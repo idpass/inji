@@ -15,7 +15,8 @@ on:
         - https://resident-app.newlogic.dev
         - http://local.newlogic.dev
 jobs:
-  build-android:
+  build-custom-android:
+    name: Android APK build with selected backend service URL
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
