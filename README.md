@@ -22,6 +22,10 @@ npm run android:newlogic
 npm run android:ph
 ```
 
+More info:
+- [Start the emulator via command line](https://developer.android.com/studio/run/emulator-commandline)
+- [Connecting the device via ADB command line](https://developer.android.com/studio/command-line/adb)
+
 # Building from Source
 
 ## Build via Android Studio
