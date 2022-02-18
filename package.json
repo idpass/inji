@@ -2,8 +2,8 @@
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
-    "android:ph": "expo run:android --variant PhDebug",
-    "android:newlogic": "expo run:android --variant NewlogicDebug",
+    "android:ph": "npx react-native run-android --variant=phDebug",
+    "android:newlogic": "npx react-native run-android --variant=newlogicDebug",
     "ios": "expo run:ios",
     "eject": "expo eject --npm",
     "build:android:ph": "cd android && ./gradlew :app:assemblePhRelease && cd ..",
