@@ -1,11 +1,13 @@
-import { ActorRefFrom, ContextFrom, EventFrom, send, StateFrom } from 'xstate';
+import { EventFrom, send, StateFrom } from 'xstate';
 import { createModel } from 'xstate/lib/model';
 import { VID_ITEM_STORE_KEY } from '../shared/constants';
 import { AppServices } from '../shared/GlobalContext';
 import { CredentialDownloadResponse, request } from '../shared/request';
 import { VID, VIDCredential, VIDVerifiableCredential } from '../types/vid';
-import { StoreEvents, storeMachine } from './store';
+import { StoreEvents } from './store';
 import { ActivityLogEvents } from './activityLog';
+import { IS_USING_MOCK_DATA } from '../shared/constants';
+import sampleData from '../shared/sample-data/6750324731.json';
 
 const model = createModel(
   {
@@ -289,12 +291,32 @@ export const createVidItemMachine = (
   vidKey: string
 ) => {
   const [_, uin, requestId] = vidKey.split(':');
-  return vidItemMachine.withContext({
+  const machine = vidItemMachine.withContext({
     ...vidItemMachine.context,
     serviceRefs,
     uin,
     requestId,
   });
+  return IS_USING_MOCK_DATA
+    ? machine.withConfig({
+        services: {
+          checkStatus: () => (callback) =>
+            callback(model.events.DOWNLOAD_READY()),
+          downloadCredential: (context) => (callback) => {
+            callback(
+              model.events.CREDENTIAL_DOWNLOADED({
+                credential: sampleData.credential as VIDCredential,
+                verifiableCredential: sampleData.verifiableCredential as any,
+                generatedOn: new Date(),
+                uin: context.uin,
+                tag: '',
+                requestId: context.requestId,
+              })
+            );
+          },
+        },
+      })
+    : machine;
 };
 
 type State = StateFrom<typeof vidItemMachine>;

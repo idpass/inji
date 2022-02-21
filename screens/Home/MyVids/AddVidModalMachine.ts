@@ -10,6 +10,7 @@ import { log } from 'xstate/lib/actions';
 import { createModel } from 'xstate/lib/model';
 import { BackendResponseError, request } from '../../../shared/request';
 import { VID_ITEM_STORE_KEY } from '../../../shared/constants';
+import { uniqueId } from 'xstate/lib/utils';
 
 const model = createModel(
   {
@@ -248,6 +249,21 @@ export const AddVidModalMachine = model.createMachine(
     },
   }
 );
+
+export const createMockAddVidModalMachine = () => {
+  return AddVidModalMachine.withContext({
+    ...AddVidModalMachine.context,
+    uin: '6750324731',
+  }).withConfig({
+    actions: {
+      setUin: model.assign({ uin: '6750324731' }),
+    },
+    services: {
+      requestOtp: () => Promise.resolve(),
+      requestCredential: () => Promise.resolve(uniqueId()),
+    },
+  });
+};
 
 type State = StateFrom<typeof AddVidModalMachine>;
 

@@ -2,22 +2,24 @@ import {
   ActorRefFrom,
   DoneInvokeEvent,
   EventFrom,
-  forwardTo,
   send,
   sendParent,
   StateFrom,
 } from 'xstate';
-import { log } from 'xstate/lib/actions';
 import { createModel } from 'xstate/lib/model';
 import { StoreEvents, StoreResponseEvent } from '../../machines/store';
 import { VidEvents } from '../../machines/vid';
 import { vidItemMachine } from '../../machines/vidItem';
 import { AppServices } from '../../shared/GlobalContext';
 import {
+  IS_USING_MOCK_DATA,
   MY_VIDS_STORE_KEY,
   ONBOARDING_STATUS_STORE_KEY,
 } from '../../shared/constants';
-import { AddVidModalMachine } from './MyVids/AddVidModalMachine';
+import {
+  AddVidModalMachine,
+  createMockAddVidModalMachine,
+} from './MyVids/AddVidModalMachine';
 
 const model = createModel(
   {
@@ -88,7 +90,7 @@ export const MyVidsTabMachine = model.createMachine(
       addingVid: {
         invoke: {
           id: 'AddVidModal',
-          src: AddVidModalMachine,
+          src: 'createAddVidModalMachine',
           onDone: '.storing',
         },
         on: {
@@ -134,6 +136,12 @@ export const MyVidsTabMachine = model.createMachine(
         (_, event: StoreResponseEvent) => VidEvents.VID_ADDED(event.response),
         { to: (context) => context.serviceRefs.vid }
       ),
+    },
+
+    services: {
+      createAddVidModalMachine: IS_USING_MOCK_DATA
+        ? createMockAddVidModalMachine()
+        : AddVidModalMachine,
     },
 
     guards: {

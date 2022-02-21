@@ -31,5 +31,6 @@ export default {
   },
   extra: {
     backendServiceUrl: process.env.BACKEND_SERVICE_URL,
+    useMockData: process.env.USE_MOCK_DATA,
   },
 };

@@ -4,6 +4,9 @@ export const HOST =
   Constants.manifest.extra.backendServiceUrl ||
   'https://resident-app.newlogic.dev';
 
+export const IS_USING_MOCK_DATA =
+  Constants.manifest.extra.useMockData === true.toString();
+
 export const MY_VIDS_STORE_KEY = 'myVids';
 
 export const RECEIVED_VIDS_STORE_KEY = 'receivedVids';
