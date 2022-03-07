@@ -32,4 +32,9 @@ export default {
   extra: {
     backendServiceUrl: process.env.BACKEND_SERVICE_URL,
   },
+  plugins: [
+    '@react-native-firebase/app',
+    '@react-native-firebase/perf',
+    '@react-native-firebase/crashlytics'
+  ]
 };
