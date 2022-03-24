@@ -172,14 +172,17 @@ export const appMachine = model.createMachine(
             createActivityLogMachine(serviceRefs),
             activityLogMachine.id
           );
-          serviceRefs.scan = spawn(
-            createScanMachine(serviceRefs),
-            scanMachine.id
-          );
-          serviceRefs.request = spawn(
-            createRequestMachine(serviceRefs),
-            requestMachine.id
-          );
+
+          serviceRefs.request = null;
+          serviceRefs.scan = null;
+          // serviceRefs.scan = spawn(
+          //   createScanMachine(serviceRefs),
+          //   scanMachine.id
+          // );
+          // serviceRefs.request = spawn(
+          //   createRequestMachine(serviceRefs),
+          //   requestMachine.id
+          // );
           return serviceRefs;
         },
       }),
@@ -190,8 +193,8 @@ export const appMachine = model.createMachine(
           context.serviceRefs.vc.subscribe(logState);
           context.serviceRefs.settings.subscribe(logState);
           context.serviceRefs.activityLog.subscribe(logState);
-          context.serviceRefs.scan.subscribe(logState);
-          context.serviceRefs.request.subscribe(logState);
+          // context.serviceRefs.scan.subscribe(logState);
+          // context.serviceRefs.request.subscribe(logState);
         }
       },
 
@@ -206,38 +209,37 @@ export const appMachine = model.createMachine(
           deviceId: getDeviceId(),
           deviceName: await getDeviceName(),
         };
-
         callback(model.events.APP_INFO_RECEIVED(appInfo));
       },
 
       checkFocusState: () => (callback) => {
-        const changeHandler = (newState: AppStateStatus) => {
-          switch (newState) {
-            case 'background':
-            case 'inactive':
-              callback({ type: 'INACTIVE' });
-              break;
-            case 'active':
-              callback({ type: 'ACTIVE' });
-              break;
-          }
-        };
+        // const changeHandler = (newState: AppStateStatus) => {
+        //   switch (newState) {
+        //     case 'background':
+        //     case 'inactive':
+        //       callback({ type: 'INACTIVE' });
+        //       break;
+        //     case 'active':
+        //       callback({ type: 'ACTIVE' });
+        //       break;
+        //   }
+        // };
 
-        const blurHandler = () => callback({ type: 'INACTIVE' });
-        const focusHandler = () => callback({ type: 'ACTIVE' });
+        // const blurHandler = () => callback({ type: 'INACTIVE' });
+        // const focusHandler = () => callback({ type: 'ACTIVE' });
 
-        AppState.addEventListener('change', changeHandler);
+        // AppState.addEventListener('change', changeHandler);
 
-        // android only
-        AppState.addEventListener('blur', blurHandler);
-        AppState.addEventListener('focus', focusHandler);
+        // // android only
+        // AppState.addEventListener('blur', blurHandler);
+        // AppState.addEventListener('focus', focusHandler);
 
-        return () => {
-          AppState.removeEventListener('change', changeHandler);
+        // return () => {
+          // AppState.removeEventListener('change', changeHandler);
 
-          AppState.removeEventListener('blur', blurHandler);
-          AppState.removeEventListener('focus', focusHandler);
-        };
+          // AppState.removeEventListener('blur', blurHandler);
+          // AppState.removeEventListener('focus', focusHandler);
+        // };
       },
 
       checkNetworkState: () => (callback) => {

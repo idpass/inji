@@ -6,6 +6,7 @@ import { GlobalContextProvider } from './components/GlobalContextProvider';
 import { GlobalContext } from './shared/GlobalContext';
 import { useSelector } from '@xstate/react';
 import { selectIsReady } from './machines/app';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const AppInitialization: React.FC = () => {
   const { appService } = useContext(GlobalContext);
@@ -17,8 +18,10 @@ const AppInitialization: React.FC = () => {
 
 export default function App() {
   return (
-    <GlobalContextProvider>
-      <AppInitialization />
-    </GlobalContextProvider>
+    <SafeAreaProvider>
+      <GlobalContextProvider>
+        <AppInitialization />
+      </GlobalContextProvider>
+    </SafeAreaProvider>
   );
 }
