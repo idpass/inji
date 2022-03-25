@@ -159,6 +159,11 @@ export const AddVcModalMachine = model.createMachine(
             },
           ],
         },
+        on: {
+          DISMISS: {
+            actions: [sendParent('DISMISS')],
+          },
+        },
       },
       done: {
         type: 'final',

@@ -9,6 +9,7 @@ import { HomeScreenTabProps } from './HomeScreen';
 import { AddVcModal } from './MyVcs/AddVcModal';
 import { DownloadingVcModal } from './MyVcs/DownloadingVcModal';
 import { OnboardingOverlay } from './OnboardingOverlay';
+import { MessageOverlay } from '../../components/MessageOverlay';
 
 export const MyVcsTab: React.FC<HomeScreenTabProps> = (props) => {
   const controller = useMyVcsTab(props);

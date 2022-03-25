@@ -185,6 +185,7 @@ export const scanMachine = model.createMachine(
         },
         on: {
           CONNECTED: 'exchangingDeviceInfo',
+          DISMISS: 'clearingConnection',
         },
       },
       exchangingDeviceInfo: {
@@ -250,6 +251,7 @@ export const scanMachine = model.createMachine(
         exit: ['disconnect', 'clearReason'],
       },
       disconnected: {
+        entry: ['disconnect'],
         on: {
           DISMISS: 'findingConnection',
         },
