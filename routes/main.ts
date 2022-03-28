@@ -18,23 +18,23 @@ export const mainRoutes: TabScreen[] = [
       title: 'HOME',
     },
   },
-  // {
-  //   name: 'Scan',
-  //   component: ScanScreen,
-  //   icon: 'qr-code-scanner',
-  //   options: {
-  //     title: 'SCAN',
-  //     headerShown: false,
-  //   },
-  // },
-  // {
-  //   name: 'Request',
-  //   component: RequestScreen,
-  //   icon: 'file-download',
-  //   options: {
-  //     title: 'REQUEST',
-  //   },
-  // },
+  {
+    name: 'Scan',
+    component: ScanScreen,
+    icon: 'qr-code-scanner',
+    options: {
+      title: 'SCAN',
+      headerShown: false,
+    },
+  },
+  {
+    name: 'Request',
+    component: RequestScreen,
+    icon: 'file-download',
+    options: {
+      title: 'REQUEST',
+    },
+  },
   {
     name: 'Profile',
     component: ProfileScreen,
