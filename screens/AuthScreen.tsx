@@ -24,7 +24,7 @@ export const AuthScreen: React.FC<RootRouteProps> = (props) => {
       <Centered fill>
         <Icon name="fingerprint" size={180} color={Colors.Orange} />
       </Centered>
-      <Column>
+      <Column style={{ marginBottom: 32 }}>
         <Button
           title="Use biometrics"
           margin="0 0 8 0"
