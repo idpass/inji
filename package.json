@@ -4,7 +4,7 @@
     "android": "expo run:android",
     "android:ph": "expo run:android --variant PhDebug",
     "android:newlogic": "expo run:android --variant NewlogicDebug",
-    "ios": "expo run:ios",
+    "ios": "expo run:ios --device",
     "eject": "expo eject --npm",
     "build:android:ph": "cd android && ./gradlew :app:assemblePhRelease && cd ..",
     "build:android:newlogic": "cd android && ./gradlew :app:assembleNewlogicRelease && cd ..",
