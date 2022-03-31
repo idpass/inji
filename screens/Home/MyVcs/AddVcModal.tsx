@@ -6,12 +6,12 @@ import { IdInputModal } from './IdInputModal';
 
 export const AddVcModal: React.FC<AddVcModalProps> = (props) => {
   const controller = useAddVcModal(props);
-  
+
   return (
     <React.Fragment>
       <IdInputModal
         service={props.service}
-        isVisible={true}
+        isVisible={!controller.isAcceptingOtpInput}
         onDismiss={controller.DISMISS}
       />
 
