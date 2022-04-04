@@ -60,7 +60,7 @@ export const MessageOverlay: React.FC<AsyncOverlayProps> = (props) => {
       {props.hasProgress && showAbortBtn && (
         <Button
           margin="0 -10 -10 -10"
-          title="Cancel"
+          title={props.cancelLabel}
           onPress={props.onCancel}
         />
       )}
