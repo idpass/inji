@@ -1,11 +1,11 @@
 import React from 'react';
 import { MessageOverlay } from '../../../components/MessageOverlay';
-import { AddVcModalProps, useAddVcModal } from './AddVcModalController';
+import { AddVidModalProps, useAddVidModal } from './AddVidModalController';
 import { OtpVerificationModal } from './OtpVerificationModal';
 import { IdInputModal } from './IdInputModal';
 
-export const AddVcModal: React.FC<AddVcModalProps> = (props) => {
-  const controller = useAddVcModal(props);
+export const AddVidModal: React.FC<AddVidModalProps> = (props) => {
+  const controller = useAddVidModal(props);
   
   return (
     <React.Fragment>
