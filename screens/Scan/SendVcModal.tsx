@@ -53,7 +53,9 @@ export const SendVcModal: React.FC<SendVcModalProps> = (props) => {
         isVisible={controller.isSendingVc}
         title="Sharing..."
         hasProgress
+        cancelLabel="Cancel"
         onCancel={controller.CANCEL}
+        cancelDelay={1000}
       />
 
       <MessageOverlay
