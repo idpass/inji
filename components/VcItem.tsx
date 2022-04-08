@@ -80,33 +80,6 @@ export const VcItem: React.FC<VcItemProps> = (props) => {
         style={
           !verifiableCredential ? styles.loadingContainer : styles.container
         }>
-<<<<<<< HEAD:components/VcItem.tsx
-        <Column fill margin="0 24 0 0">
-          <Text
-            weight="semibold"
-            style={!verifiableCredential ? styles.loadingTitle : styles.title}
-            margin="0 0 6 0">
-            {!verifiableCredential ? '' : tag || uin}
-          </Text>
-          <Text
-            size="smaller"
-            numLines={1}
-            style={
-              !verifiableCredential ? styles.loadingSubtitle : styles.subtitle
-            }>
-            {!verifiableCredential
-              ? ''
-              : verifiableCredential.credentialSubject.fullName +
-                ' · ' +
-                generatedOn}
-          </Text>
-        </Column>
-        {verifiableCredential ? (
-          selectableOrCheck
-        ) : (
-          <RotatingIcon name="sync" color={Colors.Grey5} />
-        )}
-=======
         <View style={{ marginVertical: 24, flex: 1 }}>
           <Column fill>
             <Text
@@ -130,7 +103,6 @@ export const VcItem: React.FC<VcItemProps> = (props) => {
           </Column>
         </View>
         { verifiableCredential ? selectableOrCheck : (<RotatingIcon name="sync" color={Colors.Grey5} />) }
->>>>>>> 21a760b (Fix padding issue of ios in vid item and details):components/VidItem.tsx
       </Row>
     </Pressable>
   );
