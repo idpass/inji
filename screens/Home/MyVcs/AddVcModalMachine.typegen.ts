@@ -19,7 +19,7 @@ export interface Typegen0 {
       | 'done.invoke.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]'
       | 'error.platform.AddVcModal.requestingCredential:invocation[0]';
     focusInput:
-      | 'xstate.after(100)#AddVcModal.acceptingIdInput.focusing'
+      | 'xstate.after(500)#AddVcModal.acceptingIdInput.focusing'
       | 'INPUT_ID'
       | 'error.platform.AddVcModal.requestingCredential:invocation[0]';
     setIdErrorEmpty: 'VALIDATE_INPUT';
@@ -44,8 +44,8 @@ export interface Typegen0 {
       data: unknown;
       __tip: 'See the XState TS docs to learn how to strongly type this.';
     };
-    'xstate.after(100)#AddVcModal.acceptingIdInput.focusing': {
-      type: 'xstate.after(100)#AddVcModal.acceptingIdInput.focusing';
+    'xstate.after(500)#AddVcModal.acceptingIdInput.focusing': {
+      type: 'xstate.after(500)#AddVcModal.acceptingIdInput.focusing';
     };
     'xstate.init': { type: 'xstate.init' };
   };

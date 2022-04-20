@@ -56,7 +56,9 @@ export const IdInputModal: React.FC<IdInputModalProps> = (props) => {
                   errorStyle={{ color: Colors.Red }}
                   errorMessage={controller.idError}
                   onChangeText={controller.INPUT_ID}
-                  ref={(node) => controller.READY(node)}
+                  ref={(node) =>
+                    !controller.idInputRef && controller.READY(node)
+                  }
                 />
               </Column>
             </Row>

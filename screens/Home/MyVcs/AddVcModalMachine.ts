@@ -63,7 +63,7 @@ export const AddVcModalMachine = model.createMachine(
           focusing: {
             // delay on first render to show keyboard
             after: {
-              100: 'idle',
+              500: 'idle',
             },
           },
           idle: {
