@@ -21,7 +21,6 @@ export interface Typegen0 {
     focusInput:
       | 'xstate.after(100)#AddVcModal.acceptingIdInput.focusing'
       | 'INPUT_ID'
-      | 'DISMISS'
       | 'error.platform.AddVcModal.requestingCredential:invocation[0]';
     setIdErrorEmpty: 'VALIDATE_INPUT';
     setIdErrorWrongFormat: 'VALIDATE_INPUT';

@@ -136,7 +136,7 @@ export const AddVcModalMachine = model.createMachine(
             target: 'requestingCredential',
             actions: ['setOtp'],
           },
-          DISMISS: '#acceptingIdInput.idle',
+          DISMISS: '#acceptingIdInput.rendering',
         },
       },
       requestingCredential: {
