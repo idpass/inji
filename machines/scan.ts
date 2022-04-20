@@ -24,7 +24,7 @@ const model = createModel(
     reason: '',
     loggers: [] as EmitterSubscription[],
     locationConfig: {
-      priority: null,
+      priority: LocationEnabler.PRIORITIES.BALANCED_POWER_ACCURACY,
       alwaysShow: false,
       needBle: true,
     },
@@ -272,7 +272,7 @@ export const scanMachine = model.createMachine(
       }),
 
       requestToEnableLocation: (context) => {
-        // LocationEnabler.requestResolutionSettings(context.locationConfig);
+        LocationEnabler.requestResolutionSettings(context.locationConfig);
       },
 
       requestToDisableFlightMode: () => {
@@ -280,15 +280,15 @@ export const scanMachine = model.createMachine(
       },
 
       disconnect: () => {
-        // try {
-        //   SmartShare.destroyConnection();
-        // } catch (e) {
-        //   //
-        // }
+        try {
+          SmartShare.destroyConnection();
+        } catch (e) {
+          //
+        }
       },
 
       setConnectionParams: (_, event) => {
-        // SmartShare.setConnectionParameters(event.params);
+        SmartShare.setConnectionParameters(event.params);
       },
 
       setReceiverInfo: model.assign({
@@ -313,26 +313,26 @@ export const scanMachine = model.createMachine(
 
       registerLoggers: assign({
         loggers: () => {
-          // if (__DEV__) {
-          //   return [
-          //     SmartShare.handleNearbyEvents((event) => {
-          //       console.log(
-          //         getDeviceNameSync(),
-          //         '<Sender.Event>',
-          //         JSON.stringify(event)
-          //       );
-          //     }),
-          //     SmartShare.handleLogEvents((event) => {
-          //       console.log(
-          //         getDeviceNameSync(),
-          //         '<Sender.Log>',
-          //         JSON.stringify(event)
-          //       );
-          //     }),
-          //   ];
-          // } else {
+          if (__DEV__) {
+            return [
+              SmartShare.handleNearbyEvents((event) => {
+                console.log(
+                  getDeviceNameSync(),
+                  '<Sender.Event>',
+                  JSON.stringify(event)
+                );
+              }),
+              SmartShare.handleLogEvents((event) => {
+                console.log(
+                  getDeviceNameSync(),
+                  '<Sender.Log>',
+                  JSON.stringify(event)
+                );
+              }),
+            ];
+          } else {
             return [];
-          // }
+          }
         },
       }),
 
@@ -389,17 +389,17 @@ export const scanMachine = model.createMachine(
       },
 
       checkLocationStatus: (context) => (callback) => {
-        // const listener = LocationEnabler.addListener(({ locationEnabled }) => {
-        //   if (locationEnabled) {
-        //     callback(model.events.LOCATION_ENABLED());
-        //   } else {
-        //     callback(model.events.LOCATION_DISABLED());
-        //   }
-        // });
+        const listener = LocationEnabler.addListener(({ locationEnabled }) => {
+          if (locationEnabled) {
+            callback(model.events.LOCATION_ENABLED());
+          } else {
+            callback(model.events.LOCATION_DISABLED());
+          }
+        });
 
-        // LocationEnabler.checkSettings(context.locationConfig);
+        LocationEnabler.checkSettings(context.locationConfig);
 
-        // return () => listener.remove();
+        return () => listener.remove();
       },
 
       checkAirplaneMode: () => (callback) => {
@@ -413,33 +413,33 @@ export const scanMachine = model.createMachine(
       },
 
       discoverDevice: () => (callback) => {
-        // SmartShare.createConnection('discoverer', () => {
-        //   callback({ type: 'CONNECTED' });
-        // });
+        SmartShare.createConnection('discoverer', () => {
+          callback({ type: 'CONNECTED' });
+        });
       },
 
       exchangeDeviceInfo: (context) => (callback) => {
-        // let subscription: EmitterSubscription;
+        let subscription: EmitterSubscription;
 
-        // const message = new Message('exchange:sender-info', context.senderInfo);
-        // SmartShare.send(message.toString(), () => {
-        //   subscription = SmartShare.handleNearbyEvents((event) => {
-        //     if (event.type === 'onDisconnected') {
-        //       callback({ type: 'DISCONNECT' });
-        //     }
+        const message = new Message('exchange:sender-info', context.senderInfo);
+        SmartShare.send(message.toString(), () => {
+          subscription = SmartShare.handleNearbyEvents((event) => {
+            if (event.type === 'onDisconnected') {
+              callback({ type: 'DISCONNECT' });
+            }
 
-        //     if (event.type !== 'msg') return;
-        //     const response = Message.fromString<DeviceInfo>(event.data);
-        //     if (response.type === 'exchange:receiver-info') {
-        //       callback({
-        //         type: 'EXCHANGE_DONE',
-        //         receiverInfo: response.data,
-        //       });
-        //     }
-        //   });
-        // });
+            if (event.type !== 'msg') return;
+            const response = Message.fromString<DeviceInfo>(event.data);
+            if (response.type === 'exchange:receiver-info') {
+              callback({
+                type: 'EXCHANGE_DONE',
+                receiverInfo: response.data,
+              });
+            }
+          });
+        });
 
-        // return () => subscription?.remove();
+        return () => subscription?.remove();
       },
 
       sendVc: (context) => (callback) => {
@@ -452,39 +452,39 @@ export const scanMachine = model.createMachine(
 
         const message = new Message<VC>('send:vc', vc);
 
-        // SmartShare.send(message.toString(), () => {
-        //   subscription = SmartShare.handleNearbyEvents((event) => {
-        //     if (event.type === 'onDisconnected') {
-        //       callback({ type: 'DISCONNECT' });
-        //     }
+        SmartShare.send(message.toString(), () => {
+          subscription = SmartShare.handleNearbyEvents((event) => {
+            if (event.type === 'onDisconnected') {
+              callback({ type: 'DISCONNECT' });
+            }
 
-        //     if (event.type !== 'msg') return;
+            if (event.type !== 'msg') return;
 
-        //     const response = Message.fromString<SendVcStatus>(event.data);
-        //     if (response.type === 'send:vc:response') {
-        //       callback({
-        //         type:
-        //           response.data.status === 'accepted'
-        //             ? 'VC_ACCEPTED'
-        //             : 'VC_REJECTED',
-        //       });
-        //     }
-        //   });
-        // });
+            const response = Message.fromString<SendVcStatus>(event.data);
+            if (response.type === 'send:vc:response') {
+              callback({
+                type:
+                  response.data.status === 'accepted'
+                    ? 'VC_ACCEPTED'
+                    : 'VC_REJECTED',
+              });
+            }
+          });
+        });
 
-        // return () => subscription?.remove();
+        return () => subscription?.remove();
       },
     },
 
     guards: {
       isQrValid: (_, event) => {
-        // const param: SmartShare.ConnectionParams = Object.create(null);
-        // try {
-        //   Object.assign(param, JSON.parse(event.params));
-        //   return 'cid' in param && 'pk' in param;
-        // } catch (e) {
+        const param: SmartShare.ConnectionParams = Object.create(null);
+        try {
+          Object.assign(param, JSON.parse(event.params));
+          return 'cid' in param && 'pk' in param;
+        } catch (e) {
           return false;
-        // }
+        }
       },
     },
 
