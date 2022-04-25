@@ -60,6 +60,7 @@
     "react-native-safe-area-context": "3.3.2",
     "react-native-screens": "~3.10.1",
     "react-native-securerandom": "^1.0.0",
+    "react-native-settings-screen": "^2.2.1",
     "react-native-simple-markdown": "^1.1.0",
     "react-native-svg": "12.1.1",
     "react-native-system-setting": "^1.7.6",
