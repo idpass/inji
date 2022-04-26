@@ -37,6 +37,8 @@ const LanguageSetting: React.FC = () => {
 export const ProfileScreen: React.FC<MainRouteProps> = (props) => {
   const { t } = useTranslation('ProfileScreen');
   const controller = useProfileScreen(props);
+  const debug = __DEV__;
+
   return (
     <Column fill padding="24 0" backgroundColor={Colors.LightGrey}>
       <MessageOverlay
@@ -75,7 +77,7 @@ export const ProfileScreen: React.FC<MainRouteProps> = (props) => {
         </ListItem.Content>
       </ListItem>
       <Credits label={t('credits')} />
-      <DeveloperSettings label="Developer" />
+      {debug && <DeveloperSettings label={`Developer-${debug}`} />}
       <ListItem bottomDivider onPress={controller.LOGOUT}>
         <ListItem.Content>
           <ListItem.Title>
