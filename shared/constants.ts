@@ -1,8 +1,7 @@
 import { VC } from '../types/vc';
 import Constants from 'expo-constants';
 
-export const HOST =
-  Constants.manifest.extra.backendServiceUrl || selectServiceURL;
+export const HOST = Constants.manifest.extra.backendServiceUrl;
 
 // export const HOST =
 // Constants.manifest.extra.backendServiceUrl || selectServiceURL

@@ -1,5 +1,7 @@
 import { DecodedCredential, VerifiableCredential } from '../types/vc';
 import { HOST } from './constants';
+import { getItem } from '../machines/store';
+import * as Keychain from 'react-native-keychain';
 
 export class BackendResponseError extends Error {
   constructor(name: string, message: string) {
@@ -13,8 +15,19 @@ export async function request(
   path: `/${string}`,
   body?: Record<string, unknown>
 ) {
-  console.log('HOST', HOST);
-  const response = await fetch(HOST + path, {
+  let host = HOST;
+
+  const existingCredentials = await Keychain.getGenericPassword();
+  if (existingCredentials) {
+    const settings = await getItem(
+      'settings',
+      {},
+      existingCredentials.password
+    );
+    host = settings.serviceURL ?? host;
+  }
+
+  const response = await fetch(host + path, {
     method,
     headers: {
       'Content-Type': 'application/json',

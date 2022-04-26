@@ -221,6 +221,7 @@ export const storeMachine =
         getEncryptionKey: () => async (callback) => {
           const existingCredentials = await Keychain.getGenericPassword();
 
+          console.log('the get encryption key', existingCredentials);
           if (existingCredentials) {
             callback(model.events.KEY_RECEIVED(existingCredentials.password));
           } else {
