@@ -6,6 +6,7 @@ import { Colors } from '../../components/ui/styleUtils';
 import { MainRouteProps } from '../../routes/main';
 import { EditableListItem } from '../../components/EditableListItem';
 import { MessageOverlay } from '../../components/MessageOverlay';
+import { DeveloperSettings } from '../Developer/DeveloperScreen';
 import { Credits } from './Credits';
 import { useProfileScreen } from './ProfileScreenController';
 import { useTranslation } from 'react-i18next';
@@ -74,6 +75,7 @@ export const ProfileScreen: React.FC<MainRouteProps> = (props) => {
         </ListItem.Content>
       </ListItem>
       <Credits label={t('credits')} />
+      <DeveloperSettings label="Developer" />
       <ListItem bottomDivider onPress={controller.LOGOUT}>
         <ListItem.Content>
           <ListItem.Title>
