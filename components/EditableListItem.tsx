@@ -10,8 +10,14 @@ export const EditableListItem: React.FC<EditableListItemProps> = (props) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newValue, setNewValue] = useState(props.value);
 
+  const onPress = () => {
+    setIsEditing(true);
+    if (props.onPress) {
+      props.onPress();
+    }
+  };
   return (
-    <ListItem bottomDivider onPress={() => setIsEditing(true)}>
+    <ListItem bottomDivider onPress={onPress}>
       <ListItem.Content>
         <ListItem.Title>
           <Text>{props.label}</Text>
@@ -37,7 +43,6 @@ export const EditableListItem: React.FC<EditableListItemProps> = (props) => {
   );
 
   function edit() {
-    console.log('newValue', newValue);
     props.onEdit(newValue);
     setIsEditing(false);
   }
@@ -52,4 +57,5 @@ interface EditableListItemProps {
   label: string;
   value: string;
   onEdit: (newValue: string) => void;
+  onPress?: () => void;
 }

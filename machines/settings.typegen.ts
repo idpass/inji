@@ -15,6 +15,7 @@ export interface Typegen0 {
     updateVcLabel: 'UPDATE_VC_LABEL';
     updateServiceURL: 'UPDATE_SERVICE_URL';
     requestStoredContext: 'xstate.init';
+    storeServiceURL: 'UPDATE_SERVICE_URL';
   };
   'internalEvents': {
     'xstate.init': { type: 'xstate.init' };
@@ -31,6 +32,11 @@ export interface Typegen0 {
     hasData: 'STORE_RESPONSE';
   };
   'eventsCausingDelays': {};
-  'matchesStates': 'init' | 'storingDefaults' | 'idle';
+  'matchesStates':
+    | 'init'
+    | 'storingDefaults'
+    | 'idle'
+    | 'editingServiceURL'
+    | 'storingServiceURL';
   'tags': never;
 }

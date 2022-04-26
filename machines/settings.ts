@@ -1,7 +1,7 @@
 import { ContextFrom, EventFrom, send, StateFrom } from 'xstate';
 import { createModel } from 'xstate/lib/model';
 import { AppServices } from '../shared/GlobalContext';
-import { SETTINGS_STORE_KEY } from '../shared/constants';
+import { HOST, SETTINGS_STORE_KEY } from '../shared/constants';
 import { VCLabel } from '../types/vc';
 import { StoreEvents } from './store';
 import { log } from 'xstate/lib/actions';
@@ -25,6 +25,8 @@ const model = createModel(
       TOGGLE_BIOMETRIC_UNLOCK: (enable: boolean) => ({ enable }),
       STORE_RESPONSE: (response: unknown) => ({ response }),
       CHANGE_LANGUAGE: (language: string) => ({ language }),
+      EDIT_SERVICE_URL: () => ({}),
+      DISMISS: () => ({}),
     },
   }
 );
@@ -57,6 +59,7 @@ export const settingsMachine = model.createMachine(
         },
       },
       idle: {
+        id: 'idle',
         on: {
           TOGGLE_BIOMETRIC_UNLOCK: {
             actions: ['toggleBiometricUnlock', 'storeContext'],
@@ -67,13 +70,26 @@ export const settingsMachine = model.createMachine(
           UPDATE_VC_LABEL: {
             actions: ['updateVcLabel', 'storeContext'],
           },
+          EDIT_SERVICE_URL: 'editingServiceURL',
+        },
+      },
+      editingServiceURL: {
+        on: {
+          DISMISS: 'idle',
           UPDATE_SERVICE_URL: {
+            target: 'storingServiceURL',
             actions: [
               log('UPDATE_SERVICE_URL received'),
               'updateServiceURL',
               'storeContext',
             ],
           },
+        },
+      },
+      storingServiceURL: {
+        entry: ['storeServiceURL'],
+        on: {
+          STORE_RESPONSE: 'idle',
         },
       },
     },
@@ -89,6 +105,11 @@ export const settingsMachine = model.createMachine(
           const { serviceRefs, ...data } = context;
           return StoreEvents.SET(SETTINGS_STORE_KEY, data);
         },
+        { to: (context) => context.serviceRefs.store }
+      ),
+
+      storeServiceURL: send(
+        (context) => StoreEvents.SET(HOST, context.serviceURL),
         { to: (context) => context.serviceRefs.store }
       ),
 

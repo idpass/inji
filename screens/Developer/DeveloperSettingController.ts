@@ -10,6 +10,8 @@ export function useDeveloperSetting() {
   return {
     serviceURL: useSelector(settingsService, selectServiceURL),
 
+    EDIT_SERVICE_URL: () =>
+      settingsService.send(SettingsEvents.EDIT_SERVICE_URL()),
     UPDATE_SERVICE_URL: (url: string) => {
       settingsService.send(SettingsEvents.UPDATE_SERVICE_URL(url));
     },
