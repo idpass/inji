@@ -9,9 +9,11 @@ export interface Typegen0 {
       | 'TOGGLE_BIOMETRIC_UNLOCK'
       | 'UPDATE_NAME'
       | 'UPDATE_VC_LABEL'
+      | 'UPDATE_SERVICE_URL'
       | 'STORE_RESPONSE';
     updateName: 'UPDATE_NAME';
     updateVcLabel: 'UPDATE_VC_LABEL';
+    updateServiceURL: 'UPDATE_SERVICE_URL';
     requestStoredContext: 'xstate.init';
   };
   'internalEvents': {

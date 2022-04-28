@@ -1,22 +1,12 @@
 import React, { useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { Divider, Icon, ListItem, Overlay } from 'react-native-elements';
-import { SettingsComponent } from './DeveloperSettings';
 import { Button, Text, Row } from '../../components/ui';
 import { Colors } from '../../components/ui/styleUtils';
+import { DeveloperSettings } from './DeveloperSettings';
 
-export const DeveloperSettings: React.FC<DeveloperProps> = (props) => {
+export const DeveloperScreen: React.FC = () => {
   const [isViewing, setIsViewing] = useState(false);
-
-  const settingsOptions = [
-    { title: 'My Info', subTitle: 'SETUP YOUR PROFILE', onPress: () => null },
-    { title: 'Accounts', subTitle: null, onPress: () => null },
-    { title: 'Contacts', subTitle: 'Your friends', onPress: () => null },
-    { title: 'Downloads', subTitle: 'Downloaded movies', onPress: () => null },
-    { title: 'Import', subTitle: null, onPress: () => null },
-    { title: 'Blocked Contacts', subTitle: null, onPress: () => null },
-    { title: 'Developer Tools', subTitle: null, onPress: () => null },
-  ];
 
   const styles = StyleSheet.create({
     buttonContainer: {
@@ -37,7 +27,7 @@ export const DeveloperSettings: React.FC<DeveloperProps> = (props) => {
     <ListItem bottomDivider onPress={() => setIsViewing(true)}>
       <ListItem.Content>
         <ListItem.Title>
-          <Text>{props.label}</Text>
+          <Text>Developer Settings</Text>
         </ListItem.Title>
       </ListItem.Content>
       <Overlay
@@ -58,15 +48,10 @@ export const DeveloperSettings: React.FC<DeveloperProps> = (props) => {
           </Row>
           <Divider />
           <View style={styles.settingsView}>
-            <Text>Developer Settings</Text>
-            <SettingsComponent settingsOptions={settingsOptions} />
+            <DeveloperSettings />
           </View>
         </View>
       </Overlay>
     </ListItem>
   );
 };
-
-interface DeveloperProps {
-  label: string;
-}

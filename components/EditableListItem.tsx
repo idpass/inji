@@ -17,7 +17,9 @@ export const EditableListItem: React.FC<EditableListItemProps> = (props) => {
           <Text>{props.label}</Text>
         </ListItem.Title>
       </ListItem.Content>
-      <Text color={Colors.Grey}>{props.value}</Text>
+      <Text color={Colors.Grey} style={{ maxWidth: '70%' }}>
+        {props.value}
+      </Text>
       <Overlay
         overlayStyle={{ padding: 24, elevation: 6 }}
         isVisible={isEditing}
@@ -35,6 +37,7 @@ export const EditableListItem: React.FC<EditableListItemProps> = (props) => {
   );
 
   function edit() {
+    console.log('newValue', newValue);
     props.onEdit(newValue);
     setIsEditing(false);
   }

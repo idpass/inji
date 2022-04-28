@@ -1,9 +1,13 @@
 import { VC } from '../types/vc';
 import Constants from 'expo-constants';
+import { selectServiceURL } from '../machines/settings';
 
 export const HOST =
-  Constants.manifest.extra.backendServiceUrl ||
-  'https://resident-app.newlogic.dev';
+  Constants.manifest.extra.backendServiceUrl || selectServiceURL;
+
+// export const HOST =
+// Constants.manifest.extra.backendServiceUrl || selectServiceURL
+// 'https://resident-app.newlogic.dev';
 
 export const MY_VCS_STORE_KEY = 'myVCs';
 

@@ -4,6 +4,7 @@ import { AppServices } from '../shared/GlobalContext';
 import { SETTINGS_STORE_KEY } from '../shared/constants';
 import { VCLabel } from '../types/vc';
 import { StoreEvents } from './store';
+import { log } from 'xstate/lib/actions';
 
 const model = createModel(
   {
@@ -14,10 +15,12 @@ const model = createModel(
       plural: 'IDs',
     } as VCLabel,
     isBiometricUnlockEnabled: false,
+    serviceURL: 'https://resident-app.newlogic.dev',
   },
   {
     events: {
       UPDATE_NAME: (name: string) => ({ name }),
+      UPDATE_SERVICE_URL: (url: string) => ({ url }),
       UPDATE_VC_LABEL: (label: string) => ({ label }),
       TOGGLE_BIOMETRIC_UNLOCK: (enable: boolean) => ({ enable }),
       STORE_RESPONSE: (response: unknown) => ({ response }),
@@ -64,6 +67,13 @@ export const settingsMachine = model.createMachine(
           UPDATE_VC_LABEL: {
             actions: ['updateVcLabel', 'storeContext'],
           },
+          UPDATE_SERVICE_URL: {
+            actions: [
+              log('UPDATE_SERVICE_URL received'),
+              'updateServiceURL',
+              'storeContext',
+            ],
+          },
         },
       },
     },
@@ -92,6 +102,10 @@ export const settingsMachine = model.createMachine(
 
       updateName: model.assign({
         name: (_, event) => event.name,
+      }),
+
+      updateServiceURL: model.assign({
+        serviceURL: (_, event) => event.url,
       }),
 
       updateVcLabel: model.assign({
@@ -133,4 +147,8 @@ export function selectVcLabel(state: State) {
 
 export function selectBiometricUnlockEnabled(state: State) {
   return state.context.isBiometricUnlockEnabled;
+}
+
+export function selectServiceURL(state: State) {
+  return state.context.serviceURL;
 }
