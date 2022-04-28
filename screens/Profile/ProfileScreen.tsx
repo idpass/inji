@@ -77,7 +77,7 @@ export const ProfileScreen: React.FC<MainRouteProps> = (props) => {
         </ListItem.Content>
       </ListItem>
       <Credits label={t('credits')} />
-      {debug && <DeveloperSettings label={`Developer-${debug}`} />}
+      {debug && <DeveloperSettings label={`Developer Settings`} />}
       <ListItem bottomDivider onPress={controller.LOGOUT}>
         <ListItem.Content>
           <ListItem.Title>
