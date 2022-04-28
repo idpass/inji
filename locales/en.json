@@ -39,6 +39,10 @@
   "BiometricScreen": {
     "unlock": "Unlock with fingerprint"
   },
+  "DeveloperScreen": {
+    "devSettings": "Developer Settings",
+    "serviceURL": "Service URL"
+  },
   "HistoryTab": {
     "noHistory": "No history available yet",
     "downloaded": "downloaded",
