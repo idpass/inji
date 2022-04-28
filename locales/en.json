@@ -41,8 +41,7 @@
   },
   "DeveloperScreen": {
     "devSettings": "Developer Settings",
-    "serviceURL": "Service URL",
-    "back": "Back"
+    "serviceURL": "Service URL"
   },
   "HistoryTab": {
     "noHistory": "No history available yet",
