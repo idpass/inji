@@ -4,8 +4,10 @@ import { Divider, Icon, ListItem, Overlay } from 'react-native-elements';
 import { Button, Text, Row } from '../../components/ui';
 import { Colors } from '../../components/ui/styleUtils';
 import { DeveloperSettings } from './DeveloperSettings';
+import { useTranslation } from 'react-i18next';
 
 export const DeveloperScreen: React.FC = () => {
+  const { t } = useTranslation('DeveloperScreen');
   const [isViewing, setIsViewing] = useState(false);
 
   const styles = StyleSheet.create({
@@ -27,7 +29,7 @@ export const DeveloperScreen: React.FC = () => {
     <ListItem bottomDivider onPress={() => setIsViewing(true)}>
       <ListItem.Content>
         <ListItem.Title>
-          <Text>Developer Settings</Text>
+          <Text>{t('devSettings')}</Text>
         </ListItem.Title>
       </ListItem.Content>
       <Overlay
@@ -40,11 +42,11 @@ export const DeveloperScreen: React.FC = () => {
               <Button
                 type="clear"
                 icon={<Icon name="chevron-left" color={Colors.Orange} />}
-                title="Back"
+                title=""
                 onPress={() => setIsViewing(false)}
               />
             </View>
-            <Text size="small">Developer Settings</Text>
+            <Text size="small">{t('devSettings')}</Text>
           </Row>
           <Divider />
           <View style={styles.settingsView}>
