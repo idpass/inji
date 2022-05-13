@@ -11,14 +11,14 @@ export interface Typegen0 {
     setSelectedVc: 'SELECT_VC';
     removeLoggers:
       | 'SCREEN_BLUR'
-      | 'xstate.after(CLEAR_DELAY)#clearingConnection'
+      | 'xstate.after(CLEAR_DELAY)#scan.clearingConnection'
       | 'CANCEL'
       | 'DISMISS';
     requestToDisableFlightMode: 'FLIGHT_REQUEST';
     requestToEnableLocation: 'LOCATION_DISABLED' | 'LOCATION_REQUEST';
     disconnect: 'LOCATION_ENABLED';
     registerLoggers:
-      | 'xstate.after(CLEAR_DELAY)#clearingConnection'
+      | 'xstate.after(CLEAR_DELAY)#scan.clearingConnection'
       | 'CANCEL'
       | 'DISMISS';
     requestSenderInfo: 'SCAN';
@@ -26,14 +26,14 @@ export interface Typegen0 {
     logShared: 'VC_ACCEPTED';
   };
   'internalEvents': {
-    'xstate.after(CLEAR_DELAY)#clearingConnection': {
-      type: 'xstate.after(CLEAR_DELAY)#clearingConnection';
+    'xstate.after(CLEAR_DELAY)#scan.clearingConnection': {
+      type: 'xstate.after(CLEAR_DELAY)#scan.clearingConnection';
     };
     'xstate.init': { type: 'xstate.init' };
   };
   'invokeSrcNameMap': {
-    checkAirplaneMode: 'done.invoke.scan.checkingAirplaneMode.checkingStatus:invocation[0]';
-    checkLocationStatus: 'done.invoke.checkingLocationService:invocation[0]';
+    checkAirplaneMode: 'done.invoke.scan.checkingAirplaneMode:invocation[0]';
+    checkLocationStatus: 'done.invoke.scan.checkingLocationService:invocation[0]';
     checkLocationPermission: 'done.invoke.scan.checkingLocationService.checkingPermission:invocation[0]';
     discoverDevice: 'done.invoke.scan.connecting:invocation[0]';
     exchangeDeviceInfo: 'done.invoke.scan.exchangingDeviceInfo:invocation[0]';
@@ -46,7 +46,7 @@ export interface Typegen0 {
     delays: never;
   };
   'eventsCausingServices': {
-    checkAirplaneMode: 'APP_ACTIVE';
+    checkAirplaneMode: 'SCREEN_FOCUS';
     checkLocationStatus: 'FLIGHT_DISABLED';
     checkLocationPermission: 'LOCATION_ENABLED' | 'APP_ACTIVE';
     discoverDevice: 'RECEIVE_DEVICE_INFO';
@@ -82,7 +82,6 @@ export interface Typegen0 {
     | 'reviewing.sendingVc'
     | 'reviewing.accepted'
     | 'reviewing.rejected'
-    | 'reviewing.cancelled'
     | 'reviewing.navigatingToHome'
     | 'disconnected'
     | 'invalid'
@@ -103,7 +102,6 @@ export interface Typegen0 {
           | 'sendingVc'
           | 'accepted'
           | 'rejected'
-          | 'cancelled'
           | 'navigatingToHome';
       };
   'tags': never;
