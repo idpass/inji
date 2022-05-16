@@ -191,6 +191,11 @@ export const AddVcModalMachine =
           type: 'final',
           data: (context) => VC_ITEM_STORE_KEY(context),
         },
+        on: {
+          DISMISS: {
+            actions: [sendParent('DISMISS')],
+          },
+        },
       },
     },
     {

@@ -28,6 +28,7 @@ export const AddVcModal: React.FC<AddVcModalProps> = (props) => {
         isVisible={controller.isRequestingCredential}
         title={t('requestingCredential')}
         hasProgress
+        onCancel={controller.DISMISS}
       />
     </React.Fragment>
   );
