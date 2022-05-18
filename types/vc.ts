@@ -48,8 +48,10 @@ export interface CredentialSubject {
   vcVer: 'VC-V1' | string;
 }
 
+type VCContext = (string | Record<string, unknown>)[];
+
 export interface VerifiableCredential {
-  '@context': (string | Record<string, unknown>)[];
+  '@context': VCContext;
   'credentialSubject': CredentialSubject;
   'id': string;
   'issuanceDate': string;
@@ -62,6 +64,21 @@ export interface VerifiableCredential {
     verificationMethod: string;
   };
   'type': VerifiableCredentialType[];
+}
+
+export interface VerifiablePresentation {
+  '@context': VCContext;
+  'verifiableCredential': VerifiableCredential[];
+  'type': 'VerifiablePresentation';
+  'proof': {
+    created: string;
+    jws: string;
+    proofPurpose: 'authentication' | string;
+    type: 'RsaSignature2018' | string;
+    verificationMethod: string;
+    challenge: string;
+    domain: string;
+  };
 }
 
 export type VerifiableCredentialType =

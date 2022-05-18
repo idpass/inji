@@ -9,6 +9,9 @@ export interface Typegen0 {
     setReceiverInfo: 'EXCHANGE_DONE';
     setReason: 'UPDATE_REASON';
     setSelectedVc: 'SELECT_VC';
+    setVerifiablePresentation: 'VERIFICATION_SUCCESS';
+    signVerifiablePresentation: 'VERIFICATION_SUCCESS';
+    setVerificationImage: 'IMAGE_CAPTURED';
     removeLoggers:
       | 'SCREEN_BLUR'
       | 'xstate.after(CLEAR_DELAY)#scan.clearingConnection'
@@ -38,10 +41,12 @@ export interface Typegen0 {
     discoverDevice: 'done.invoke.scan.connecting:invocation[0]';
     exchangeDeviceInfo: 'done.invoke.scan.exchangingDeviceInfo:invocation[0]';
     sendVc: 'done.invoke.scan.reviewing.sendingVc:invocation[0]';
+    verifyIdentity: 'done.invoke.scan.reviewing.verifyingIdentity:invocation[0]';
+    captureImage: 'done.invoke.scan.reviewing.capturingImage:invocation[0]';
   };
   'missingImplementations': {
-    actions: never;
-    services: never;
+    actions: 'signVerifiablePresentation' | 'setVerificationImage';
+    services: 'captureImage';
     guards: never;
     delays: never;
   };
@@ -51,7 +56,9 @@ export interface Typegen0 {
     checkLocationPermission: 'LOCATION_ENABLED' | 'APP_ACTIVE';
     discoverDevice: 'RECEIVE_DEVICE_INFO';
     exchangeDeviceInfo: 'CONNECTED';
-    sendVc: 'SELECT_VC';
+    sendVc: 'SELECT_VC' | 'VERIFICATION_SUCCESS';
+    captureImage: 'CAPTURE_IMAGE';
+    verifyIdentity: 'IMAGE_CAPTURED';
   };
   'eventsCausingGuards': {
     isQrValid: 'SCAN';
@@ -83,6 +90,10 @@ export interface Typegen0 {
     | 'reviewing.accepted'
     | 'reviewing.rejected'
     | 'reviewing.navigatingToHome'
+    | 'reviewing.capturingUserIdentity'
+    | 'reviewing.verifyingIdentity'
+    | 'reviewing.capturingImage'
+    | 'reviewing.invalidIdentity'
     | 'disconnected'
     | 'invalid'
     | {
@@ -102,7 +113,11 @@ export interface Typegen0 {
           | 'sendingVc'
           | 'accepted'
           | 'rejected'
-          | 'navigatingToHome';
+          | 'navigatingToHome'
+          | 'capturingUserIdentity'
+          | 'verifyingIdentity'
+          | 'capturingImage'
+          | 'invalidIdentity';
       };
   'tags': never;
 }

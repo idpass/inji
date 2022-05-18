@@ -7,10 +7,11 @@ import { EmitterSubscription, Linking, PermissionsAndroid } from 'react-native';
 import { DeviceInfo } from '../components/DeviceInfoList';
 import { Message } from '../shared/Message';
 import { getDeviceNameSync } from 'react-native-device-info';
-import { VC } from '../types/vc';
+import { VC, VerifiablePresentation } from '../types/vc';
 import { AppServices } from '../shared/GlobalContext';
 import { ActivityLogEvents } from './activityLog';
 import { VC_ITEM_STORE_KEY } from '../shared/constants';
+import { CameraCapturedPicture } from 'expo-camera';
 
 const checkingAirplaneMode = '#checkingAirplaneMode';
 const checkingLocationService = '#checkingLocationService';
@@ -29,6 +30,8 @@ const model = createModel(
       needBle: true,
     },
     vcName: '',
+    verifiablePresentation: {} as VerifiablePresentation,
+    verificationImage: {} as CameraCapturedPicture,
   },
   {
     events: {
@@ -55,6 +58,12 @@ const model = createModel(
       UPDATE_VC_NAME: (vcName: string) => ({ vcName }),
       STORE_RESPONSE: (response: unknown) => ({ response }),
       APP_ACTIVE: () => ({}),
+      VERIFY_AND_SELECT_VC: (vc: VC) => ({ vc }),
+      CAPTURE_IMAGE: () => ({}),
+      RETRY_CAPTURE: () => ({}),
+      IMAGE_CAPTURED: (image: CameraCapturedPicture) => ({ image }),
+      VERIFICATION_FAILED: () => ({}),
+      VERIFICATION_SUCCESS: () => ({}),
     },
   }
 );
@@ -62,7 +71,7 @@ const model = createModel(
 export const ScanEvents = model.events;
 
 export const scanMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5SwMYEMB2A6FALMKA1gJYZQCCxATgA4A2mYAsgPYRg75GlQDKALmn4BXWAGIAYgBkAkgHEAEgBUA+gBEZvcgCEpAUTWJQNFrGL9iLDEZAAPRAFoALAEYsANgCsLpwHYAnC7uAAzuAZ4AzAA0IACeiABMThFYwQk+AByensEZLgEuAL6FMaiYnAQkZJS0DBjMbBx4lTwCQqKSsoqqegByOvqGSCAmZhZWNvYIEREZWC4u2S4ROQnusy4x8QjpKT7rGf5JrslpxaXo2M3c1dT0jKzsWFRgAI7CcBZkSixqxLBoABGdDAnXkynUmgGBhso3MlmswymTgyTnmCV87iOgQywU8GQSW0QLmCwSw-ic-gigRCQQSnip5xAZSuXCqFDudQaTzAGCBIIgYO6KgASnoAIoAVT0vCUsNM8ImSMQGWpWCyfgWuPcTicnicRJ2y3mTgOR11PgiZxKzMuFRuUCkLHQ4wwvDAVAAbsQUE02a1BCJxFIAPIAYXIShkId6Kj60KGxgVrsmjl8aKcSV8JKptMx0TiiF8qPJet8CQSwT1BNcTJZ9vZTpdCPdXp9fpaZDaQbEoYjUZjkK0uhhwzhKeVOz8WAxC3Lvg2YX8hpyKW8eoxCVVWPxdbt10bzqELY93t9zzeH1gXygPz0fOBoL7kejsfjI8TI2TCNTU7mxYiLxKRmCJs1yQ0sTJPx3EWDJUT1UD3D3coDx4JtjysVszw4F53k+Hg7wfEFe3DF9Bw0YdBnlMYf0nbUPASCkQgrdcIk2QsEAZTwsGyTEFhWLF-B1ZDWU7R0j1dLD2wbHgAAUPQAW3+MwrBI-tXzjfoP2oxVEVAKYkn-bd-FyRj3ErTxDQpXwePpISUQyXx8TgkSZLIdDJNPaTULIeSqCU2AVIwNSyNjCiEx0id9MQTxfCgq1IgpDJ3BCVxDTydwsBRSsK3SEkZiQm16x88Tm0wrzz3YDBiEgEKB1jMUpRlOUx2-JVooQXE5jWLF0kxVUTILbYvG4hdi1CSsSSxQqLhQ-13Ikk820q3kasFchZNklRyDDKMADU9Ei2iOuY8kkgiCsUvpA0OPM-xyT4kI4upczXJKjyluwrAIH+flauferRQlaVZSO9q7BinUPAKlwhIiZIGRXYI1x8Tx6StJzGIyN6QTQKgeDDKx6hQV0xFsa8hA4NAADN+A9AAKMN9HIEV1D0KRyAATQASjEYrcfxshCYwYmoq-GjwYM7wPHxMJVQJGDXF8Q0SWCNw-ECWYHMiPVXOp0gfqFomCFJ3gI16MG9IhhBklspIFm8KtFlJG7tgWFEsAu-IXC3FKSUxVyaBeGg8YIlhhdFsQxTDPQZAOtm9pkGOVBkXoJBDS3fwSeGsrSRZ-ECfxs2SV3iVOVJcRWSIrSpFxsaK-djZJngxDDGNej0XbRyTCWramBwkk97xVkdn2NxV2KEnmdZ9VAlYji3VywFsPBMCgHg1DAbCZAwamWDECi296DvdszycKxsjLM2u9M5YyFWsRs2KnGRzU1aOGbbXKZfV7IDet-bDvPeYg9AAA0wwKHIL0OQeh1AxkOq1Xuv5nBT1mCZcsMxKzZkWCrDKWAxqHFNGEFYC5XIvG9GAAA7jwLAxAIDER2jHWSqhGogxaj3XSyD-BzGymxBkjlAjBHTIaFiZJna+ExOg8saMyEAKoTQ2AYAQTNzIHtFAYheDs07qoPaYYz4dVhlPXUOpswmJCJ4dwIiZhomIcjVEuwFwRFkRQ6hZAsCKOUTeNRrcoExykPo62WQsoSNvq4ZYyM2IiPpGInIEjIISPpAkZxNVXFQHcbyQ2UBvG6O2mGJhShu7i04ZONGUFTSYkYjXOKy4OIVgJFldwqpAJOTro03wyT5FuMURgTJ2SwxAwAFLaMKeOY61sZhuHhviYIFJMwCNRCI5ImU1iMVyOZIRDIOmpKwGgFAvoaB00FBRJgmheABKmLPGcL99RFx1EXRGtS0ZTzijMq0uprL11mtgchKSW7mz8ecxAWI0QWLij7SI+J-AWNwdkdUuoJGUhypEdpDdyg-M6VAA+mgTm8DOYg4pHVHIpBSgjTM6DkqWQ4nXWF8EEVHDSMirZLdJSyTUJGWBYpyC8BjICzqrhyRqwCM0rWRxFkhHJFkUIVp0YkicEysgWKzbt20by6sM5QiuEMtnSIliqV5CnkSjZBdzLMVcj9VATdDmKpxXijhYtkQSJ4lKvI1YnbsTdpPaeKxALLHsiir5tCMCejQHQOh1rTm8ocEEyRMwKTpH1Fke+VKZlTypFWU0EzvD+BEhosMYo+gqF0JKEUkbpbmkxGkbOeITJCUNA4ZYNkYLOpWNuDBOazb5tjOnMMkpbVFPtTFfEPFyymkpEXa6Q1HANo8FNWYLbmnZ2KDaDAjR4DDHrKQXZFhPRgEjVCmcbE1batcDrSl2wHCwrsfkLcE0LG6jevNDktQHiNDcnwQMoheWwzJGEZYSRkb8WyGexAFIsrAUcnia5sVs2otEg6Go9x6iPBwpefC3xfi-UfLyipPEshMUCAycsEE5gUipMWOZcV8Rytg2+hDXJkNYF5H9CAvKGTEuYtkFZ1I8giNCB4DNqJpqTxcjRkqdGX3sC-SlDw2YLovzYssIDdbL05HMnqLUmaH1iQ+uVZaHYHTdk-figdCAHALlsn4U4mpjjKw4pSGyasNxPR3BiLTDodNugqihvC14w73j+l+qk+C8oSLxGjfE2QVzrB4rFGCvs-AXU+V-ODh4yqeb02+vyAUgqBbJNkZKcE4rrDxGEQ0mNSyxVmNnDWSXiqPo81JFa1VIC8tVI2lKUKlx4nyGV6LiSX5xVNIJtzqWMLpa+ua5jrWLo8ULr1Ys1TS42yLqkVGawhEuf9clt9DWvN7p4VmHMgFBXrENHPVbG42KAVcKBHGYBQ5GxFibMZozJaOC8MErwQj0j-rJVZD2ARTSwx8Ay1EesDYE0tS9tqfcix13VOt9IXgWK6iskJfBbEKSkhmaqUIgdg4PdvOHS1vKLqppYrjpIBcggqzrpfJH1irS+pgwGlAUOyCRvTLhjE5pAiwUiCrJWuHkb6jvfnLb9Yf64DXv-beu8WB7qnnXDE5ZlghHscBhAQQPvP2RhWF+bWig0fRdsuhIJI0+HJFieGqJ+GARWEt9Iporn2-yEJIuEu7Qm4UUo57qiUCRpmFlWYuQmI3r8Em7Y1XG0LlCF4ICaz5VpO6b0gPxmxlTHt1lW5TSfZwUOLZqPPsyTpmuxWEyqInHG7kds3Z+zDmqvR9V7OsMmegsd6BNw3DuFTWSFdpPF4ABWJsWvp7e6Z9I+CLGV+ziZFKcFCS1LJdn9MkHXB4gkQPvk3ooDHnQwoFgCld1j9h6Z2KudGlZsB8ZERw9yQO83I-Tf1eXE8AtxWLKBI+HcIKEIpbsNxVS9it3ZNQzV-g2cnsSZR87UM9EBkh7oQg1YvByNVRUcqUsQ3A-87FAItw65XJSBg1Q0WMT8uEeFW9dRcgnY8RI9iQtw0QCQgh8hsFQInIRILdndeF84BF-YlsB4P8m0dQ65SUHYl1CggA */
+  /** @xstate-layout N4IgpgJg5mDOIC5SwMYEMB2A6FALMKA1gJYZQCCxATgA4A2mYAsgPYRg75GlQDKALmn4BXWAGIAYgBkAkgHEAEgBUA+gBEZvcgCEpAUTWJQNFrGL9iLDEZAAPRAFoALAEYsANgCsLpwHYAnC7uAAzuAZ4AzAA0IACeiABMThFYwQk+AByensEZLgEuAL6FMaiYnAQkZJS0DBjMbBx4lTwCQqKSsoqqegByOvqGSCAmZhZWNvYIEREZWC4u2S4ROQnusy4x8QjpKT7rGf5JrslpxaXo2M3c1dT0jKzsWFRgAI7CcBZkSixqxLBoABGdDAnXkynUmgGBhso3MlmswymTgyTnmCV87iOgQywU8GQSW0QLmCwSw-ic-gigRCQQSnip5xAZSuXCqFDudQaTzAGCBIIgYO6KgASnoAIoAVT0vCUsNM8ImSMQGWpWCyfgWuPcTicnicRJ2y3mTgOR11PgiZxKzMuFRuUCkLHQ4wwvDAVAAbsQUE02a1BCJxFIAPIAYXIShkId6Kj60KGxgVrsmjgibgJCSpvl8nlzaV8PkNvgyvlS+Qymd8pP8BKZLPt7KdLoR7q9Pr9LTIbSDYlDEajMchWl0MOGcJTyp2h3Vvizepp7gJWUNOU8WHx7iX+YCWIp9bt1ybzqErY93t9zzeH1gXygPz0fOBoP7kejsfjo8TI2TCNTO0CLBZn1BI8i1DJ3ENLEEg3FF038UJKwWXwD3KI8eGbU8rDbC8OBed5Ph4B8nxBPtwzfIcNBHQZ5TGP8p1RfwsASdMWIiJxggiLwMlXfwy3cLMc0WPIMTxVDWS7R0T1dHCO0bHgAAUPQAW3+MwrDIgd3zjfov1oxVEVAKYszcYC9RcfxuL3TxDQpGDllVWtDmSekEnE+SyEwmTzzk9CyCUqhVNgdSME0ijYyohN9MnIzEHcY1OJYlw1i8BZ-ENPI5myVwCWSSJghzdy-KkltsJ8y92AwYhIDCwdYzFKUZTlcdfyVWKECyMkIIgikKSxPFCTiOK83VYJ-EsnV6XYriiv9TzpLPdsKt5arBXIBSFJUcgwyjAA1PRovo9qdXXTw1jG-FXDxSkoIiGDgjghIxtAlj4tmySvMW3CsAgf5+Rq186tFCVpVlQ62rsOKCuYlZqVA5LS2pVc8Q3CCl2ydNcWpJwipBNAqB4MMrHqFBXTEWxbyEDg0AAM34D0AAow30cgRXUPQpHIABNABKMQGxQPGCbIImMBJmKfzoiHjIpZiQj1dYENNAlDRJZLmP1U1ghcHr-AZdyadIX6ReJggyd4CNenBwzIYQBZ3FnasQm8VwEIs1XFjJalvfWDEsTu9yaBeGh8aIlhRfFsQxTDPQZH29ndpkGOVBkXoJBDa3-ytMtcyXXIjnYw5IlVlz5jOvNSyObxfAiIrTdJngxDDGNej0HaxyTKWbamBx121h6LScNZXEV1W8zRFi8zCCz8yydywFsPBMCgHg1DAXCZAwGmWDEKjm96VudszqcrTcfISULJYknTVW9w8U16TyQscwyefF9wZfV-XjtN+3sQ9AABphgUOQXocg9DqBjAdFqXd-wOBYqkPwes9ShF8MkZKNkhp2zyOudMJZuK5j4hEFCNoGwvG9GAAA7jwLAxAICkW2jHBSqgGqg2ap3AycDIjkjCJWUIeIQK5ENAkR+WA-CYhLDrFi6R3LkOqtQsgWBYBgBBA3Mgu0UBiF4BzNuqhdphmPu1FEYj8qmipEQvKwi9RzBRFkCyIjKxJFkd-KhNDlGqLvBopuoCY5SEMbbYSHgcjJVNOxJIm5hGiPEbwqRd0iikLtHI1xij3Fmx4F4-aIoZASC5ltXoagVDaP0DtFQ+j-HGQZFgQsrFSx8JrnqYRVoUghFCIXHIJCLjlCSQoqASjeTGygBksMW0wxMKUB3SWnCpw+DRIcIISwhJoNLMIgIWV0h6hmGlMaHTbRdJcT0vpGABlDOBgAKV0RMicR1bYOFmOqcaPgCqkgEviLiKzawbnWZEdMFltnOIoQctAKBfQ0HpoKKiTBNC8HKcSMIHgNT5D1jSUChorQYlSJ4MIeISRrBrv8+RND0CguEMLKAkplFUBkJVCw-BYjeOYZKMUKcmDkHATChAAkyzJUxL8u6c4ZjCMRRuasZ0CQ6lRGJBJeyAU0M9B6YgNNYg8CpbyGldLMnZKTuFQpkpRkymhTAqZ7U7qzJJKqOGSQ8i6hWSSe+1YVgcXGrWHGUrsDdNlfKxVyrqXmHVXoLJEgtVAwkOQGQNFDUS2RAEEx9JfZYlVJsLBj80QrErMkQ4oFCwus6W6-ZhK0DEtJTIZSaAYBiBkCy8BKgIwMrFN+K50sVR+A8F4LwFJtbZ0GtsJIT14U10RosZYkR8XJN6aQT0aA6B0JVRgNV3jei+PZekJi8yqTBJCHOM6Vj0jkg1HdeK1i0EjoOeOyd06fW0qjnoJQIpck1qUIy6BHDI2IEpGWcaAl22YpzEuaISauIwUpONTFIj0xnWPY3S2i6I3XKmE-T5uoRGcQGgVVWqpTU5jnFuDiWIdlkLzWQXemhIW8ANc+2DiA+KnVVJWUsOpKRDzQ+xdU+QcwpQ4nhxJBGoBiElApNQkYIFinILwGM7KmnkgdSJBk+DMHbB1osICrHcgBBLM8iDhG94t10eynIWVVT5kCCSbW6wmMYerCxFEM94k5p+v8FA9cwVEd4CRsjkyX0IDOmWSsxDEPtsxF24k48YZT0LFR3ItdXW0IwBOqd4LiNQvZQ4EIYjKwPJrEOzEqtnrzG1pEeZFl3DiS0WGMUfQVC6EZUl7w5IkiYjSCxPECFLKGgcMsfiJIDipq4vy4rFsyuxnTmGSUbmG3d0QNkLKc5TRAc3ckVr7WPCddmN1sILFig2gwI0eAwwGykCBRYOVSW9YwzVpPVwkQGlYN7n3DYc5tSxt1O9B0NR7j1EeJ2B0PZRDst+R4apSROILBWNkWyaJdRUlLNdARARnvsle1yD7V4CK3jDn8AEz52UBdRgyMxiw+KBY5XMXqxDUSZrxKiOHPAEcPEaFgXk-0IC6apC2tI2Q1gsVrIm7toR74HDMV4e7r8ovFRp+9xov2tz-eWIDn5IO5OOGyBigqT18RzgrJxtCc0SpYTdOVT77Jvs7fI42hAtyyRHCzPGpcIQ9aYsNEB1IaMIKnxEUuKn81Sp66Wnha8hFvgsEfP9JdXEgIiL1mkGYOZ2K+FXF4Dwgka752ef4D3OvvI+48lAAKQUQoh72PLeKaaCShGLEr7WJZnUMhVzZ3ZEkHSfTKpnyqq12V8LlqWE4c3ZjFlxBuRFTzURDzciL7XjfvffV+hjgUbfczzGzEPPUc5r4O-Gk7rcLvtZu+F7Z4q4-ZK+mq+uTM2Zcz5gxEWLBxC+5oy8N8hYrhNdXCFoTRz1yxv-m85Ix-gRiFjSEVghHuqBvkPLSKiNSAbEbK-mLGkhDB-gxFmFUqxB2huuxJBFgsZl1JiHdFxHrP1CPrZkHGACHKSj8BHGbOJpZMxGxndGkHRkuB7DOIcMBEuIEHNnXDAWolAEfsxCPGguPLMNxCXBZEEmsMQn7JZH4G-EvGQF-BvFvCwElnOOqHwYQhBBjLfHCjqAJOIVNNrBpmOvQmALpnME9GinxOsJ1u7EmosGiHmHiDMAVIsPdgYX0h4ukigJQUgUPJWPVu1llv+krk6pZCWBxKSHqK4cokch4UukxJqKpo-OsEPHxMIgyDBAkXgluIWK4UCiCmCr9r2mEIEKsJSNSBvsIqWIBhZtWIcFuPkK4S8AAFZmyQBJah57gP6hCL6RDpRJqHDvoWYIRqbA7Zp15XgyqKJ8jehQCngB4KAsDKTGEwam4LAwS1g9GTQ9SZqooLBkiFhZC24u5HBP7jEEqKJEoiCkrkoegzpqpLo1xiJZgMh0ZnRDwK5Gj6jCrXTJS+bLiuFyoExepkC3G+rso6huAFR+C0E1xoLjTCK-p2q5AhBZhJCMhRburnEFqXHKolowBt5JAbi47pDVhoKISCrNr2HZC+y5izCuGnpxYgm0ria6hiIhAajxS1h8TLBWKFipaMQMh6xagEFjEYncHLHjZm45g8IljagCJDwAHya1hliUkCRdFgSjENhT4OacH5Hin-gohMR8S5jD4FRYjc6wos77D0hDzTZPzuT0l0JKF7CzBORoI6zNY8QYGgQOzMFUjTTEKfriRJZpSnZb4OqLDsTvHwIiJLaISTQITUieAbaFBAA */
   model.createMachine(
     {
       tsTypes: {} as import('./scan.typegen').Typegen0,
@@ -253,6 +262,9 @@ export const scanMachine =
                 CANCEL: {
                   target: 'idle',
                 },
+                VERIFY_AND_SELECT_VC: {
+                  target: 'capturingUserIdentity',
+                },
               },
             },
             sendingVc: {
@@ -278,6 +290,54 @@ export const scanMachine =
             },
             rejected: {},
             navigatingToHome: {},
+            capturingUserIdentity: {
+              description: 'Open camera and capture an image of the user.',
+              on: {
+                CAPTURE_IMAGE: {
+                  target: 'capturingImage',
+                },
+              },
+            },
+            verifyingIdentity: {
+              description:
+                "Use SDK to compare 2D image from user's camera and image in VC.",
+              invoke: {
+                src: 'verifyIdentity',
+              },
+              on: {
+                VERIFICATION_SUCCESS: {
+                  actions: [
+                    'setVerifiablePresentation',
+                    'signVerifiablePresentation',
+                  ],
+                  target: 'sendingVc',
+                },
+                VERIFICATION_FAILED: {
+                  target: 'invalidIdentity',
+                },
+              },
+            },
+            capturingImage: {
+              invoke: {
+                src: 'captureImage',
+              },
+              on: {
+                IMAGE_CAPTURED: {
+                  actions: 'setVerificationImage',
+                  target: 'verifyingIdentity',
+                },
+              },
+            },
+            invalidIdentity: {
+              on: {
+                CANCEL: {
+                  target: 'selectingVc',
+                },
+                RETRY_CAPTURE: {
+                  target: 'capturingUserIdentity',
+                },
+              },
+            },
           },
           on: {
             CANCEL: {
@@ -406,6 +466,13 @@ export const scanMachine =
         openSettings: () => {
           Linking.openSettings();
         },
+
+        setVerifiablePresentation: model.assign({
+          verifiablePresentation: () => {
+            // TODO
+            return {} as VerifiablePresentation;
+          },
+        }),
       },
 
       services: {
@@ -526,6 +593,16 @@ export const scanMachine =
 
           return () => subscription?.remove();
         },
+
+        verifyIdentity: () => async (callback) => {
+          // TODO
+          const result = await Promise.resolve(true);
+          if (result) {
+            callback(ScanEvents.VERIFICATION_SUCCESS());
+          } else {
+            callback(ScanEvents.VERIFICATION_FAILED());
+          }
+        },
       },
 
       guards: {
@@ -617,4 +694,8 @@ export function selectIsLocationDisabled(state: State) {
 
 export function selectIsAirplaneEnabled(state: State) {
   return state.matches('checkingAirplaneMode.enabled');
+}
+
+export function selectIsCapturingIdentity(state: State) {
+  return state.matches('reviewing.capturingUserIdentity');
 }
