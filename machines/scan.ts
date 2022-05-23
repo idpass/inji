@@ -67,6 +67,9 @@ export const scanMachine = model.createMachine(
     },
     id: 'scan',
     initial: 'inactive',
+    invoke: {
+      src: 'checkConnection',
+    },
     on: {
       SCREEN_BLUR: 'inactive',
       SCREEN_FOCUS: 'checkingAirplaneMode',
@@ -404,6 +407,16 @@ export const scanMachine = model.createMachine(
         });
       },
 
+      checkConnection: () => (callback) => {
+        const subscription = SmartShare.handleNearbyEvents((event) => {
+          if (event.type === 'onDisconnected') {
+            callback({ type: 'DISCONNECT' });
+          }
+        });
+
+        return () => subscription.remove();
+      },
+
       discoverDevice: () => (callback) => {
         SmartShare.createConnection('discoverer', () => {
           callback({ type: 'CONNECTED' });
@@ -416,10 +429,6 @@ export const scanMachine = model.createMachine(
         const message = new Message('exchange:sender-info', context.senderInfo);
         SmartShare.send(message.toString(), () => {
           subscription = SmartShare.handleNearbyEvents((event) => {
-            if (event.type === 'onDisconnected') {
-              callback({ type: 'DISCONNECT' });
-            }
-
             if (event.type !== 'msg') return;
             const response = Message.fromString<DeviceInfo>(event.data);
             if (response.type === 'exchange:receiver-info') {
@@ -446,10 +455,6 @@ export const scanMachine = model.createMachine(
 
         SmartShare.send(message.toString(), () => {
           subscription = SmartShare.handleNearbyEvents((event) => {
-            if (event.type === 'onDisconnected') {
-              callback({ type: 'DISCONNECT' });
-            }
-
             if (event.type !== 'msg') return;
 
             const response = Message.fromString<SendVcStatus>(event.data);
