@@ -9,9 +9,6 @@ export interface Typegen0 {
     setReceiverInfo: 'EXCHANGE_DONE';
     setReason: 'UPDATE_REASON';
     setSelectedVc: 'SELECT_VC';
-    setVerifiablePresentation: 'VERIFICATION_SUCCESS';
-    signVerifiablePresentation: 'VERIFICATION_SUCCESS';
-    setVerificationImage: 'IMAGE_CAPTURED';
     removeLoggers:
       | 'SCREEN_BLUR'
       | 'xstate.after(CLEAR_DELAY)#scan.clearingConnection'
@@ -42,11 +39,11 @@ export interface Typegen0 {
     exchangeDeviceInfo: 'done.invoke.scan.exchangingDeviceInfo:invocation[0]';
     sendVc: 'done.invoke.scan.reviewing.sendingVc:invocation[0]';
     verifyIdentity: 'done.invoke.scan.reviewing.verifyingIdentity:invocation[0]';
-    captureImage: 'done.invoke.scan.reviewing.capturingImage:invocation[0]';
+    createSignedVp: 'done.invoke.scan.reviewing.creatingVerifiablePresentation:invocation[0]';
   };
   'missingImplementations': {
-    actions: 'signVerifiablePresentation' | 'setVerificationImage';
-    services: 'captureImage';
+    actions: never;
+    services: never;
     guards: never;
     delays: never;
   };
@@ -56,9 +53,9 @@ export interface Typegen0 {
     checkLocationPermission: 'LOCATION_ENABLED' | 'APP_ACTIVE';
     discoverDevice: 'RECEIVE_DEVICE_INFO';
     exchangeDeviceInfo: 'CONNECTED';
-    sendVc: 'SELECT_VC' | 'VERIFICATION_SUCCESS';
-    captureImage: 'CAPTURE_IMAGE';
-    verifyIdentity: 'IMAGE_CAPTURED';
+    sendVc: 'SELECT_VC' | 'VP_CREATED';
+    verifyIdentity: 'FACE_DETECTED';
+    createSignedVp: 'VERIFICATION_SUCCESS';
   };
   'eventsCausingGuards': {
     isQrValid: 'SCAN';
@@ -92,8 +89,8 @@ export interface Typegen0 {
     | 'reviewing.navigatingToHome'
     | 'reviewing.capturingUserIdentity'
     | 'reviewing.verifyingIdentity'
-    | 'reviewing.capturingImage'
     | 'reviewing.invalidIdentity'
+    | 'reviewing.creatingVerifiablePresentation'
     | 'disconnected'
     | 'invalid'
     | {
@@ -116,8 +113,8 @@ export interface Typegen0 {
           | 'navigatingToHome'
           | 'capturingUserIdentity'
           | 'verifyingIdentity'
-          | 'capturingImage'
-          | 'invalidIdentity';
+          | 'invalidIdentity'
+          | 'creatingVerifiablePresentation';
       };
   'tags': never;
 }

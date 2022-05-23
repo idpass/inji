@@ -27,6 +27,7 @@ export const MessageOverlay: React.FC<MessageOverlayProps> = (props) => {
         {props.hasProgress && (
           <LinearProgress variant="indeterminate" color={Colors.Orange} />
         )}
+        {props.children}
       </Column>
     </Overlay>
   );

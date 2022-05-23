@@ -5,6 +5,7 @@
     "deviceRefNumber": "Device reference number",
     "name": "Name"
   },
+  "FaceScanner": {},
   "PasscodeVerify": {
     "passcodeMismatchError": "Passcode did not match."
   },
@@ -185,23 +186,30 @@
   "SelectVcOverlay": {
     "header": "Share {{vcLabel}}",
     "chooseVc": "Choose the {{vcLabel}} you'd like to share with",
-    "cancel": "Cancel",
-    "share": "Share"
+    "share": "Share",
+    "verifyAndShare": "Verify Identity & Share"
   },
   "SendVcModal": {
     "reasonForSharing": "Reason for sharing (optional)",
     "acceptRequest": "Accept request and choose {{vcLabel}}",
     "reject": "Reject",
-    "statusSharing": {
-      "title": "Sharing..."
+    "status": {
+      "sharing": "Sharing...",
+      "accepted": {
+        "title": "Success!",
+        "message": "Your {{vcLabel}} has been successfully shared with {{receiver}}"
+      },
+      "rejected": {
+        "title": "Notice",
+        "message": "Your {{vcLabel}} was rejected by {{receiver}}"
+      },
+      "verifyingIdentity": "Verifying identity..."
     },
-    "statusAccepted": {
-      "title": "Success!",
-      "message": "Your {{vcLabel}} has been successfully shared with {{receiver}}"
-    },
-    "statusRejected": {
-      "title": "Notice",
-      "message": "Your {{vcLabel}} was rejected by {{receiver}}"
+    "errors": {
+      "invalidIdentity": {
+        "title": "Unable to verify identity",
+        "message": "An error occured and we couldn't scan your portrait. Try again, make sure your face is visible, devoid of any accessories."
+      }
     }
   },
   "WelcomeScreen": {
@@ -212,6 +220,13 @@
   "common": {
     "cancel": "Cancel",
     "save": "Save",
-    "editLabel": "Edit {{label}}"
+    "editLabel": "Edit {{label}}",
+    "camera": {
+      "errors": {
+        "missingPermission": "This app uses the camera to scan the QR code of another device."
+      },
+      "allowAccess": "Allow access to camera"
+    },
+    "tryAgain": "Try again"
   }
 }

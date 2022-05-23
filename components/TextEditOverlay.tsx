@@ -31,7 +31,7 @@ export const TextEditOverlay: React.FC<EditOverlayProps> = (props) => {
           <Button
             fill
             type="clear"
-            title={t('cancel')}
+            title={t('common:cancel')}
             onPress={dismiss}
             margin="0 8 0 0"
           />

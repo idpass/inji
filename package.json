@@ -64,7 +64,8 @@
     "react-native-svg": "12.1.1",
     "react-native-system-setting": "^1.7.6",
     "react-native-vector-icons": "^8.1.0",
-    "xstate": "^4.26.0"
+    "xstate": "^4.26.0",
+    "expo-face-detector": "~11.1.3"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

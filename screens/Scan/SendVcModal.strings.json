@@ -2,15 +2,22 @@
   "reasonForSharing": "Reason for sharing (optional)",
   "acceptRequest": "Accept request and choose {{vcLabel}}",
   "reject": "Reject",
-  "statusSharing": {
-    "title": "Sharing..."
+  "status": {
+    "sharing": "Sharing...",
+    "accepted": {
+      "title": "Success!",
+      "message": "Your {{vcLabel}} has been successfully shared with {{receiver}}"
+    },
+    "rejected": {
+      "title": "Notice",
+      "message": "Your {{vcLabel}} was rejected by {{receiver}}"
+    },
+    "verifyingIdentity": "Verifying identity..."
   },
-  "statusAccepted": {
-    "title": "Success!",
-    "message": "Your {{vcLabel}} has been successfully shared with {{receiver}}"
-  },
-  "statusRejected": {
-    "title": "Notice",
-    "message": "Your {{vcLabel}} was rejected by {{receiver}}"
+  "errors": {
+    "invalidIdentity": {
+      "title": "Unable to verify identity",
+      "message": "An error occured and we couldn't scan your portrait. Try again, make sure your face is visible, devoid of any accessories."
+    }
   }
 }

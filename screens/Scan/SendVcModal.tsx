@@ -1,13 +1,14 @@
 import React from 'react';
 import { Input } from 'react-native-elements';
 import { DeviceInfoList } from '../../components/DeviceInfoList';
-import { Button, Column } from '../../components/ui';
+import { Button, Column, Row } from '../../components/ui';
 import { Colors } from '../../components/ui/styleUtils';
 import { SelectVcOverlay } from './SelectVcOverlay';
 import { MessageOverlay } from '../../components/MessageOverlay';
 import { Modal, ModalProps } from '../../components/ui/Modal';
 import { useSendVcModal } from './SendVcModalController';
 import { useTranslation } from 'react-i18next';
+import { VerifyIdentityOverlay } from './VerifyIdentityOverlay';
 
 export const SendVcModal: React.FC<SendVcModalProps> = (props) => {
   const { t } = useTranslation('SendVcModal');
@@ -51,20 +52,47 @@ export const SendVcModal: React.FC<SendVcModalProps> = (props) => {
         isVisible={controller.isSelectingVc}
         receiverName={controller.receiverInfo.deviceName}
         onSelect={controller.SELECT_VC}
+        onVerifyAndSelect={controller.VERIFY_AND_SELECT_VC}
         onCancel={controller.CANCEL}
         vcKeys={controller.vcKeys}
       />
 
+      <VerifyIdentityOverlay
+        isVisible={controller.isCapturingIdentity}
+        onFaceDetected={controller.FACE_DETECTED}
+        onCancel={controller.CANCEL}
+      />
+
+      <MessageOverlay
+        isVisible={controller.isVerifyingIdentity}
+        title={t('status.verifyingIdentity')}
+        hasProgress
+      />
+
+      <MessageOverlay
+        isVisible={controller.isInvalidIdentity}
+        title={t('errors.invalidIdentity.title')}
+        message={t('errors.invalidIdentity.message')}
+        onBackdropPress={props.onDismiss}>
+        <Row>
+          <Button title={t('common:cancel')} onPress={controller.CANCEL} />
+          <Button
+            title={t('common:tryAgain')}
+            onPress={controller.RETRY_CAPTURE}
+          />
+        </Row>
+      </MessageOverlay>
+
       <MessageOverlay
         isVisible={controller.isSendingVc}
-        title={t('statusSharing.title')}
+        title={t('status.sharing.title')}
         hasProgress
       />
 
       <MessageOverlay
         isVisible={controller.isAccepted}
-        title={t('statusAccepted.title')}
-        message={t('statusAccepted.message', {
+        title={t('status.accepted.title')}
+        message={t('status.accepted.message', {
           vcLabel: controller.vcLabel.singular,
           receiver: controller.receiverInfo.deviceName,
         })}
@@ -73,8 +101,8 @@ export const SendVcModal: React.FC<SendVcModalProps> = (props) => {
 
       <MessageOverlay
         isVisible={controller.isRejected}
-        title={t('statusRejected.title')}
-        message={t('statusRejected.message', {
+        title={t('status.rejected.title')}
+        message={t('status.rejected.message', {
           vcLabel: controller.vcLabel.singular,
           receiver: controller.receiverInfo.deviceName,
         })}

@@ -26,7 +26,12 @@ export const EditableListItem: React.FC<EditableListItemProps> = (props) => {
           <Text>{t('editLabel', { label: props.label })}</Text>
           <Input autoFocus value={newValue} onChangeText={setNewValue} />
           <Row>
-            <Button fill type="clear" title={t('cancel')} onPress={dismiss} />
+            <Button
+              fill
+              type="clear"
+              title={t('common:cancel')}
+              onPress={dismiss}
+            />
             <Button fill title={t('save')} onPress={edit} />
           </Row>
         </Column>
