@@ -4,6 +4,7 @@ export interface Typegen0 {
   '@@xstate/typegen': true;
   'eventsCausingActions': {
     setCameraRef: 'READY';
+    openSettings: 'OPEN_SETTINGS';
     flipWhichCamera: 'FLIP_CAMERA';
     setFaceMetadata: 'FACE_DETECTED';
     setFaceImage: 'done.invoke.faceScanner.scanning.faceFound:invocation[0]';
@@ -22,6 +23,8 @@ export interface Typegen0 {
     'xstate.init': { type: 'xstate.init' };
   };
   'invokeSrcNameMap': {
+    checkPermission: 'done.invoke.faceScanner.init.checkingPermission:invocation[0]';
+    requestPermission: 'done.invoke.faceScanner.init.requestingPermission:invocation[0]';
     captureImage: 'done.invoke.faceScanner.scanning.faceFound:invocation[0]';
   };
   'missingImplementations': {
@@ -31,18 +34,32 @@ export interface Typegen0 {
     delays: never;
   };
   'eventsCausingServices': {
+    checkPermission: 'APP_FOCUSED';
+    requestPermission: 'DENIED';
     captureImage: 'FACE_DETECTED';
   };
   'eventsCausingGuards': {
+    canRequestPermission: 'DENIED';
     isOutOfBounds: 'FACE_DETECTED';
   };
   'eventsCausingDelays': {};
   'matchesStates':
     | 'init'
+    | 'init.checkingPermission'
+    | 'init.permissionDenied'
+    | 'init.permissionGranted'
+    | 'init.requestingPermission'
     | 'scanning'
     | 'scanning.faceFound'
-    | 'scanning.faceTooFar'
+    | 'scanning.faceNotFound'
     | 'imageCaptured'
-    | { scanning?: 'faceFound' | 'faceTooFar' };
+    | {
+        init?:
+          | 'checkingPermission'
+          | 'permissionDenied'
+          | 'permissionGranted'
+          | 'requestingPermission';
+        scanning?: 'faceFound' | 'faceNotFound';
+      };
   'tags': never;
 }

@@ -1,6 +1,7 @@
-import { Camera, FaceDetectionResult } from 'expo-camera';
+import { Camera, FaceDetectionResult, PermissionResponse } from 'expo-camera';
 import { CameraType, Face } from 'expo-camera/build/Camera.types';
 import { Image } from 'expo-face-detector';
+import { Linking } from 'react-native';
 import { assign, EventFrom, StateFrom } from 'xstate';
 import { createModel } from 'xstate/lib/model';
 
@@ -20,6 +21,10 @@ const model = createModel(
       FACE_DETECTED: (result: FaceDetectionResult) => ({ result }),
       READY: (cameraRef: Camera) => ({ cameraRef }),
       FLIP_CAMERA: () => ({}),
+      DENIED: (response: PermissionResponse) => ({ response }),
+      GRANTED: () => ({}),
+      OPEN_SETTINGS: () => ({}),
+      APP_FOCUSED: () => ({}),
     },
   }
 );
@@ -32,7 +37,7 @@ export interface FaceScanResult {
 }
 
 export const faceScannerMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QDMCGBjMBldqB2eYATgHQCWeZALgMQBKAogIIAiAmoqAA4D2s1ZHnk4gAHogC0ANikkAHAAYpAJgCsARgDMAFmUB2TVLlSANCACeiLavm7te+yr0BOBQ4C+7s2kw58hUlhcAgooEh8wADEeAFc8CBoIITByPAA3HgBrFIi-AmISIP9Q8Iwo2PiECgzcKkE8AG0FAF0RXn46oRFxBAltZxJNVQUlOTk9PWG5Z2czSwQ9ZW0SbRlnbTllTSXnZWVPbzK8gMLgyjwwiOi4hOIiHlIuABtUKmQHgFtS3zOCopCLt9yjcqukeLV6k1WkgQO0BF0YT11M4bM5NMj1Oo5Kp0coFNi5ohVLp5CNVM5JnJ1EYJgcQLlfoEzqEaJEADIASQACgB9ADCTAAsgw6Ew2nx4cJEVZVHoSAptNp1BNNIZJttlISENZbEsHHonK4PF56UdGadihdWUw+QweSwGAAVBh850scUderdSSaPQKEhSVRSClSJTOOT9bRatUkP1jTRKdFJoOeE14HgQOAiBn+AoUageyXe3qykhoybqJZuLZUrVqQbKobTTbE-qaOk5-JMy2XMrXeKFzpS0A9aRyMtYqnIhR4lRBrU4-0JhTkynU8Z6Dtm3PdgG9zCOng8SKoIiDr3S3p+lahvTrg3bW-RiMkPHxvQRxa7KRbn47i17ueCIjj66wBkGIZhhG6x1pssb4nI6KLJW+hKL+2DmmQHyoDAfKoFwVAxEQkBAcOYiSMMJDqCMShBm4Bqflq4yyM4wbOOoQYqP0yhyOhxzEKRxZ9Fi4HBgaUGRlqfRykYyhSJoMz6MSHE-qmQA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QDMCGBjMBldqB2eYATgHQCWeZALiegBZjoDWFUACsQLZmyxkD2eAMQARAKIA5AJJiRiUAAd+fKgLzyQAD0QBaAIwAmAyQMBWAJwBmABzWADHoAslywfOOANCACeu0wHYANhJ-R389SzC3QJjLAF84rzRMHHxCUgpqWgZmVg4ibl41IQBxACUAQQkAFVkNJRU1DW0EHUc7YxtA6z09c2sza3NzQK9fVtdjO0s7fqHrAL1-U0CEpIxsXAJickoaBS4ePkERMEpIIQB5NkkAfSwxauqpCRKseuVqJqQtXW6Q6aGbrWGymIzWMa6AwzEiOCwrZwzbp6QL+NYgZKbNI7TL7Q5FE5nMgXCpsNi3ABilwAwgBVB5yH4NL6CZpQ-zGazhQKmUwdSIGVGQiZGEjTWahIYGOx2azOdGY1LbDJ7EhEMAARwArnBVHh2PjjsJylVaozFJ9VKyfi03I4TJFHI4YqYFkEucL9JY9LC9GDxX7zAYQQqNkr0rssurtbq8obiuJpHUmZbvqAWkt7Y5g45ek7A4EnZ7JmLvQ4ZbKrI5zGjEhiw1sI7ihGUxBURABND6Na3pvzBfwclzWQs80y9CE+RBTexcwWy8eFlyhlKNnawRusEiYin8LV4CBCCCCMC7ABu-CYp8Va9IG7SW53e4PCAoF9wVrwAG07ABdbssuoNq6JY5gkN6gSGCiIJ6HYoTLMKrrGMssH2P4lj+HYzp6CuWLKiQ94EI+Gy7vuh7EEQ-CkAoAA2qBUMgVGcNuDbYnem76ixmCkS+b78B+ag-v+KY9kBfYINKpgkCMrpOg42auIEljCu0PqymEMyyoEBi5qsdY3mxBEcVAQgUgAMlI5LUhUACyYiVABn5sggegLCE-gDCCBiDjWIL+MKM6yhygQLiiiK4eG67GaZFTUmItziLU1Jmo5aa-BMIUkNpMzOOYQUYaMU4SWY0lBiM3qWK6qKOAkdZ4PwEBwBoBn4bi2SMCw+r5IURqpb26VtHYwQYUOSlWEYNieiF1ghGEhg1g47jLvprGtaqBwFEcainOcEB9WJA3mD6fIVQYfozNKLjFsGJCmDMIxLTl47xCtq6GW1G09WoJREPgVCQPtzmDfaGEYQMvJOpYSmehE-jSX6rmQdM7gRNYEW3pGNDRjqsB6gam0EgdzJOcBLkeSE0odIO-go3B-lFTorqWCYc2RA4yxBAY6PvXsgOk20MIjdCY2TJNDPIrN4TBpB0puOY3P4YRlCcU+ZF8+JjMzbYjhcjW7TmHyQTCjYM2yehMojjpKIKxGSvEZgEj8FQPF7SJgFA5l2aonK4Rgk43mmAF2awmVmGVa5zpwjbUUPvq6sDTY9rZVhoH5UbRVOHYpXRNmZgebMXOvXhTacKgMDUqgChUFq6quxaolA+0YoxAjbgjrYRjCuhUlmO0Osophzq1usb3KvHLRtKYIODsLoGi5O4w6Ms9rwYYyxGL0ha1XEQA */
   model.createMachine(
     {
       tsTypes: {} as import('./faceScanner.typegen').Typegen0,
@@ -44,6 +49,52 @@ export const faceScannerMachine =
       initial: 'init',
       states: {
         init: {
+          initial: 'checkingPermission',
+          states: {
+            checkingPermission: {
+              invoke: {
+                src: 'checkPermission',
+              },
+              on: {
+                DENIED: [
+                  {
+                    cond: 'canRequestPermission',
+                    target: 'requestingPermission',
+                  },
+                  {
+                    target: 'permissionDenied',
+                  },
+                ],
+                GRANTED: {
+                  target: 'permissionGranted',
+                },
+              },
+            },
+            permissionDenied: {
+              on: {
+                OPEN_SETTINGS: {
+                  actions: 'openSettings',
+                },
+                APP_FOCUSED: {
+                  target: 'checkingPermission',
+                },
+              },
+            },
+            permissionGranted: {},
+            requestingPermission: {
+              invoke: {
+                src: 'requestPermission',
+              },
+              on: {
+                GRANTED: {
+                  target: 'permissionGranted',
+                },
+                DENIED: {
+                  target: 'permissionDenied',
+                },
+              },
+            },
+          },
           on: {
             READY: {
               actions: 'setCameraRef',
@@ -52,7 +103,7 @@ export const faceScannerMachine =
           },
         },
         scanning: {
-          initial: 'faceTooFar',
+          initial: 'faceNotFound',
           states: {
             faceFound: {
               invoke: {
@@ -70,7 +121,7 @@ export const faceScannerMachine =
                 ],
               },
             },
-            faceTooFar: {
+            faceNotFound: {
               description:
                 'For accurate consistent results user must be facing the camera and have it close to their face.',
             },
@@ -82,7 +133,7 @@ export const faceScannerMachine =
             FACE_DETECTED: [
               {
                 cond: 'isOutOfBounds',
-                target: '.faceTooFar',
+                target: '.faceNotFound',
               },
               {
                 actions: 'setFaceMetadata',
@@ -126,13 +177,34 @@ export const faceScannerMachine =
         setCaptureError: assign({
           captureError: '',
         }),
+
+        openSettings: () => Linking.openSettings(),
       },
+
       services: {
-        // monitorCapabilities: () => (callback) => {},
+        checkPermission: () => async (callback) => {
+          const result = await Camera.getCameraPermissionsAsync();
+          if (result.granted) {
+            callback(FaceScannerEvents.GRANTED());
+          } else {
+            callback(FaceScannerEvents.DENIED(result));
+          }
+        },
+
+        requestPermission: () => async (callback) => {
+          const result = await Camera.requestCameraPermissionsAsync();
+          if (result.granted) {
+            callback(FaceScannerEvents.GRANTED());
+          } else {
+            callback(FaceScannerEvents.DENIED(result));
+          }
+        },
+
         captureImage: (context) => {
           return context.cameraRef.takePictureAsync({ base64: true });
         },
       },
+
       guards: {
         isOutOfBounds: (context, event) => {
           const { faces } = event.result;
@@ -144,6 +216,10 @@ export const faceScannerMachine =
             );
           }
           return false;
+        },
+
+        canRequestPermission: (_context, event) => {
+          return event.response.canAskAgain;
         },
       },
     }
@@ -159,12 +235,16 @@ export function selectFace(state: State) {
   return state.context.face;
 }
 
+export function selectIsPermissionGranted(state: State) {
+  return state.matches('init.permissionGranted');
+}
+
 export function selectIsScanning(state: State) {
   return state.matches('scanning');
 }
 
-export function selectIsFaceTooFar(state: State) {
-  return state.matches('scanning.faceTooFar');
+export function selectIsFaceNotFound(state: State) {
+  return state.matches('scanning.faceNotFound');
 }
 
 export function selectIsFaceFound(state: State) {
