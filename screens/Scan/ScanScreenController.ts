@@ -11,6 +11,7 @@ import {
   selectIsScanning,
   selectIsConnecting,
   selectIsExchangingDeviceInfo,
+  selectProgress,
 } from '../../machines/scan';
 import { selectVcLabel } from '../../machines/settings';
 import { selectShareableVcs } from '../../machines/vc';
@@ -48,6 +49,7 @@ export function useScanScreen({ navigation }: MainRouteProps) {
     scanService,
     selectIsExchangingDeviceInfo
   );
+  const progress = useSelector(scanService, selectProgress);
 
   let statusMessage = '';
   if (isConnecting) {
@@ -82,6 +84,7 @@ export function useScanScreen({ navigation }: MainRouteProps) {
 
   return {
     locationError,
+    progress,
     vcLabel: useSelector(settingsService, selectVcLabel),
 
     isInvalid,

@@ -9,6 +9,7 @@ export interface Typegen0 {
     setReceiverInfo: 'EXCHANGE_DONE';
     setReason: 'UPDATE_REASON';
     setSelectedVc: 'SELECT_VC';
+    updateProgress: 'SENDING';
     removeLoggers:
       | 'SCREEN_BLUR'
       | 'xstate.after(CLEAR_DELAY)#clearingConnection'

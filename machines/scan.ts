@@ -26,6 +26,7 @@ const model = createModel(
       needBle: true,
     },
     vcName: '',
+    progress: 0,
   },
   {
     events: {
@@ -51,6 +52,7 @@ const model = createModel(
       LOCATION_REQUEST: () => ({}),
       UPDATE_VC_NAME: (vcName: string) => ({ vcName }),
       STORE_RESPONSE: (response: unknown) => ({ response }),
+      SENDING: (value: unknown) => ({ value }),
       APP_ACTIVE: () => ({}),
     },
   }
@@ -231,6 +233,9 @@ export const scanMachine = model.createMachine(
               DISCONNECT: '#scan.disconnected',
               VC_ACCEPTED: 'accepted',
               VC_REJECTED: 'rejected',
+              SENDING: {
+                actions: ['updateProgress'],
+              },
             },
           },
           accepted: {
@@ -304,6 +309,10 @@ export const scanMachine = model.createMachine(
           }
           return { ...event.vc, reason };
         },
+      }),
+
+      updateProgress: model.assign({
+        progress: (_, event) => Number(event.value),
       }),
 
       registerLoggers: assign({
@@ -451,6 +460,12 @@ export const scanMachine = model.createMachine(
           tag: '',
         };
 
+        SmartShare.handleNearbyEvents((event) => {
+          if (event.type === 'transferupdate') {
+            callback({ type: 'SENDING', value: event.data });
+          }
+        });
+
         const message = new Message<VC>('send:vc', vc);
 
         SmartShare.send(message.toString(), () => {
@@ -514,6 +529,10 @@ export function selectReason(state: State) {
 
 export function selectVcName(state: State) {
   return state.context.vcName;
+}
+
+export function selectProgress(state: State) {
+  return state.context.progress;
 }
 
 export function selectIsScanning(state: State) {

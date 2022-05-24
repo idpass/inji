@@ -13,13 +13,24 @@ const styles = StyleSheet.create({
 
 export const MessageOverlay: React.FC<AsyncOverlayProps> = (props) => {
   const [showAbortBtn, setAbortBtn] = useState(false);
+  const isDeterminate = props.isDeterminate ? 'determinate' : 'indeterminate';
   const delay = props.cancelDelay ? props.cancelDelay : 0;
 
   useEffect(() => {
+    console.log('isDeterminate', isDeterminate);
     setTimeout(() => {
       setAbortBtn(true);
     }, delay);
   }, [props.isVisible]);
+
+  useEffect(() => {
+    setAbortBtn(true);
+    console.log('props.progress', props.progress);
+    if (props.progress === 1) {
+      setAbortBtn(false);
+      console.log('showAbortBtn', showAbortBtn);
+    }
+  }, [props.progress]);
 
   return (
     <Overlay
@@ -34,7 +45,11 @@ export const MessageOverlay: React.FC<AsyncOverlayProps> = (props) => {
         )}
         {props.message && <Text margin="0 0 12 0">{props.message}</Text>}
         {props.hasProgress && (
-          <LinearProgress variant="indeterminate" color={Colors.Orange} />
+          <LinearProgress
+            variant={isDeterminate}
+            color={Colors.Orange}
+            value={props.progress}
+          />
         )}
       </Column>
       {props.hasProgress && showAbortBtn && (

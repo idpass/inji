@@ -452,6 +452,7 @@ export const requestMachine =
 
         receiveVc: () => (callback) => {
           const subscription = SmartShare.handleNearbyEvents((event) => {
+            console.log('event', event);
             if (event.type !== 'msg') return;
 
             const message = Message.fromString<VC>(event.data);
