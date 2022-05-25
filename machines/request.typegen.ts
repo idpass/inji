@@ -23,6 +23,7 @@ export interface Typegen0 {
     storeVc: 'STORE_RESPONSE';
     sendVcReceived: 'STORE_RESPONSE';
     logReceived: 'STORE_RESPONSE';
+    sendVcDataToOdk: 'STORE_RESPONSE';
   };
   'internalEvents': {
     'xstate.after(CLEAR_DELAY)#clearingConnection': {

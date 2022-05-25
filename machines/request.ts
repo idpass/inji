@@ -1,5 +1,6 @@
 import SmartShare from '@idpass/smartshare-react-native';
 import BluetoothStateManager from 'react-native-bluetooth-state-manager';
+import ODKIntentModule from '../lib/react-native-odk-intent/ODKIntentModule';
 import { EmitterSubscription } from 'react-native';
 import { assign, EventFrom, send, sendParent, StateFrom } from 'xstate';
 import { createModel } from 'xstate/lib/model';
@@ -198,7 +199,7 @@ export const requestMachine = model.createMachine(
           },
           accepted: {
             id: 'accepted',
-            entry: ['sendVcReceived', 'logReceived'],
+            entry: ['sendVcReceived', 'logReceived', 'sendVcDataToOdk'],
             invoke: {
               src: 'sendVcResponse',
               data: {
@@ -349,6 +350,22 @@ export const requestMachine = model.createMachine(
         },
         { to: (context) => context.serviceRefs.vc }
       ),
+
+      sendVcDataToOdk: (context) => {
+        const { verifiableCredential } = context.incomingVc;
+        const { credentialSubject: subject } = verifiableCredential;
+
+        ODKIntentModule.sendBundleResult({
+          biometrics: subject.biometrics,
+          date_of_birth: subject.dateOfBirth,
+          email: subject.email,
+          full_name: subject.fullName,
+          issuance_date: verifiableCredential.issuanceDate,
+          issuer: verifiableCredential.issuer,
+          phone: subject.phone,
+          uin: subject.UIN,
+        });
+      },
     },
 
     services: {

@@ -1,18 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   BottomTabNavigationOptions,
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import { Icon } from 'react-native-elements';
-import { mainRoutes } from '../routes/main';
-import { RootRouteProps } from '../routes';
+import { MainRouteProps, mainRoutes } from '../routes/main';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { Colors } from '../components/ui/styleUtils';
 import { useTranslation } from 'react-i18next';
+import ODKIntentModule from '../lib/react-native-odk-intent/ODKIntentModule';
 
 const { Navigator, Screen } = createBottomTabNavigator();
 
-export const MainLayout: React.FC<RootRouteProps> = () => {
+export const MainLayout: React.FC<MainRouteProps> = (props) => {
   const { t } = useTranslation('MainLayout');
 
   const options: BottomTabNavigationOptions = {
@@ -28,6 +28,14 @@ export const MainLayout: React.FC<RootRouteProps> = () => {
     tabBarShowLabel: false,
     tabBarStyle: { height: 86, paddingHorizontal: 36 },
   };
+
+  useEffect(() => {
+    ODKIntentModule.isRequestIntent().then((result) => {
+      if (result) {
+        props.navigation.navigate('Request');
+      }
+    });
+  }, []);
 
   return (
     <Navigator initialRouteName={mainRoutes[0].name} screenOptions={options}>
