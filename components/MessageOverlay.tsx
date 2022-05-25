@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import { Overlay, LinearProgress } from 'react-native-elements';
 import { Button, Column, Text } from './ui';
 import { Colors, elevation } from './ui/styleUtils';
@@ -12,23 +12,23 @@ const styles = StyleSheet.create({
 });
 
 export const MessageOverlay: React.FC<AsyncOverlayProps> = (props) => {
-  const [showAbortBtn, setAbortBtn] = useState(false);
-  const isDeterminate = props.isDeterminate ? 'determinate' : 'indeterminate';
+  const [showAbortBtn, setShowAbortBtn] = useState(
+    props.cancelDelay ? false : true
+  );
+  const progressVariant = props.isDeterminate ? 'determinate' : 'indeterminate';
   const delay = props.cancelDelay ? props.cancelDelay : 0;
 
   useEffect(() => {
-    console.log('isDeterminate', isDeterminate);
-    setTimeout(() => {
-      setAbortBtn(true);
-    }, delay);
+    if (delay) {
+      setTimeout(() => {
+        setShowAbortBtn(true);
+      }, delay);
+    }
   }, [props.isVisible]);
 
   useEffect(() => {
-    setAbortBtn(true);
-    console.log('props.progress', props.progress);
     if (props.progress === 1) {
-      setAbortBtn(false);
-      console.log('showAbortBtn', showAbortBtn);
+      setShowAbortBtn(false);
     }
   }, [props.progress]);
 
@@ -45,19 +45,30 @@ export const MessageOverlay: React.FC<AsyncOverlayProps> = (props) => {
         )}
         {props.message && <Text margin="0 0 12 0">{props.message}</Text>}
         {props.hasProgress && (
-          <LinearProgress
-            variant={isDeterminate}
-            color={Colors.Orange}
-            value={props.progress}
-          />
+          <View style={{ flexDirection: 'row' }}>
+            <View style={{ flex: 1 }}>
+              <LinearProgress
+                variant={progressVariant}
+                color={Colors.Orange}
+                value={props.progress}
+              />
+            </View>
+            {props.isDeterminate && (
+              <Text weight="semibold" margin="-12 0 0 8">
+                % {props.progress * 100}
+              </Text>
+            )}
+          </View>
         )}
       </Column>
       {props.hasProgress && showAbortBtn && (
-        <Button
-          margin="0 -10 -10 -10"
-          title={props.cancelLabel}
-          onPress={props.onCancel}
-        />
+        <View>
+          <Button
+            margin="0 -10 -10 -10"
+            title={props.cancelLabel}
+            onPress={props.onCancel}
+          />
+        </View>
       )}
     </Overlay>
   );

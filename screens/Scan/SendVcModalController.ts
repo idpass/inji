@@ -8,6 +8,7 @@ import {
   selectIsRejected,
   selectIsSelectingVc,
   selectIsSendingVc,
+  selectProgress,
   selectVcName,
 } from '../../machines/scan';
 import { selectVcLabel } from '../../machines/settings';
@@ -22,6 +23,7 @@ export function useSendVcModal() {
   const vcService = appService.children.get('vc');
 
   return {
+    progress: useSelector(scanService, selectProgress),
     receiverInfo: useSelector(scanService, selectReceiverInfo),
     reason: useSelector(scanService, selectReason),
     vcName: useSelector(scanService, selectVcName),

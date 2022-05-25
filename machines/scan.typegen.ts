@@ -13,15 +13,15 @@ export interface Typegen0 {
     removeLoggers:
       | 'SCREEN_BLUR'
       | 'xstate.after(CLEAR_DELAY)#clearingConnection'
-      | 'CANCEL'
-      | 'DISMISS';
+      | 'DISMISS'
+      | 'APP_ACTIVE';
     requestToDisableFlightMode: 'FLIGHT_REQUEST';
     requestToEnableLocation: 'LOCATION_DISABLED' | 'LOCATION_REQUEST';
-    disconnect: 'LOCATION_ENABLED' | 'DISMISS' | 'DISCONNECT';
+    disconnect: 'LOCATION_ENABLED' | 'DISMISS' | 'DISCONNECT' | 'CANCEL';
     registerLoggers:
       | 'xstate.after(CLEAR_DELAY)#clearingConnection'
-      | 'CANCEL'
-      | 'DISMISS';
+      | 'DISMISS'
+      | 'APP_ACTIVE';
     requestSenderInfo: 'SCAN';
     clearReason: 'xstate.init';
     logShared: 'VC_ACCEPTED';

@@ -58,6 +58,8 @@ const model = createModel(
   }
 );
 
+const scanDisconnected = '#scan.disconnected';
+
 export const ScanEvents = model.events;
 
 export const scanMachine = model.createMachine(
@@ -193,7 +195,7 @@ export const scanMachine = model.createMachine(
           src: 'exchangeDeviceInfo',
         },
         on: {
-          DISCONNECT: '#scan.disconnected',
+          DISCONNECT: scanDisconnected,
           EXCHANGE_DONE: {
             target: 'reviewing',
             actions: ['setReceiverInfo'],
@@ -202,7 +204,7 @@ export const scanMachine = model.createMachine(
       },
       reviewing: {
         on: {
-          CANCEL: 'findingConnection',
+          CANCEL: scanDisconnected,
           DISMISS: 'findingConnection',
           ACCEPT_REQUEST: '.selectingVc',
           UPDATE_REASON: {
@@ -230,7 +232,7 @@ export const scanMachine = model.createMachine(
               src: 'sendVc',
             },
             on: {
-              DISCONNECT: '#scan.disconnected',
+              DISCONNECT: scanDisconnected,
               VC_ACCEPTED: 'accepted',
               VC_REJECTED: 'rejected',
               SENDING: {
@@ -254,6 +256,7 @@ export const scanMachine = model.createMachine(
         entry: ['disconnect'],
         on: {
           DISMISS: 'findingConnection',
+          APP_ACTIVE: 'findingConnection',
         },
       },
       invalid: {

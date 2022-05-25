@@ -61,7 +61,9 @@ export const SendVcModal: React.FC<SendVcModalProps> = (props) => {
         hasProgress
         cancelLabel="Cancel"
         onCancel={controller.CANCEL}
-        cancelDelay={1000}
+        isDeterminate={true}
+        progress={controller.progress}
+        cancelDelay={0}
       />
 
       <MessageOverlay

@@ -45,15 +45,11 @@ export const ScanScreen: React.FC<MainRouteProps> = (props) => {
       <MessageOverlay
         isVisible={controller.statusMessage !== ''}
         message={controller.statusMessage}
-        hasProgress={
-          !controller.isInvalid && controller.progress ? true : false
-        }
+        hasProgress={!controller.isInvalid}
         onBackdropPress={controller.DISMISS_INVALID}
         onCancel={controller.DISMISS}
         cancelLabel="Cancel"
-        isDeterminate={controller.progress > -1 ? true : false}
-        progress={controller.progress}
-        cancelDelay={0}
+        cancelDelay={10000}
       />
 
       <SendVcModal
