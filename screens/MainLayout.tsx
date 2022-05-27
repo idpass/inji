@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   BottomTabNavigationOptions,
   createBottomTabNavigator,
@@ -8,12 +8,16 @@ import { MainRouteProps, mainRoutes } from '../routes/main';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { Colors } from '../components/ui/styleUtils';
 import { useTranslation } from 'react-i18next';
-import ODKIntentModule from '../lib/react-native-odk-intent/ODKIntentModule';
+import { GlobalContext } from '../shared/GlobalContext';
+import { useSelector } from '@xstate/react';
+import { selectIsRequestIntent } from '../machines/app';
 
 const { Navigator, Screen } = createBottomTabNavigator();
 
 export const MainLayout: React.FC<MainRouteProps> = (props) => {
   const { t } = useTranslation('MainLayout');
+  const { appService } = useContext(GlobalContext);
+  const isRequestIntent = useSelector(appService, selectIsRequestIntent);
 
   const options: BottomTabNavigationOptions = {
     headerLeft: () => <Icon name="notifications" color={Colors.Orange} />,
@@ -30,12 +34,10 @@ export const MainLayout: React.FC<MainRouteProps> = (props) => {
   };
 
   useEffect(() => {
-    ODKIntentModule.isRequestIntent().then((result) => {
-      if (result) {
-        props.navigation.navigate('Request');
-      }
-    });
-  }, []);
+    if (isRequestIntent) {
+      props.navigation.navigate('Request');
+    }
+  }, [isRequestIntent]);
 
   return (
     <Navigator initialRouteName={mainRoutes[0].name} screenOptions={options}>

@@ -66,7 +66,7 @@ export type RootStackParamList = {
 
 export interface Screen {
   name: string;
-  component: React.FC<RootRouteProps>;
+  component: React.FC;
   options?: NativeStackNavigationOptions;
 }
 
