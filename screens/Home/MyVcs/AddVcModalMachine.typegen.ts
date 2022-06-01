@@ -13,17 +13,18 @@ export interface Typegen0 {
       | 'error.platform.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]'
       | 'error.platform.AddVcModal.requestingCredential:invocation[0]';
     setOtp: 'INPUT_OTP';
+    resetIdInputRef: 'DISMISS';
     setRequestId: 'done.invoke.AddVcModal.requestingCredential:invocation[0]';
     setOtpError: 'error.platform.AddVcModal.requestingCredential:invocation[0]';
-    setTransactionId: 'xstate.init';
+    setTransactionId: 'DISMISS';
     clearOtp:
+      | 'DISMISS'
       | 'done.invoke.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]'
       | 'error.platform.AddVcModal.requestingCredential:invocation[0]';
     focusInput:
       | 'xstate.after(100)#AddVcModal.acceptingIdInput.focusing'
       | 'INPUT_ID'
-      | 'SELECT_ID_TYPE'
-      | 'DISMISS';
+      | 'SELECT_ID_TYPE';
     setIdErrorEmpty: 'VALIDATE_INPUT';
     setIdErrorWrongFormat: 'VALIDATE_INPUT';
   };
