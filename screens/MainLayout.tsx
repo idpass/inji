@@ -1,19 +1,23 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   BottomTabNavigationOptions,
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import { Icon } from 'react-native-elements';
-import { mainRoutes } from '../routes/main';
-import { RootRouteProps } from '../routes';
+import { MainRouteProps, mainRoutes } from '../routes/main';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { Colors } from '../components/ui/styleUtils';
 import { useTranslation } from 'react-i18next';
+import { GlobalContext } from '../shared/GlobalContext';
+import { useSelector } from '@xstate/react';
+import { selectIsRequestIntent } from '../machines/app';
 
 const { Navigator, Screen } = createBottomTabNavigator();
 
-export const MainLayout: React.FC<RootRouteProps> = () => {
+export const MainLayout: React.FC<MainRouteProps> = (props) => {
   const { t } = useTranslation('MainLayout');
+  const { appService } = useContext(GlobalContext);
+  const isRequestIntent = useSelector(appService, selectIsRequestIntent);
 
   const options: BottomTabNavigationOptions = {
     headerLeft: () => <Icon name="notifications" color={Colors.Orange} />,
@@ -28,6 +32,12 @@ export const MainLayout: React.FC<RootRouteProps> = () => {
     tabBarShowLabel: false,
     tabBarStyle: { height: 86, paddingHorizontal: 36 },
   };
+
+  useEffect(() => {
+    if (isRequestIntent) {
+      props.navigation.navigate('Request');
+    }
+  }, [isRequestIntent]);
 
   return (
     <Navigator initialRouteName={mainRoutes[0].name} screenOptions={options}>

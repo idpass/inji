@@ -18,11 +18,12 @@ export interface Typegen0 {
     requestReceiverInfo: 'CONNECTED';
     requestReceivedVcs: 'xstate.init';
     requestExistingVc: 'VC_RESPONSE';
-    mergeIncomingVc: 'STORE_RESPONSE';
     prependReceivedVc: 'VC_RESPONSE';
+    mergeIncomingVc: 'STORE_RESPONSE';
     storeVc: 'STORE_RESPONSE';
     sendVcReceived: 'STORE_RESPONSE';
     logReceived: 'STORE_RESPONSE';
+    sendVcDataIntent: 'STORE_RESPONSE';
   };
   'internalEvents': {
     'xstate.after(CLEAR_DELAY)#clearingConnection': {
@@ -57,6 +58,7 @@ export interface Typegen0 {
   };
   'eventsCausingGuards': {
     hasExistingVc: 'VC_RESPONSE';
+    isRequestIntent: 'STORE_RESPONSE';
   };
   'eventsCausingDelays': {
     CLEAR_DELAY: 'xstate.init';
@@ -78,9 +80,10 @@ export interface Typegen0 {
     | 'reviewing.accepting'
     | 'reviewing.accepting.requestingReceivedVcs'
     | 'reviewing.accepting.requestingExistingVc'
-    | 'reviewing.accepting.mergingIncomingVc'
     | 'reviewing.accepting.prependingReceivedVc'
+    | 'reviewing.accepting.mergingIncomingVc'
     | 'reviewing.accepting.storingVc'
+    | 'reviewing.acceptedIntentShare'
     | 'reviewing.accepted'
     | 'reviewing.rejected'
     | 'reviewing.navigatingToHome'
@@ -90,6 +93,7 @@ export interface Typegen0 {
         reviewing?:
           | 'idle'
           | 'accepting'
+          | 'acceptedIntentShare'
           | 'accepted'
           | 'rejected'
           | 'navigatingToHome'
@@ -97,8 +101,8 @@ export interface Typegen0 {
               accepting?:
                 | 'requestingReceivedVcs'
                 | 'requestingExistingVc'
-                | 'mergingIncomingVc'
                 | 'prependingReceivedVc'
+                | 'mergingIncomingVc'
                 | 'storingVc';
             };
       };

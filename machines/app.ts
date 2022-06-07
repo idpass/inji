@@ -16,11 +16,13 @@ import { createRequestMachine, requestMachine } from './request';
 import { createScanMachine, scanMachine } from './scan';
 import { pure, respond } from 'xstate/lib/actions';
 import { AppServices } from '../shared/GlobalContext';
+import ODKIntentModule from '../lib/react-native-odk-intent/ODKIntentModule';
 
 const model = createModel(
   {
     info: {} as AppInfo,
     serviceRefs: {} as AppServices,
+    isRequestIntent: false,
   },
   {
     events: {
@@ -41,13 +43,25 @@ export const appMachine = model.createMachine(
     schema: {
       context: model.initialContext,
       events: {} as EventFrom<typeof model>,
+      services: {} as {
+        checkIntent: { data: boolean };
+      },
     },
     id: 'app',
     initial: 'init',
     states: {
       init: {
-        initial: 'store',
+        initial: 'intent',
         states: {
+          intent: {
+            invoke: {
+              src: 'checkIntent',
+              onDone: {
+                target: 'store',
+                actions: 'setIntent',
+              },
+            },
+          },
           store: {
             entry: ['spawnStoreActor', 'logStoreEvents'],
             on: {
@@ -126,6 +140,10 @@ export const appMachine = model.createMachine(
   },
   {
     actions: {
+      setIntent: assign({
+        isRequestIntent: (_context, event) => event.data,
+      }),
+
       forwardToServices: pure((context, event) =>
         Object.values(context.serviceRefs).map((serviceRef) =>
           send({ ...event, type: `APP_${event.type}` }, { to: serviceRef })
@@ -176,7 +194,10 @@ export const appMachine = model.createMachine(
             scanMachine.id
           );
           serviceRefs.request = spawn(
-            createRequestMachine(serviceRefs),
+            createRequestMachine({
+              serviceRefs,
+              isRequestIntent: context.isRequestIntent,
+            }),
             requestMachine.id
           );
           return serviceRefs;
@@ -200,6 +221,10 @@ export const appMachine = model.createMachine(
     },
 
     services: {
+      checkIntent: () => {
+        return ODKIntentModule.isRequestIntent();
+      },
+
       getAppInfo: () => async (callback) => {
         const appInfo = {
           deviceId: getDeviceId(),
@@ -261,6 +286,10 @@ type State = StateFrom<typeof appMachine>;
 
 export function selectAppInfo(state: State) {
   return state.context.info;
+}
+
+export function selectIsRequestIntent(state: State) {
+  return state.context.isRequestIntent; // TODO: change to state 'ready.intent.request'
 }
 
 export function selectIsReady(state: State) {

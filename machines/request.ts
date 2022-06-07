@@ -1,7 +1,15 @@
 import SmartShare from '@idpass/smartshare-react-native';
 import BluetoothStateManager from 'react-native-bluetooth-state-manager';
+import ODKIntentModule from '../lib/react-native-odk-intent/ODKIntentModule';
 import { EmitterSubscription } from 'react-native';
-import { assign, EventFrom, send, sendParent, StateFrom } from 'xstate';
+import {
+  assign,
+  ContextFrom,
+  EventFrom,
+  send,
+  sendParent,
+  StateFrom,
+} from 'xstate';
 import { createModel } from 'xstate/lib/model';
 import { DeviceInfo } from '../components/DeviceInfoList';
 import { Message } from '../shared/Message';
@@ -21,6 +29,7 @@ const model = createModel(
     incomingVc: {} as VC,
     connectionParams: '',
     loggers: [] as EmitterSubscription[],
+    isRequestIntent: false,
   },
   {
     events: {
@@ -176,25 +185,46 @@ export const requestMachine = model.createMachine(
                   STORE_RESPONSE: 'mergingIncomingVc',
                 },
               },
-              mergingIncomingVc: {
-                entry: ['mergeIncomingVc'],
-                on: {
-                  STORE_RESPONSE: '#accepted',
-                },
-              },
               prependingReceivedVc: {
                 entry: ['prependReceivedVc'],
                 on: {
                   STORE_RESPONSE: 'storingVc',
                 },
               },
+              mergingIncomingVc: {
+                entry: ['mergeIncomingVc'],
+                on: {
+                  STORE_RESPONSE: [
+                    {
+                      cond: 'isRequestIntent',
+                      target: '#acceptedIntentShare',
+                    },
+                    {
+                      target: '#accepted',
+                    },
+                  ],
+                },
+              },
               storingVc: {
                 entry: ['storeVc'],
                 on: {
-                  STORE_RESPONSE: '#accepted',
+                  STORE_RESPONSE: [
+                    {
+                      cond: 'isRequestIntent',
+                      target: '#acceptedIntentShare',
+                    },
+                    {
+                      target: '#accepted',
+                    },
+                  ],
                 },
               },
             },
+          },
+          acceptedIntentShare: {
+            id: 'acceptedIntentShare',
+            entry: ['sendVcReceived', 'logReceived', 'sendVcDataIntent'],
+            always: 'navigatingToHome',
           },
           accepted: {
             id: 'accepted',
@@ -349,6 +379,22 @@ export const requestMachine = model.createMachine(
         },
         { to: (context) => context.serviceRefs.vc }
       ),
+
+      sendVcDataIntent: (context) => {
+        const { verifiableCredential } = context.incomingVc;
+        const { credentialSubject: subject } = verifiableCredential;
+
+        ODKIntentModule.sendBundleResult({
+          biometrics: subject.biometrics,
+          date_of_birth: subject.dateOfBirth,
+          email: subject.email,
+          full_name: subject.fullName,
+          issuance_date: verifiableCredential.issuanceDate,
+          issuer: verifiableCredential.issuer,
+          phone: subject.phone,
+          uin: subject.UIN,
+        });
+      },
     },
 
     services: {
@@ -433,6 +479,10 @@ export const requestMachine = model.createMachine(
         const vcKey = VC_ITEM_STORE_KEY(context.incomingVc);
         return receivedVcs.includes(vcKey);
       },
+
+      isRequestIntent: (context) => {
+        return context.isRequestIntent;
+      },
     },
 
     delays: {
@@ -441,10 +491,12 @@ export const requestMachine = model.createMachine(
   }
 );
 
-export function createRequestMachine(serviceRefs: AppServices) {
+export function createRequestMachine(
+  context?: Partial<ContextFrom<typeof model>>
+) {
   return requestMachine.withContext({
     ...requestMachine.context,
-    serviceRefs,
+    ...(context || {}),
   });
 }
 
