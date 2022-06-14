@@ -28,7 +28,6 @@ export function useAuthScreen(props: RootRouteProps) {
   const isAuthorized = useSelector(authService, selectAuthorized);
 
   const [alertMsg, setHasAlertMsg] = useState('');
-  const [isBiometricsAvailable, setIsBiometricsAvailable] = useState(false);
   const [biometricState, biometricSend, bioService] =
     useMachine(biometricsMachine);
 
@@ -44,9 +43,10 @@ export function useAuthScreen(props: RootRouteProps) {
 
   const { t } = useTranslation('AuthScreen');
 
+  let isBiometricsAvailable = false;
   const fetchIsAvailable = async () => {
     const result = await LocalAuthentication.hasHardwareAsync();
-    setIsBiometricsAvailable(result);
+    isBiometricsAvailable = result;
   };
   fetchIsAvailable();
 
