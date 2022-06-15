@@ -1,6 +1,10 @@
-import { Camera, FaceDetectionResult, PermissionResponse } from 'expo-camera';
+import {
+  Camera,
+  CameraCapturedPicture,
+  FaceDetectionResult,
+  PermissionResponse,
+} from 'expo-camera';
 import { CameraType, Face } from 'expo-camera/build/Camera.types';
-import { Image } from 'expo-face-detector';
 import { Linking } from 'react-native';
 import { assign, EventFrom, StateFrom } from 'xstate';
 import { createModel } from 'xstate/lib/model';
@@ -33,7 +37,7 @@ export const FaceScannerEvents = model.events;
 
 export interface FaceScanResult {
   metadata: Face;
-  image: Image;
+  image: CameraCapturedPicture;
 }
 
 export const faceScannerMachine =
@@ -170,7 +174,7 @@ export const faceScannerMachine =
         setFaceImage: assign({
           face: (context, event) => ({
             ...context.face,
-            image: event.data as Image,
+            image: event.data as CameraCapturedPicture,
           }),
         }),
 
@@ -235,8 +239,12 @@ export function selectFace(state: State) {
   return state.context.face;
 }
 
-export function selectIsPermissionGranted(state: State) {
-  return state.matches('init.permissionGranted');
+export function selectIsCheckingPermission(state: State) {
+  return state.matches('init.checkingPermission');
+}
+
+export function selectIsPermissionDenied(state: State) {
+  return state.matches('init.permissionDenied');
 }
 
 export function selectIsScanning(state: State) {

@@ -74,7 +74,7 @@ const model = createModel(
 export const ScanEvents = model.events;
 
 export const scanMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5SwMYEMB2A6FALMKA1gJYZQCCxATgA4A2mYAsgPYRg75GlQDKALmn4BXWAGIAYgBkAkgHEAEgBUA+gBEZvcgCEpAUTWJQNFrGL9iLDEZAAPRAFoALAEYsANgCsLpwHYAnC7uAAzuAZ4AzAA0IACeiABMThFYwQk+AByensEZLgEuAL6FMaiYnAQkZJS0DBjMbBx4lTwCQqKSsoqqegByOvqGSCAmZhZWNvYIEREZWC4u2S4ROQnusy4x8QjpKT7rGf5JrslpxaXo2M3c1dT0jKzsWFRgAI7CcBZkSixqxLBoABGdDAnXkynUmgGBhso3MlmswymTgyTnmCV87iOgQywU8GQSW0QLmCwSw-ic-gigRCQQSnip5xAZSuXCqFDudQaTzAGCBIIgYO6KgASnoAIoAVT0vCUsNM8ImSMQGWpWCyfgWuPcTicnicRJ2y3mTgOR11PgiZxKzMuFRuUCkLHQ4wwvDAVAAbsQUE02a1BCJxFIAPIAYXIShkId6Kj60KGxgVrsmjgibgJCSpvl8nlzaV8PkNvgyvlS+Qymd8pP8BKZLPt7KdLoR7q9Pr9LTIbSDYlDEajMchWl0MOGcJTyp2h3Vvizepp7gJWUNOU8WHx7iX+YCWIp9bt1ybzqErY93t9zzeH1gXygPz0fOBoP7kejsfjo8TI2TCNTO0CLBZn1BI8i1DJ3ENLEEg3FF038UJKwWXwD3KI8eGbU8rDbC8OBed5Ph4B8nxBPtwzfIcNBHQZ5TGP8p1RfwsASdMWIiJxggiLwMlXfwy3cLMc0WPIMTxVDWS7R0T1dHCO0bHgAAUPQAW3+MwrDIgd3zjfov1oxVEVAKYszcYC9RcfxuL3TxDQpGDllVWtDmSekEnE+SyEwmTzzk9CyCUqhVNgdSME0ijYyohN9MnIzEHcY1OJYlw1i8BZ-ENPI5myVwCWSSJghzdy-KkltsJ8y92AwYhIDCwdYzFKUZTlcdfyVWKECyMkIIgikKSxPFCTiOK83VYJ-EsnV6XYriiv9TzpLPdsKt5arBXIBSFJUcgwyjAA1PRovo9qdXXTw1jG-FXDxSkoIiGDgjghIxtAlj4tmySvMW3CsAgf5+Rq186tFCVpVlQ62rsOKCuYlZqVA5LS2pVc8Q3CCl2ydNcWpJwipBNAqB4MMrHqFBXTEWxbyEDg0AAM34D0AAow30cgRXUPQpHIABNABKMQGxQPGCbIImMBJmKfzoiHjIpZiQj1dYENNAlDRJZLmP1U1ghcHr-AZdyadIX6ReJggyd4CNenBwzIYQBZ3FnasQm8VwEIs1XFjJalvfWDEsTu9yaBeGh8aIlhRfFsQxTDPQZH29ndpkGOVBkXoJBDa3-ytMtcyXXIjnYw5IlVlz5jOvNSyObxfAiIrTdJngxDDGNej0HaxyTKWbamBx121h6LScNZXEV1W8zRFi8zCCz8yydywFsPBMCgHg1DAXCZAwGmWDEKjm96VudszqcrTcfISULJYknTVW9w8U16TyQscwyefF9wZfV-XjtN+3sQ9AABphgUOQXocg9DqBjAdFqXd-wOBYqkPwes9ShF8MkZKNkhp2zyOudMJZuK5j4hEFCNoGwvG9GAAA7jwLAxAICkW2jHBSqgGqg2ap3AycDIjkjCJWUIeIQK5ENAkR+WA-CYhLDrFi6R3LkOqtQsgWBYBgBBA3Mgu0UBiF4BzNuqhdphmPu1FEYj8qmipEQvKwi9RzBRFkCyIjKxJFkd-KhNDlGqLvBopuoCY5SEMbbYSHgcjJVNOxJIm5hGiPEbwqRd0iikLtHI1xij3Fmx4F4-aIoZASC5ltXoagVDaP0DtFQ+j-FTGpGWK0uoRHxVyLMSCWCWJD3JONQ42sdbn2cRQhRUAlG8mNlADJYYtphiYUoDuktOFTh8GiQ4QQlhCTQaWYRAQsrpD1DMNKY0SEXHKEk3p-SMCDOGcDAAUroyZE4jq2wcLMdU40fAFVJAJfEXFVm1g3BsyI6YLI7O6fImhaAUC+hoPTQUVEmCaF4OU4kYQPAanyHrGkoFDRWgxKkTwYQ8QkjWDXAFyS+noDBcIYWUBJTKKoDISqFh+CxEkNtCBag9ATPbt+a50sVQMjEViSsfEFihHdk05p8xqSHDQQcfU7gCWHOJSIMlFKPTUt5LS+lltfGwunExGuaxPY6gEY07YLFSQwzGskQIOsOKvwSfslxhzPQemIDTWIPBlUYFVWITJ2Sk7hUKZKMZMoYUwOme1VUGYGnrBLCWBCvhVnENGjMbWVJ6QPRlTQh1BNnWuppeYelXqJA+qBhIcgMgaLBollMM6ZIRGcXWCsDEFJMFGuyA7FErgrSkm1hBNNijSCejQHQOhbqPXqo5pq0C2q7rxRyPqltVjCxiMFb7P5yRdm2ltT0mhfaB1DpzXSqOLKRS5IjMwyUYpNU6jmHdXMhZHk1z4sIriMFKTjTQVxa99Ie1EpeKedRjrDb-QUi8ZR7qsKhV2ptMMYpIxXNat3RIgE0EFm8LWkkFI41lixmsbKxr4l7OwAcxuo6-HlpuVMJ+XyalPStFW2NWCdbsXVPkHMKUOJYjXWQu1jdIXQs1XxU6qpKylh1JSIeqtVRzOY3OLcHEOOJK42QMQkoFJqBg8DcgvAYzju5YlLwoma46sNcSHBQEKwEIZAZr9u9ND70PuwqZFbEA5CyqqfMFrSRBGiPRiTTGcxpELjPPD67sC-VQPXcF1neBQt4EGjhjmEBnUw65mpFICoCTHmgmGU9b2z1rja7A27B0Qs0NF2LDmyOOBCGIvlgQazLCnqrZ68xtaRAWRZaV+WtFQb0H0FQugz2at7m4c0mI0jGoZGNIzCAHDLH4iSA4KxVRhBYuJLrYpevpzDJKMrHL4MJfxBuOcpoX1zn1F57YM3411IW285beWbQYEaPAYYDZSDAosA6wbesYZq0nq4SIepDS9z7hsOc2p6Qifeg6Go9x6iPE7A6HsohNV-I8IWO6HFfkrGyLZNEuoqSlmugIgIUP2Qw65PDq8BFbxhz+ACZ8mrMQwXxAyMxiw+KDW2EucklJiGolAtWS6pOeDk4eI0LAvJ-oQE1QyFIW40jZDWCxWsmwmmhHvgcMxXgwfWvwx5DktQxfsBR1uNHywkicQWNjptjhsiYtCBiJ6pYcwlmF-NUqbpyoI-ZEj57cWKvTatOSERllaxLhCHrLFhoX2pDRhBU+tTdfBf159MqS08LXkIt8Fgj5-rjq4kBEPqwZg5nYnR7YWL1wCT4jXfOLz-Bu5KmB2Sl5ioBSCiFfPex5bxUrCiJ6U3cx9wrLWBcBUZH5ZTwtNP31KqrU1XwuWpYTineSDxLBJYyTVxjbkKjjfU+e-Tz9P6z5pekc5R1XM8xsxDz1HOa+0fxqx63PH7Wif9-T8P7hQbdvMzZhvasIWAaFgsQn3GjEkKBO0mEB1nroLGAKHCbGLGkhDLtv+JhpIq4AUMQmNEIlgnrF1C-kPLSKiNSAbEbITOFjcqgQxFmFgDXMlNrFxAVOxFNiSCasJndFxHrP1G5JPkHGACHGSj8BHGbJqtSA7BiHOHdGkMJkuB7DOIcMBEuIEKvnXEgWolAD-uuEkEEGguPA0viCXBZEEmsMQn7JZH4G-EvGQF-BvFvCwINnOOqCPDmAyBBBjLfPCjqAJGYVNNrF+rQvQmADLnMNRmkHxOsPNkKkaosGiHmHiImpfGDgEakhoRomIZOkPJWKNrNpiI+nbuNONLwhxKSHqCkQMukigOOkxJqAEKdvHkPA+k0gyDBHUUlJiNPAEcCqCuCijk9GjoEKsLzhNOvkaqWM+tWKJIcFuPkAES8AAFZmyQCDYF57gLBsa36RDpRNLirkiTExq4hW44yT6EaKJ8jehQC-r3gsAKAsDKTBHn57YLAwS1hbGTQ9QC5ooCp0E6xYpjTx5HByYbqAqKJyqko8CKpUp7rbD+4X4oitoMYYjZBnQcQ247BPRMTLC1iWRg63owHJ6nF9IZpOoupkDDq5qM4CSpC6r5QHA4JWLfZtq4rjSJoYgBGFa7oqoUmPH-j5QayebiK4ajGJDHbkiCqqhpD+a8F66Ek4A-qeL-rECAbAYqpgaap+DrjmReCcSv5omiTrhYYkFLBhB5YykKaaE8lTgOA5g8IljagCJDy4HbAWSyzxGUjeFXzSnJ6hYoDhbLGWlGIzg14gRPSYiBC3xUgmivJDxHZPzuQcln6wl7bWl7CzBORoI6wIS1iqygQOyKFUjTTELV7iSDZpQ-Zv4rD-bsRonwIiIeDzb6jJpYqBD3aFBAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5SwMYEMB2A6FALMKA1gJYZQCCxATgA4A2mYAsgPYRg75GlQDKALmn4BXWAGIAYgBkAkgHEAEgBUA+gBEZvcgCEpAUTWJQNFrGL9iLDEZAAPRAFoALAEYsANgCsLpwHYAnC7uAAzuAZ4AzAA0IACeiABMThFYwQk+AByensEZLgEuAL6FMaiYnAQkZJS0DBjMbBx4lTwCQqKSsoqqegByOvqGSCAmZhZWNvYIEREZWC4u2S4ROQnusy4x8QjpKT7rGf5JrslpxaXo2M3c1dT0jKzsWFRgAI7CcBZkSixqxLBoABGdDAnXkynUmgGBhso3MlmswymTgyTnmCV87iOgQywU8GQSW0QLmCwSw-ic-gigRCQQSnip5xAZSuXCqFDudQaTzAGCBIIgYO6KgASnoAIoAVT0vCUsNM8ImSMQGWpWCyfgWuPcTicnicRJ2y3mTgOR11PgiZxKzMuFRuUCkLHQ4wwvDAVAAbsQUE02a1BCJxFIAPIAYXIShkId6Kj60KGxgVrsmjgibgJCSpvl8nlzaV8PkNvgyvlS+Qymd8pP8BKZLPt7KdLoR7q9Pr9LTIbSDYlDEajMchWl0MOGcJTyp2h3Vvizepp7gJWUNOU8WHx7iX+YCWIp9bt1ybzqErY93t9zzeH1gXygPz0fOBoP7kejsfjo8TI2TCNTO0CLBZn1BI8i1DJ3ENLEEg3FF038UJKwWXwD3KI8eGbU8rDbC8OBed5Ph4B8nxBPtwzfIcNBHQZ5TGP8p1RfwsASdMWIiJxggiLwMlXfwy3cLMc0WPIMTxVDWS7R0T1dHCO0bHgAAUPQAW3+MwrDIgd3zjfov1oxVEVAKYszcYC9RcfxuL3TxDQpGDllVWtDmSekEnE+SyEwmTzzk9CyCUqhVNgdSME0ijYyohN9MnIzEHcY1OJYlw1i8BZ-ENPI5myVwCWSSJghzdy-KkltsJ8y92AwYhIDCwdYzFKUZTlcdfyVWKECyMkIIgikKSxPFCTiOK83VYJ-EsnV6XYriiv9TzpLPdsKt5arBXIBSFJUcgwyjAA1PRovo9qdXXTw1jG-FXDxSkoIiGDgjghIxtAlj4tmySvMW3CsAgf5+Rq186tFCVpVlQ62rsOKCuYlZqVA5LS2pVc8Q3CCl2ydNcWpJwipBNAqB4MMrHqFBXTEWxbyEDg0AAM34D0AAow30cgRXUPQpHIABNABKMQGxQPGCbIImMBJmKfzoiHjIpZiQj1dYENNAlDRJZLmP1U1ghcHr-AZdyadIX6ReJggyd4CNenBwzIYQBZ3FnasQm8VwEIs1XFjJalvfWDEsTu9yaBeGh8aIlhRfFsQxTDPQZH29ndpkGOVBkXoJBDa3-ytMtcyXXIjnYw5IlVlz5jOvNSyObxfAiIrTdJngxDDGNej0HaxyTKWbamBx121h6LScNZXEV1W8zRFi8zCCz8yydywFsPBMCgHg1DAXCZAwGmWDEKjm96VudszqcrTcfISULJYknTVW9w8U16TyQscwyefF9wZfV-XjtN+3sQ9AABphgUOQXocg9DqBjAdFqXd-wOBYqkPwes9ShF8MkZKNkhp2zyOudMJZuK5j4hEFCNoGwvG9GAAA7jwLAxAICkW2jHBSqgGqg2ap3AycDIjkjCJWUIeIQK5ENAkR+WA-CYhLDrFi6R3LkOqtQsgWBYBgBBA3Mgu0UBiF4BzNuqhdphmPu1FEYj8qmipEQvKwi9RzBRFkCyIjKxJFkd-KhNDlGqLvBopuoCY5SEMbbYSHgcjJVNOxJIm5hGiPEbwqRd0iikLtHI1xij3Fmx4F4-aIoZASC5ltXoagVDaP0DtFQ+j-FTGpGWK0uoRHxVyLMSCWCWJD3JONQ42sdbn2cRQhRUAlG8mNlADJYYtphiYUoDuktOFTh8GiQ4QQlhCTQaWYRAQsrpD1DMNKY0SEXHKEk3p-SMCDOGcDAAUroyZE4jq2wcLMdU40fAFVJAJfEXFVm1g3BsyI6YLI7O6fImhaAUC+hoPTQUVEmCaF4OU4kYQPAanyHrGkoFDRWgxKkTwYQ8QkjWDXAFyS+noDBcIYWUBJTKKoDISqFh+CxEkNtCBag9ATPbt+a50sVQMjEViSsfEFihHdk05p8xqSHDQQcfU7gCWHOJSIMlFKPTUt5LS+lltfGwunExGuaxPY6gEY07YLFSQwzGskQIOsOKvwSfslxhzPQemIDTWIPBlUYFVWITJ2Sk7hUKZKMZMoYUwOme1VUGYGnrBLCWBCvhVnENGjMbWVJ6QPRlTQh1BNnWuppeYelXqJA+qBhIcgMgaLBollMM6ZIRGcXWCsDEFJMFGuyA7FErgrSkm1hBNNijSCejQHQOhbqPXqo5pq0C2q7rxRyPqltVjCxiMFb7P5yRdm2ltT0mhfaB1DpzXSqOLKRS5IjMwyUYpNU6jmHdXMhZHk1z4sIriMFKTjTQVxa99Ie1EpeKedRjrDb-QUi8ZR7qsKhV2ptMMYpIxXNat3RIgE0EFm8LWkkFI41lixmsbKxr4l7OwAcxuo6-HlpuVMJ+XyalPStFW2NWCdbsXVPkHMKUOJYjXWQu1jdIXQs1XxU6qpKylh1JSIeqtVRzOY3OLcHEOOJK42QMQkoFJqBg8DcgvAYzju5YlLwoma46sNcSHBQEKwEIZAZr9u9ND70PuwqZFbEA5CyqqfMFrSRBGiPRiTTGcxpELjPPD67sC-VQPXcF1neBQt4EGjhjmEBnUw65mpFICoCTHmgmGU9b2z1rja7A27B0Qs0NF2LDmyOOBCGIvlgQazLCnqrZ68xtaRAWRZaV+WtFQb0H0FQugz2at7m4c0mI0jGoZGNIzCAHDLH4iSA4KxVRhBYuJLrYpevpzDJKMrHL4MJfxBuOcpoX1zn1F57YM3411IW285beWbQYEaPAYYDZSDAosA6wbesYZq0nq4SIepDS9z7hsOc2p6Qifeg6Go9x6iPE7A6HsohNV-I8IWO6HFfkrGyLZNEuoqSlmugIgIUP2Qw65PDq8BFbxhz+ACZ8mrMQwXxAyMxiw+KDW2EucklJiGolAtWS6pOeDk4eI0LAvJ-oQE1QyFIW40jZDWCxWsmwmmhHvgcMxXgwfWvwx5DktQxfsBR1uNHywkicQWNjptjhsiYqXYL-Iswcb5f159MqS0EfsiR89uLFXptWnJCIyytYlwhD1liw0L7UhowgqfWpuvgtu4Wh776+Ebx3mIv9cdXEgLB9WDMHM7E6PbCxeuASfEa75xef4YX81SpunKl7xSKk1I3N2-+Ni8x5bxUrCiJ6U3cx9wrLWBcBUZGu+Ku7xvnuforUgJqvhctSwnFO8kHiWCSxkmrjG3IVG68lTA7JCqf1nzS9I5yjquZ5jZiHnqOc18o-jRj1uOP2sE8H+n8fsAg27eZmzDeqsIWAaFgsQn3GjBamEMXkFgLELITOFu3nBv+JhpIq4AUMQmNEIlgnrF1K-kPLSKiNSAbEbPAWLGkhDB3gxFmFgDXMlNrFxAVOxFNiSCasJndFxHrP1G5K7kHGACHGSj8BHGbJqtSA7BiHOHdGkMJkuB7DOIcMBEuIEGvnXGQWolAL-uuEkEEGguPA0viCXBZEEmsMQn7JZH4G-EvGQF-BvFvCwINnOOqCPDmAyBBBjLfPCjqAJCYVNNrF+rQvQj-hfntgdtRmkHxOsPNkKkaosGiHmHiImpfGDn4akmoRoiIZOkPJWKNrNpiI+nbuNONLwhxKSHqMkQMukigOOkxJqAEKdnHkPA+k0gyDBLUUlJiNPH4cCqCuCijk9GjoEKsLzhNBvkaqWM+tWKJIcFuPkH4S8AAFZmwL5BFwK557gLBsZ36RDpRNLirkgTExq4hW4u566EaKJ8jehQC-r3gsAKAsDKSBF+6X4LAwS1hbGTQ9QC5ooCo0E6xYpjRx5HByYbqAqKJyqko8CKpUp7rbCPF7YoitoMYYjZBnQcQ247BPRMTLC1iWRg63odYnEKZ9IZpOoupkDDq5qM4CSpC6r5QHA4JWLfZtq4rjSJoYh+GFa7oqoUnLFTj5QayebiK4YjGJDHbkiCqqhpD+bcEEmbqgk-qeL-rECAbAYqpgaar37MTLgBB3QYjTSrIoxYzoriJazHFJ6nHqE8ntQOA5g8IljagCJDxYHbAWSyxxFnRZDrBeB6zuShYoDhZLGwn-gohMSV4gRPSYiBC3xUgmivJDxHZPzuQcnn6BlTjWl7CzBORoI6wIS1iqygQOzyFUjTTEIV7iSDZpQ-bv4rD-bsRonwIiIeDzacTY6cS5jFDFBAA */
   model.createMachine(
     {
       tsTypes: {} as import('./scan.typegen').Typegen0,
@@ -332,7 +332,7 @@ export const scanMachine =
             },
             creatingVerifiablePresentation: {
               invoke: {
-                src: 'createSignedVp',
+                src: 'createVerifiablePresentation',
               },
               on: {
                 VP_CREATED: {
@@ -589,26 +589,37 @@ export const scanMachine =
           return () => subscription?.remove();
         },
 
-        verifyIdentity: () => async (callback) => {
+        verifyIdentity: (context, event) => async (callback) => {
           // TODO: use SDK verify identity
-          const sdkVerify = () => Promise.resolve(true);
+          const doesFaceMatch = (vcFace: string, scannedFace: string) => {
+            console.log('doesFaceMatch', vcFace, scannedFace);
+            return Promise.resolve(Boolean(Math.round(Math.random())));
+          };
 
-          const result = await sdkVerify();
-          if (result) {
-            callback(ScanEvents.VERIFICATION_SUCCESS());
-          } else {
-            callback(ScanEvents.VERIFICATION_FAILED());
-          }
+          const vcFace = context.selectedVc.credential.biometrics.face;
+          const scannedFace = event.face.image.base64;
+          const result = await doesFaceMatch(vcFace, scannedFace);
+
+          setTimeout(() => {
+            if (result) {
+              callback(ScanEvents.VERIFICATION_SUCCESS());
+            } else {
+              callback(ScanEvents.VERIFICATION_FAILED());
+            }
+          }, 3000);
         },
 
-        createSignedVp: (context) => async (callback) => {
+        createVerifiablePresentation: (context) => async (callback) => {
           // TODO: create and sign Verifiable Presentation
           const challenge = '???';
           const vp = await createVerifiablePresentation(
             context.selectedVc.verifiableCredential,
             challenge
           );
-          callback(ScanEvents.VP_CREATED(vp));
+
+          setTimeout(() => {
+            callback(ScanEvents.VP_CREATED(vp));
+          }, 3000);
         },
       },
 
@@ -709,6 +720,10 @@ export function selectIsCapturingIdentity(state: State) {
 
 export function selectIsVerifyingIdentity(state: State) {
   return state.matches('reviewing.verifyingIdentity');
+}
+
+export function selectIsCreatingVerifiablePresentation(state: State) {
+  return state.matches('reviewing.creatingVerifiablePresentation');
 }
 
 export function selectIsInvalidIdentity(state: State) {

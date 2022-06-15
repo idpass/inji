@@ -12,10 +12,12 @@ import {
   faceScannerMachine,
   FaceScanResult,
   selectFace,
+  selectIsCheckingPermission,
   selectIsFaceFound,
   selectIsFaceNotFound,
   selectIsImageCaptured,
-  selectIsPermissionGranted,
+  selectIsPermissionDenied,
+  selectIsScanning,
   selectWhichCamera,
 } from '../machines/faceScanner';
 import { GlobalContext } from '../shared/GlobalContext';
@@ -54,15 +56,19 @@ export const FaceScanner: React.FC<FaceScannerProps> = (props) => {
   const isActive = useSelector(appService, selectIsActive);
 
   const machine = useRef(faceScannerMachine);
-  const service = useInterpret(machine.current);
+  const service = useInterpret(machine.current, undefined, (state) => {
+    console.log('\n\nstate', state._sessionid, state.value, state.event.type);
+  });
 
   const whichCamera = useSelector(service, selectWhichCamera);
   const face = useSelector(service, selectFace);
 
-  const isPermissionGranted = useSelector(service, selectIsPermissionGranted);
+  const isPermissionDenied = useSelector(service, selectIsPermissionDenied);
   const isFaceNotFound = useSelector(service, selectIsFaceNotFound);
   const isFaceFound = useSelector(service, selectIsFaceFound);
   const isImageCaptured = useSelector(service, selectIsImageCaptured);
+  const isCheckingPermission = useSelector(service, selectIsCheckingPermission);
+  const isScanning = useSelector(service, selectIsScanning);
 
   const faceDetectorSettings = {
     mode: FaceDetector.FaceDetectorMode.accurate,
@@ -74,11 +80,11 @@ export const FaceScanner: React.FC<FaceScannerProps> = (props) => {
 
   const setCameraRef = useCallback(
     (node: Camera) => {
-      if (node != null && isPermissionGranted) {
+      if (node != null && !isScanning) {
         service.send(FaceScannerEvents.READY(node));
       }
     },
-    [isPermissionGranted]
+    [isScanning]
   );
 
   useEffect(() => {
@@ -93,7 +99,9 @@ export const FaceScanner: React.FC<FaceScannerProps> = (props) => {
     }
   }, [isActive]);
 
-  if (!isPermissionGranted) {
+  if (isCheckingPermission) {
+    return <Column></Column>;
+  } else if (isPermissionDenied) {
     return (
       <Column padding="24" fill align="space-between">
         <Text align="center" color={Colors.Red}>

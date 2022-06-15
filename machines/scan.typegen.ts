@@ -39,7 +39,7 @@ export interface Typegen0 {
     exchangeDeviceInfo: 'done.invoke.scan.exchangingDeviceInfo:invocation[0]';
     sendVc: 'done.invoke.scan.reviewing.sendingVc:invocation[0]';
     verifyIdentity: 'done.invoke.scan.reviewing.verifyingIdentity:invocation[0]';
-    createSignedVp: 'done.invoke.scan.reviewing.creatingVerifiablePresentation:invocation[0]';
+    createVerifiablePresentation: 'done.invoke.scan.reviewing.creatingVerifiablePresentation:invocation[0]';
   };
   'missingImplementations': {
     actions: never;
@@ -55,7 +55,7 @@ export interface Typegen0 {
     exchangeDeviceInfo: 'CONNECTED';
     sendVc: 'SELECT_VC' | 'VP_CREATED';
     verifyIdentity: 'FACE_DETECTED';
-    createSignedVp: 'VERIFICATION_SUCCESS';
+    createVerifiablePresentation: 'VERIFICATION_SUCCESS';
   };
   'eventsCausingGuards': {
     isQrValid: 'SCAN';
