@@ -10,7 +10,6 @@ import creditsContent from '../../Credits.md';
 export const Credits: React.FC<CreditsProps> = (props) => {
   const { t } = useTranslation('Credits');
   const [isViewing, setIsViewing] = useState(false);
-  //const [content, setContent] = useState("");
 
   const images = {
     'docs/images/newlogic_logo.png': require('../../docs/images/newlogic_logo.png'),
