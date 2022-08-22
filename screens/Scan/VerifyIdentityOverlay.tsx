@@ -1,7 +1,8 @@
+import FaceAuth from 'mosip-mobileid-sdk';
 import React from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import { Icon, Overlay } from 'react-native-elements';
-import { FaceScanner } from '../../components/FaceScanner';
+// import { FaceScanner } from '../../components/FaceScanner';
 import { Column, Row } from '../../components/ui';
 import { Colors } from '../../components/ui/styleUtils';
 import {
@@ -28,7 +29,11 @@ export const VerifyIdentityOverlay: React.FC<VerifyIdentityOverlayProps> = (
         <Icon name="close" color={Colors.Orange} onPress={props.onCancel} />
       </Row>
       <Column fill style={styles.content} align="center">
-        <FaceScanner onFaceDetected={controller.FACE_DETECTED} />
+        <FaceAuth
+          data={controller.selectedVc?.credential?.biometrics.face}
+          onValidationSuccess={controller.FACE_DETECTED}
+        />
+        {/* <FaceScanner onFaceDetected={controller.FACE_DETECTED} /> */}
       </Column>
     </Overlay>
   );

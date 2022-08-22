@@ -671,6 +671,10 @@ export function selectVcName(state: State) {
   return state.context.vcName;
 }
 
+export function selectSelectedVc(state: State) {
+  return state.context.selectedVc;
+}
+
 export function selectIsScanning(state: State) {
   return state.matches('findingConnection');
 }

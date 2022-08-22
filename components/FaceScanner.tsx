@@ -23,42 +23,13 @@ import {
 import { GlobalContext } from '../shared/GlobalContext';
 import { selectIsActive } from '../machines/app';
 
-const styles = StyleSheet.create({
-  scannerContainer: {
-    borderWidth: 4,
-    borderColor: Colors.Black,
-    borderRadius: 32,
-    justifyContent: 'center',
-    height: 400,
-    width: 300,
-    overflow: 'hidden',
-  },
-  scanner: {
-    height: '100%',
-    width: '100%',
-    margin: 'auto',
-  },
-  flipIconButton: {
-    alignSelf: 'center',
-    alignItems: 'center',
-  },
-  scannerContainerInvalid: {
-    borderColor: Colors.Red,
-  },
-  scannerContainerValid: {
-    borderColor: Colors.Green,
-  },
-});
-
 export const FaceScanner: React.FC<FaceScannerProps> = (props) => {
   const { t } = useTranslation('FaceScanner');
   const { appService } = useContext(GlobalContext);
   const isActive = useSelector(appService, selectIsActive);
 
   const machine = useRef(faceScannerMachine);
-  const service = useInterpret(machine.current, undefined, (state) => {
-    console.log('\n\nstate', state._sessionid, state.value, state.event.type);
-  });
+  const service = useInterpret(machine.current);
 
   const whichCamera = useSelector(service, selectWhichCamera);
   const face = useSelector(service, selectFace);
@@ -149,3 +120,30 @@ export const FaceScanner: React.FC<FaceScannerProps> = (props) => {
 interface FaceScannerProps {
   onFaceDetected: (face: FaceScanResult) => void;
 }
+
+const styles = StyleSheet.create({
+  scannerContainer: {
+    borderWidth: 4,
+    borderColor: Colors.Black,
+    borderRadius: 32,
+    justifyContent: 'center',
+    height: 400,
+    width: 300,
+    overflow: 'hidden',
+  },
+  scanner: {
+    height: '100%',
+    width: '100%',
+    margin: 'auto',
+  },
+  flipIconButton: {
+    alignSelf: 'center',
+    alignItems: 'center',
+  },
+  scannerContainerInvalid: {
+    borderColor: Colors.Red,
+  },
+  scannerContainerValid: {
+    borderColor: Colors.Green,
+  },
+});

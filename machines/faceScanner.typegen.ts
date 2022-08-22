@@ -2,14 +2,6 @@
 
 export interface Typegen0 {
   '@@xstate/typegen': true;
-  'eventsCausingActions': {
-    setCameraRef: 'READY';
-    openSettings: 'OPEN_SETTINGS';
-    flipWhichCamera: 'FLIP_CAMERA';
-    setFaceMetadata: 'FACE_DETECTED';
-    setFaceImage: 'done.invoke.faceScanner.scanning.faceFound:invocation[0]';
-    setCaptureError: 'error.platform.faceScanner.scanning.faceFound:invocation[0]';
-  };
   'internalEvents': {
     'done.invoke.faceScanner.scanning.faceFound:invocation[0]': {
       type: 'done.invoke.faceScanner.scanning.faceFound:invocation[0]';
@@ -23,9 +15,9 @@ export interface Typegen0 {
     'xstate.init': { type: 'xstate.init' };
   };
   'invokeSrcNameMap': {
+    captureImage: 'done.invoke.faceScanner.scanning.faceFound:invocation[0]';
     checkPermission: 'done.invoke.faceScanner.init.checkingPermission:invocation[0]';
     requestPermission: 'done.invoke.faceScanner.init.requestingPermission:invocation[0]';
-    captureImage: 'done.invoke.faceScanner.scanning.faceFound:invocation[0]';
   };
   'missingImplementations': {
     actions: never;
@@ -33,10 +25,18 @@ export interface Typegen0 {
     guards: never;
     delays: never;
   };
+  'eventsCausingActions': {
+    flipWhichCamera: 'FLIP_CAMERA';
+    openSettings: 'OPEN_SETTINGS';
+    setCameraRef: 'READY';
+    setCaptureError: 'error.platform.faceScanner.scanning.faceFound:invocation[0]';
+    setFaceImage: 'done.invoke.faceScanner.scanning.faceFound:invocation[0]';
+    setFaceMetadata: 'FACE_DETECTED';
+  };
   'eventsCausingServices': {
-    checkPermission: 'APP_FOCUSED';
-    requestPermission: 'DENIED';
     captureImage: 'FACE_DETECTED';
+    checkPermission: 'APP_FOCUSED' | 'xstate.init';
+    requestPermission: 'DENIED';
   };
   'eventsCausingGuards': {
     canRequestPermission: 'DENIED';
@@ -44,6 +44,7 @@ export interface Typegen0 {
   };
   'eventsCausingDelays': {};
   'matchesStates':
+    | 'imageCaptured'
     | 'init'
     | 'init.checkingPermission'
     | 'init.permissionDenied'
@@ -52,7 +53,6 @@ export interface Typegen0 {
     | 'scanning'
     | 'scanning.faceFound'
     | 'scanning.faceNotFound'
-    | 'imageCaptured'
     | {
         init?:
           | 'checkingPermission'
