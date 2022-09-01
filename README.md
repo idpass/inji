@@ -98,6 +98,22 @@ More info here: [Build your app from the command line](https://developer.android
 
 # Developing iOS
 
+## Setup Google Nearby Messages API key
+
+In `shared/constants.ts`:
+
+```js
+export const GNM_API_KEY = '<YOUR_API_KEY>';
+```
+
+In `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<meta-data android:name="com.google.android.nearby.messages.API_KEY" android:value="<YOUR_API_KEY>" />
+```
+
+More info here: [Get Started with Google Nearby Messages](https://developers.google.com/nearby/messages/android/get-started)
+
 ## Build for TestFlight
 
 1. Install all dependencies
