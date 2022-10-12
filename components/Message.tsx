@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
   viewContainer: {
     backgroundColor: 'rgba(0,0,0,.6)',
     width: Dimensions.get('screen').width,
-    height: Dimensions.get('screen').height,
+    height: '100%',
     position: 'absolute',
     top: 0,
     zIndex: 9,

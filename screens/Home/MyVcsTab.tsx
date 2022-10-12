@@ -82,6 +82,7 @@ export const MyVcsTab: React.FC<HomeScreenTabProps> = (props) => {
       {controller.AddVcModalService && (
         <AddVcModal service={controller.AddVcModalService} />
       )}
+
       {controller.isRequestSuccessful && (
         <DownloadingVcModal
           isVisible={controller.isRequestSuccessful}
