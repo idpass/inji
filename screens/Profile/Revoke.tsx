@@ -1,14 +1,15 @@
 import React from 'react';
 import {
   Dimensions,
+  Pressable,
   RefreshControl,
   SafeAreaView,
   StyleSheet,
   View,
 } from 'react-native';
-import { Divider, Icon, ListItem, Overlay } from 'react-native-elements';
+import { CheckBox, Divider, ListItem, Overlay } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Button, Column, Centered, Row, Text } from '../../components/ui';
-import { VidItem } from '../../components/VidItem';
 import { Colors } from '../../components/ui/styleUtils';
 import { ToastItem } from '../../components/ui/ToastItem';
 import { OIDcAuthenticationOverlay } from '../../components/OIDcAuthModal';
@@ -45,6 +46,16 @@ export const Revoke: React.FC<RevokeScreenProps> = (props) => {
       padding: 24,
       elevation: 6,
       borderRadius: 4,
+    },
+    title: {
+      color: Colors.Black,
+      backgroundColor: 'transparent',
+    },
+    subtitle: {
+      backgroundColor: 'transparent',
+    },
+    container: {
+      backgroundColor: Colors.White,
     },
   });
 
@@ -83,19 +94,52 @@ export const Revoke: React.FC<RevokeScreenProps> = (props) => {
                     scroll
                     refreshControl={
                       <RefreshControl
-                        refreshing={controller.isRefreshingVcs}
+                        refreshing={controller.isFetchingVIDs}
                         onRefresh={controller.REFRESH}
                       />
                     }>
                     {controller.vidKeys.map((vcKey, index) => (
-                      <VidItem
-                        key={`${vcKey}-${index}`}
-                        vcKey={vcKey}
-                        margin="0 2 8 2"
-                        onPress={controller.selectVcItem(index, vcKey)}
-                        selectable
-                        selected={controller.selectedVidKeys.includes(vcKey)}
-                      />
+                      <Pressable
+                        onPress={controller.selectVcItem(index, vcKey.vid)}
+                        key={`vid-${index}`}>
+                        <Row
+                          elevation={2}
+                          crossAlign="center"
+                          margin="0 2 8 2"
+                          backgroundColor={Colors.White}
+                          padding={[16, 16]}
+                          style={styles.container}>
+                          <Column fill margin="0 24 0 0">
+                            <Text
+                              weight="semibold"
+                              style={styles.title}
+                              margin="0 0 6 0">
+                              {vcKey.vid}
+                            </Text>
+                            <Text
+                              size="smaller"
+                              numLines={1}
+                              style={styles.subtitle}>
+                              {t('generated')}{' '}
+                              {new Date(
+                                vcKey.generatedOnTimestamp
+                              ).toLocaleDateString()}
+                            </Text>
+                          </Column>
+                          <CheckBox
+                            checked={controller.selectedVidKeys.includes(
+                              vcKey.vid
+                            )}
+                            checkedIcon={
+                              <Icon name="checkbox-intermediate" size={24} />
+                            }
+                            uncheckedIcon={
+                              <Icon name="checkbox-blank-outline" size={24} />
+                            }
+                            onPress={controller.selectVcItem(index, vcKey.vid)}
+                          />
+                        </Row>
+                      </Pressable>
                     ))}
                   </Column>
                 )}
@@ -139,7 +183,7 @@ export const Revoke: React.FC<RevokeScreenProps> = (props) => {
                       {'\u2022'}
                     </Text>
                     <Text margin="0 0 0 0" weight="bold">
-                      {vcKey.split(':')[2]}
+                      {vcKey}
                     </Text>
                   </View>
                 ))}
@@ -167,6 +211,7 @@ export const Revoke: React.FC<RevokeScreenProps> = (props) => {
         isVisible={controller.isAuthenticating}
         onDismiss={() => controller.setAuthenticating(false)}
         onVerify={() => {
+          controller.REFRESH();
           controller.setAuthenticating(false);
           controller.setIsViewing(true);
         }}

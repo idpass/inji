@@ -373,13 +373,11 @@ export async function removeItems(
     const data = await AsyncStorage.getItem(key);
     const decrypted = decryptJson(encryptionKey, data);
     const list = JSON.parse(decrypted);
+
     const newList = list.filter(function (vc: string) {
       return !values.find(function (vcKey: string) {
-        const vcKeyArray = vcKey.split(':');
-        const finalVcKeyArray = vcKeyArray.pop();
-        console.log('finalVcKeyArray', finalVcKeyArray);
-        const finalVcKey = vcKeyArray.join(':');
-        return vc.includes(finalVcKey);
+        const vcArray = vc.split(':');
+        return vcKey.includes(vcArray[2]);
       });
     });
 

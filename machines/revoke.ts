@@ -20,6 +20,7 @@ const model = createModel(
     otpError: '',
     transactionId: '',
     requestId: '',
+    fetchedVIDs: [] as VID[],
     VIDs: [] as string[],
   },
   {
@@ -33,6 +34,8 @@ const model = createModel(
       STORE_RESPONSE: (response: string[]) => ({ response }),
       ERROR: (data: Error) => ({ data }),
       SUCCESS: () => ({}),
+      FETCH_VIDs: () => ({}),
+      SET_VIDS: (data: VID[]) => ({ data }),
     },
   }
 );
@@ -47,13 +50,17 @@ export const revokeVidsMachine =
         events: {} as EventFrom<typeof model>,
       },
       id: 'RevokeVids',
-      initial: 'acceptingVIDs',
+      initial: 'idle',
       states: {
         idle: {
           on: {
             REVOKE_VCS: {
               actions: ['setTransactionId', 'clearOtp'],
               target: 'acceptingOtpInput',
+            },
+            FETCH_VIDs: {
+              actions: [log('fetching VIDs')],
+              target: 'fetchVIDs',
             },
           },
         },
@@ -72,6 +79,17 @@ export const revokeVidsMachine =
             },
           },
         },
+        fetchVIDs: {
+          invoke: {
+            src: 'fetchVIDs',
+          },
+          on: {
+            SET_VIDS: {
+              actions: 'setFetchedVIDs',
+              target: 'acceptingVIDs',
+            },
+          },
+        },
         acceptingVIDs: {
           entry: ['setTransactionId', 'clearOtp'],
           initial: 'idle',
@@ -81,6 +99,10 @@ export const revokeVidsMachine =
                 REVOKE_VCS: {
                   actions: 'setVIDs',
                   target: '#RevokeVids.acceptingOtpInput',
+                },
+                FETCH_VIDs: {
+                  actions: [log('fetching VIDs')],
+                  target: '#RevokeVids.fetchVIDs',
                 },
               },
             },
@@ -143,7 +165,7 @@ export const revokeVidsMachine =
           },
         },
         loggingRevoke: {
-          entry: [log('loggingRevoke'), 'logRevoked'],
+          entry: [log('loggingRevoke'), 'logRevoked', 'removeVIDs'],
           on: {
             DISMISS: {
               target: 'acceptingVIDs',
@@ -164,6 +186,20 @@ export const revokeVidsMachine =
 
         setVIDs: model.assign({
           VIDs: (_context, event) => event.vcKeys,
+        }),
+
+        removeVIDs: model.assign({
+          fetchedVIDs: (_context) => {
+            return _context.fetchedVIDs.filter((vid) => {
+              return !_context.VIDs.find((vcKey: string) => {
+                return vcKey.includes(vid.vid);
+              });
+            });
+          },
+        }),
+
+        setFetchedVIDs: model.assign({
+          fetchedVIDs: (_, event) => event.data,
         }),
 
         setIdBackendError: assign({
@@ -205,11 +241,11 @@ export const revokeVidsMachine =
           (context) =>
             ActivityLogEvents.LOG_ACTIVITY(
               context.VIDs.map((vc) => ({
-                _vcKey: vc,
+                _vcKey: `vc:VID:${vc}:${Date.now()}`,
                 action: 'revoked',
                 timestamp: Date.now(),
                 deviceName: '',
-                vcLabel: vc.split(':')[2],
+                vcLabel: vc,
               }))
             ),
           {
@@ -231,31 +267,36 @@ export const revokeVidsMachine =
         requestOtp: async (context) => {
           const transactionId = String(new Date().valueOf()).substring(3, 13);
           return request('POST', '/req/otp', {
-            individualId: context.VIDs[0].split(':')[2],
+            individualId: context.VIDs[0],
             individualIdType: 'VID',
             otpChannel: ['EMAIL', 'PHONE'],
             transactionID: transactionId,
           });
         },
 
+        fetchVIDs: () => async (callback) => {
+          const response = await request('GET', '/vids');
+          if (response.response) {
+            callback({ type: 'SET_VIDS', data: response.response });
+          }
+        },
+
         requestRevoke: (context) => async (callback) => {
           await Promise.all(
             context.VIDs.map((vid: string) => {
               try {
-                const vidID = vid.split(':')[2];
                 const transactionId = String(new Date().valueOf()).substring(
                   3,
                   13
                 );
-                return request('PATCH', `/vid/${vidID}`, {
+                return request('PATCH', `/vid/${vid}`, {
                   transactionID: transactionId,
                   vidStatus: 'REVOKED',
-                  individualId: vidID,
+                  individualId: vid,
                   individualIdType: 'VID',
                   otp: context.otp,
                 });
               } catch (error) {
-                console.log('error.message', error.message);
                 return error;
               }
             })
@@ -282,6 +323,16 @@ export function createRevokeMachine(serviceRefs: AppServices) {
 
 type State = StateFrom<typeof revokeVidsMachine>;
 
+interface VID {
+  vid: string;
+  maskedVid: string;
+  vidType: string;
+  expiryTimestamp: number;
+  transactionLimit: number;
+  transactionsLeftCount: number;
+  generatedOnTimestamp: number;
+}
+
 export const RevokeVidsEvents = model.events;
 
 export function selectIdType(state: State) {
@@ -294,6 +345,14 @@ export function selectIdError(state: State) {
 
 export function selectOtpError(state: State) {
   return state.context.otpError;
+}
+
+export function selectVIDs(state: State) {
+  return state.context.fetchedVIDs;
+}
+
+export function selectIsFetchingVIDs(state: State) {
+  return state.matches('fetchVIDs');
 }
 
 export function selectIsRevokingVc(state: State) {

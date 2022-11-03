@@ -15,6 +15,7 @@ export interface Typegen0 {
     'xstate.init': { type: 'xstate.init' };
   };
   'invokeSrcNameMap': {
+    fetchVIDs: 'done.invoke.RevokeVids.fetchVIDs:invocation[0]';
     requestOtp: 'done.invoke.RevokeVids.acceptingVIDs.requestingOtp:invocation[0]';
     requestRevoke: 'done.invoke.RevokeVids.requestingRevoke:invocation[0]';
   };
@@ -29,17 +30,20 @@ export interface Typegen0 {
       | 'DISMISS'
       | 'ERROR'
       | 'REVOKE_VCS'
-      | 'done.invoke.RevokeVids.acceptingVIDs.requestingOtp:invocation[0]'
-      | 'xstate.init';
+      | 'SET_VIDS'
+      | 'done.invoke.RevokeVids.acceptingVIDs.requestingOtp:invocation[0]';
     logRevoked: 'STORE_RESPONSE';
+    removeVIDs: 'STORE_RESPONSE';
     revokeVID: 'SUCCESS';
+    setFetchedVIDs: 'SET_VIDS';
     setIdBackendError: 'error.platform.RevokeVids.acceptingVIDs.requestingOtp:invocation[0]';
     setOtp: 'INPUT_OTP';
     setOtpError: 'ERROR';
-    setTransactionId: 'DISMISS' | 'REVOKE_VCS' | 'xstate.init';
+    setTransactionId: 'DISMISS' | 'REVOKE_VCS' | 'SET_VIDS';
     setVIDs: 'REVOKE_VCS';
   };
   'eventsCausingServices': {
+    fetchVIDs: 'FETCH_VIDs';
     requestOtp: never;
     requestRevoke: 'INPUT_OTP';
   };
@@ -50,6 +54,7 @@ export interface Typegen0 {
     | 'acceptingVIDs'
     | 'acceptingVIDs.idle'
     | 'acceptingVIDs.requestingOtp'
+    | 'fetchVIDs'
     | 'idle'
     | 'invalid'
     | 'invalid.backend'

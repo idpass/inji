@@ -2,11 +2,7 @@ import { useSelector } from '@xstate/react';
 import { useContext, useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { GlobalContext } from '../../shared/GlobalContext';
-import {
-  selectIsRefreshingMyVcs,
-  selectMyVcs,
-  VcEvents,
-} from '../../machines/vc';
+import { VcEvents } from '../../machines/vc';
 import { vcItemMachine } from '../../machines/vcItem';
 import { useTranslation } from 'react-i18next';
 
@@ -15,6 +11,8 @@ import {
   selectIsAcceptingOtpInput,
   selectIsRevokingVc,
   selectIsLoggingRevoke,
+  selectVIDs,
+  selectIsFetchingVIDs,
 } from '../../machines/revoke';
 
 import { ActorRefFrom } from 'xstate';
@@ -24,13 +22,14 @@ export function useRevoke() {
   const { appService } = useContext(GlobalContext);
   const vcService = appService.children.get('vc');
   const revokeService = appService.children.get('RevokeVids');
-  const vcKeys = useSelector(vcService, selectMyVcs);
   const isRevokingVc = useSelector(revokeService, selectIsRevokingVc);
   const isLoggingRevoke = useSelector(revokeService, selectIsLoggingRevoke);
   const isAcceptingOtpInput = useSelector(
     revokeService,
     selectIsAcceptingOtpInput
   );
+  const vidKeys = useSelector(revokeService, selectVIDs);
+  const isFetchingVIDs = useSelector(revokeService, selectIsFetchingVIDs);
 
   const [isRevoking, setRevoking] = useState(false);
   const [isAuthenticating, setAuthenticating] = useState(false);
@@ -39,11 +38,6 @@ export function useRevoke() {
   const [message, setMessage] = useState('');
   const [selectedIndex, setSelectedIndex] = useState<number>(null);
   const [selectedVidKeys, setSelectedVidKeys] = useState<string[]>([]);
-
-  const vidKeys = vcKeys.filter((vc) => {
-    const vcKey = vc.split(':');
-    return vcKey[1] === 'VID';
-  });
 
   const selectVcItem = (index: number, vcKey: string) => {
     return () => {
@@ -72,6 +66,7 @@ export function useRevoke() {
     }
     if (isLoggingRevoke) {
       revokeService.send(RevokeVidsEvents.DISMISS());
+      //to refresh VCs under Home screen
       vcService.send(VcEvents.REFRESH_MY_VCS());
     }
   }, [isRevokingVc, isLoggingRevoke]);
@@ -80,16 +75,14 @@ export function useRevoke() {
     error: '',
     isAcceptingOtpInput,
     isAuthenticating,
-    isRefreshingVcs: useSelector(vcService, selectIsRefreshingMyVcs),
+    isFetchingVIDs,
     isRevoking,
     isViewing,
     message,
     selectedIndex,
     selectedVidKeys,
     toastVisible,
-    vidKeys: vidKeys.filter(
-      (vcKey, index, vid) => vid.indexOf(vcKey) === index
-    ),
+    vidKeys,
 
     CONFIRM_REVOKE_VC: () => {
       setRevoking(true);
@@ -99,7 +92,9 @@ export function useRevoke() {
     },
     INPUT_OTP: (otp: string) =>
       revokeService.send(RevokeVidsEvents.INPUT_OTP(otp)),
-    REFRESH: () => vcService.send(VcEvents.REFRESH_MY_VCS()),
+    REFRESH: () => {
+      revokeService.send(RevokeVidsEvents.FETCH_VIDs());
+    },
     REVOKE_VC: () => {
       revokeService.send(RevokeVidsEvents.REVOKE_VCS(selectedVidKeys));
       setRevoking(false);
