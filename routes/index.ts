@@ -19,7 +19,7 @@ export const baseRoutes: Screen[] = [
       headerLeft: () =>
         React.createElement(Image, {
           source: require('../assets/idpass-logo.png'),
-          style: { width: 124, resizeMode: 'contain' },
+          style: { width: 124, height: 27, resizeMode: 'contain' },
         }),
     },
   },
@@ -56,6 +56,7 @@ export type RootStackParamList = {
   Auth: undefined;
   Passcode: {
     setup: boolean;
+    message?: string;
   };
   Biometric: {
     setup: boolean;

@@ -18,7 +18,7 @@ export const MyVcsTab: React.FC<HomeScreenTabProps> = (props) => {
   return (
     <React.Fragment>
       <Column fill style={{ display: props.isVisible ? 'flex' : 'none' }}>
-        <Column fill padding="32 24">
+        <Column fill pY={32} pX={24}>
           {controller.vcKeys.length > 0 && (
             <React.Fragment>
               <Column
@@ -29,9 +29,9 @@ export const MyVcsTab: React.FC<HomeScreenTabProps> = (props) => {
                     onRefresh={controller.REFRESH}
                   />
                 }>
-                {controller.vcKeys.map((vcKey) => (
+                {controller.vcKeys.map((vcKey, index) => (
                   <VcItem
-                    key={vcKey}
+                    key={`${vcKey}-${index}`}
                     vcKey={vcKey}
                     margin="0 2 8 2"
                     onPress={controller.VIEW_VC}

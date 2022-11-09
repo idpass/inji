@@ -1,4 +1,5 @@
 import React from 'react';
+import { View } from 'react-native';
 import { getVersion } from 'react-native-device-info';
 import { ListItem, Switch } from 'react-native-elements';
 import { Column, Text } from '../../components/ui';
@@ -7,6 +8,7 @@ import { MainRouteProps } from '../../routes/main';
 import { EditableListItem } from '../../components/EditableListItem';
 import { MessageOverlay } from '../../components/MessageOverlay';
 import { Credits } from './Credits';
+import { Revoke } from './Revoke';
 import { useProfileScreen } from './ProfileScreenController';
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from '../../components/LanguageSelector';
@@ -36,7 +38,6 @@ const LanguageSetting: React.FC = () => {
 export const ProfileScreen: React.FC<MainRouteProps> = (props) => {
   const { t } = useTranslation('ProfileScreen');
   const controller = useProfileScreen(props);
-
   return (
     <Column fill padding="24 0" backgroundColor={Colors.LightGrey}>
       <MessageOverlay
@@ -55,6 +56,7 @@ export const ProfileScreen: React.FC<MainRouteProps> = (props) => {
         onEdit={controller.UPDATE_VC_LABEL}
       />
       <LanguageSetting />
+      <Revoke label={t('revokeLabel')} />
       <ListItem bottomDivider disabled={!controller.canUseBiometrics}>
         <ListItem.Content>
           <ListItem.Title>
@@ -84,12 +86,31 @@ export const ProfileScreen: React.FC<MainRouteProps> = (props) => {
       </ListItem>
       <Text
         weight="semibold"
-        margin="32"
+        margin="32 0 0 0"
         align="center"
         size="smaller"
         color={Colors.Grey}>
         Version: {getVersion()}
       </Text>
+      {controller.backendInfo.application.name !== '' ? (
+        <View>
+          <Text
+            weight="semibold"
+            align="center"
+            size="smaller"
+            color={Colors.Grey}>
+            {controller.backendInfo.application.name}:{' '}
+            {controller.backendInfo.application.version}
+          </Text>
+          <Text
+            weight="semibold"
+            align="center"
+            size="smaller"
+            color={Colors.Grey}>
+            MOSIP: {controller.backendInfo.config['mosip.host']}
+          </Text>
+        </View>
+      ) : null}
     </Column>
   );
 };

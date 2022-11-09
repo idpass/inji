@@ -1,6 +1,6 @@
 import React, { useContext, useRef } from 'react';
 import { useInterpret, useSelector } from '@xstate/react';
-import { Pressable, StyleSheet } from 'react-native';
+import { I18nManager, Pressable, StyleSheet } from 'react-native';
 import { CheckBox, Icon } from 'react-native-elements';
 import { ActorRefFrom } from 'xstate';
 import {
@@ -15,11 +15,13 @@ import { Column, Row, Text } from './ui';
 import { Colors } from './ui/styleUtils';
 import { RotatingIcon } from './RotatingIcon';
 import { GlobalContext } from '../shared/GlobalContext';
+import { LocalizedField } from '../types/vc';
 
 const styles = StyleSheet.create({
   title: {
     color: Colors.Black,
     backgroundColor: 'transparent',
+    textAlign: 'left',
   },
   loadingTitle: {
     color: 'transparent',
@@ -64,7 +66,7 @@ export const VcItem: React.FC<VcItemProps> = (props) => {
       onPress={() => props.onPress(service)}
     />
   ) : (
-    <Icon name="chevron-right" />
+    <Icon name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'} />
   );
 
   return (
@@ -76,7 +78,7 @@ export const VcItem: React.FC<VcItemProps> = (props) => {
         crossAlign="center"
         margin={props.margin}
         backgroundColor={!verifiableCredential ? Colors.Grey6 : Colors.White}
-        padding="16 24"
+        padding={[16, 16]}
         style={
           !verifiableCredential ? styles.loadingContainer : styles.container
         }>

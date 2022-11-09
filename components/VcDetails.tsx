@@ -4,7 +4,7 @@ import * as DateFnsLocale from '../lib/date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { Image } from 'react-native';
 import { Icon, ListItem } from 'react-native-elements';
-import { VC, CredentialSubject } from '../types/vc';
+import { VC, CredentialSubject, LocalizedField } from '../types/vc';
 import { Column, Row, Text } from './ui';
 import { Colors } from './ui/styleUtils';
 import { TextItem } from './ui/TextItem';
@@ -23,34 +23,39 @@ const VerifiedIcon: React.FC = () => {
 export const VcDetails: React.FC<VcDetailsProps> = (props) => {
   const { t, i18n } = useTranslation('VcDetails');
 
+  if (props.vc?.verifiableCredential == null) {
+    return <Text align="center">Loading details...</Text>;
+  }
+
   return (
     <Column>
-      <Row padding="16 24">
-        <Column fill elevation={1} padding="12 16" margin="0 16 0 0">
-          <Text size="smaller" color={Colors.Grey}>
+      <Row pY={16} pX={8} align="space-between">
+        <Column fill elevation={1} pY={12} pX={16} margin="0 8">
+          <Text size="smaller" color={Colors.Grey} align="left">
             {t('generatedOn')}
           </Text>
-          <Text weight="bold" size="smaller">
+          <Text weight="bold" size="smaller" align="left">
             {new Date(props.vc?.generatedOn).toLocaleDateString()}
           </Text>
         </Column>
-        <Column fill elevation={1} padding="12 16" margin="0 16 0 0">
+        <Column fill elevation={1} pY={12} pX={16} margin="0 8">
           <Text
             size="smaller"
+            align="left"
             color={Colors.Grey}
             style={{ textTransform: 'uppercase' }}>
             {props.vc?.idType}
           </Text>
-          <Text weight="bold" size="smaller">
+          <Text weight="bold" size="smaller" align="left">
             {props.vc?.id}
           </Text>
         </Column>
-        <Column fill elevation={1} padding="12 16">
-          <Text size="smaller" color={Colors.Grey}>
+        <Column fill elevation={1} pY={12} pX={16} margin="0 8">
+          <Text size="smaller" align="left" color={Colors.Grey}>
             {t('status')}
           </Text>
           <Row>
-            <Text weight="bold" size="smaller">
+            <Text weight="bold" size="smaller" align="left">
               {t('valid')}
             </Text>
             {props.vc?.isVerified && <VerifiedIcon />}
@@ -149,11 +154,6 @@ interface VcDetailsProps {
   vc: VC;
 }
 
-interface LocalizedField {
-  language: string;
-  value: string;
-}
-
 function getFullAddress(credential: CredentialSubject) {
   if (!credential) {
     return '';
@@ -175,7 +175,7 @@ function getFullAddress(credential: CredentialSubject) {
     .join(', ');
 }
 
-function getLocalizedField(rawField: string | LocalizedField) {
+function getLocalizedField(rawField: string | LocalizedField[]) {
   if (typeof rawField === 'string') {
     return rawField;
   }

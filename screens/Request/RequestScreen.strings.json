@@ -2,6 +2,7 @@
   "bluetoothDenied": "Please enable Bluetooth to be able to request {{vcLabel}}",
   "showQrCode": "Show this QR code to request {{vcLabel}}",
   "incomingVc": "Incoming {{vcLabel}}",
+  "request": "Request",
   "status": {
     "accepted": {
       "title": "Success!",
@@ -16,7 +17,16 @@
       "message": "The connection was interrupted. Please try again."
     },
     "waitingConnection": "Waiting for connection...",
-    "exchangingDeviceInfo": "Exchanging device info...",
-    "connected": "Connected to device. Waiting for {{vcLabel}}..."
-  }
+    "exchangingDeviceInfo": {
+      "message": "Exchanging device info...",
+      "timeoutHint": "It's taking too long to exchange device info..."
+    },
+    "connected": {
+      "message": "Connected to device. Waiting for {{vcLabel}}...",
+      "timeoutHint": "No VC data received yet. Is sending device still connected?"
+    }
+  },
+  "online": "Online",
+  "offline": "Offline",
+  "gotoSettings": "Go to settings"
 }

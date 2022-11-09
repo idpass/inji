@@ -1,36 +1,82 @@
 import React from 'react';
 import QRCode from 'react-native-qrcode-svg';
-import { Centered, Column, Text } from '../../components/ui';
+import { Button, Centered, Column, Row, Text } from '../../components/ui';
 import { Colors } from '../../components/ui/styleUtils';
-import { MainRouteProps } from '../../routes/main';
-import { ReceiveVcModal } from './ReceiveVcModal';
-import { MessageOverlay } from '../../components/MessageOverlay';
-import { useRequestScreen } from './RequestScreenController';
-import { useTranslation } from 'react-i18next';
 
-export const RequestScreen: React.FC<MainRouteProps> = (props) => {
+import { useRequestScreen } from './RequestScreenController';
+import { TFunction, useTranslation } from 'react-i18next';
+import { Switch } from 'react-native-elements';
+import { Platform } from 'react-native';
+
+export const RequestScreen: React.FC = () => {
   const { t } = useTranslation('RequestScreen');
-  const controller = useRequestScreen(props);
+  const controller = useRequestScreen();
 
   return (
-    <Column fill padding="98 24 24 24" backgroundColor={Colors.LightGrey}>
-      <Column>
-        {controller.isBluetoothDenied ? (
-          <Text color={Colors.Red} align="center">
-            {t('bluetoothDenied', { vcLabel: controller.vcLabel.singular })}
+    <Column fill padding="24" backgroundColor={Colors.LightGrey}>
+      {controller.isBluetoothDenied && (
+        <BluetoothPrompt t={t} controller={controller} />
+      )}
+
+      {!controller.isCheckingBluetoothService &&
+      !controller.isBluetoothDenied ? (
+        <Column align="flex-end" fill>
+          {controller.isWaitingForConnection && (
+            <SharingCode t={t} controller={controller} />
+          )}
+          <StatusMessage t={t} controller={controller} />
+        </Column>
+      ) : null}
+    </Column>
+  );
+};
+
+const BluetoothPrompt: React.FC<RequestScreenProps> = ({ t, controller }) => {
+  return (
+    <Centered fill>
+      <Text color={Colors.Red} align="center">
+        {t('bluetoothDenied', { vcLabel: controller.vcLabel.singular })}
+      </Text>
+      <Button
+        margin={[32, 0, 0, 0]}
+        title={t('gotoSettings')}
+        onPress={controller.GOTO_SETTINGS}
+      />
+    </Centered>
+  );
+};
+
+const StatusMessage: React.FC<RequestScreenProps> = ({ t, controller }) => {
+  return (
+    controller.statusMessage !== '' && (
+      <Column elevation={1} padding="16 24">
+        <Text>{controller.statusMessage}</Text>
+        {controller.statusHint !== '' && (
+          <Text size="small" color={Colors.Grey}>
+            {controller.statusHint}
           </Text>
-        ) : (
-          controller.isWaitingForConnection && (
-            <Text align="center">
-              {t('showQrCode', { vcLabel: controller.vcLabel.singular })}
-            </Text>
-          )
+        )}
+        {controller.isStatusCancellable && (
+          <Button
+            margin={[8, 0, 0, 0]}
+            title={t('cancel', { ns: 'common' })}
+            onPress={controller.CANCEL}
+          />
         )}
       </Column>
+    )
+  );
+};
+
+const SharingCode: React.FC<RequestScreenProps> = ({ t, controller }) => {
+  return (
+    <React.Fragment>
+      <Text align="center">
+        {t('showQrCode', { vcLabel: controller.vcLabel.singular })}
+      </Text>
 
       <Centered fill>
-        {controller.isWaitingForConnection &&
-        controller.connectionParams !== '' ? (
+        {controller.connectionParams !== '' ? (
           <QRCode
             size={200}
             value={controller.connectionParams}
@@ -39,46 +85,20 @@ export const RequestScreen: React.FC<MainRouteProps> = (props) => {
         ) : null}
       </Centered>
 
-      {controller.statusMessage !== '' && (
-        <Column elevation={1} padding="16 24">
-          <Text>{controller.statusMessage}</Text>
-        </Column>
-      )}
-
-      <ReceiveVcModal
-        isVisible={controller.isReviewing}
-        onDismiss={controller.REJECT}
-        onAccept={controller.ACCEPT}
-        onReject={controller.REJECT}
-        headerTitle={t('incomingVc', { vcLabel: controller.vcLabel.singular })}
-      />
-
-      <MessageOverlay
-        isVisible={controller.isAccepted}
-        title={t('status.accepted.title')}
-        message={t('status.accepted.message', {
-          vcLabel: controller.vcLabel.singular,
-          sender: controller.senderInfo.deviceName,
-        })}
-        onBackdropPress={controller.DISMISS}
-      />
-
-      <MessageOverlay
-        isVisible={controller.isRejected}
-        title={t('status.rejected.title')}
-        message={t('status.rejected.message', {
-          vcLabel: controller.vcLabel.singular,
-          sender: controller.senderInfo.deviceName,
-        })}
-        onBackdropPress={controller.DISMISS}
-      />
-
-      <MessageOverlay
-        isVisible={controller.isDisconnected}
-        title={t('status.disconnected.title')}
-        message={t('status.disconnected.message')}
-        onBackdropPress={controller.DISMISS}
-      />
-    </Column>
+      <Row align="center" crossAlign="center" margin={[0, 0, 48, 0]}>
+        <Text margin={[0, 16, 0, 0]}>Offline</Text>
+        <Switch
+          value={controller.sharingProtocol === 'ONLINE'}
+          onValueChange={controller.SWITCH_PROTOCOL}
+          disabled={Platform.OS === 'ios'}
+        />
+        <Text margin={[0, 0, 0, 16]}>Online</Text>
+      </Row>
+    </React.Fragment>
   );
 };
+
+interface RequestScreenProps {
+  t: TFunction;
+  controller: ReturnType<typeof useRequestScreen>;
+}
