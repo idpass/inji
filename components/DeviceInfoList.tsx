@@ -10,21 +10,15 @@ export const DeviceInfoList: React.FC<DeviceInfoProps> = (props) => {
       <TextItem
         divider
         label={props.of === 'receiver' ? t('requestedBy') : t('sentBy')}
-        text={props.deviceInfo.deviceName}
-      />
-      <TextItem divider label={t('name')} text={props.deviceInfo.name} />
-      <TextItem
-        divider
-        label={t('deviceRefNumber')}
-        text={props.deviceInfo.deviceId}
+        text={t(props.deviceInfo.deviceName)}
       />
     </React.Fragment>
   );
 };
 
 interface DeviceInfoProps {
-  of: 'sender' | 'receiver';
   deviceInfo: DeviceInfo;
+  of?: string;
 }
 
 export interface DeviceInfo {

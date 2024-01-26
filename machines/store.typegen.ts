@@ -2,7 +2,7 @@
 
 export interface Typegen0 {
   '@@xstate/typegen': true;
-  'internalEvents': {
+  internalEvents: {
     'done.invoke._store': {
       type: 'done.invoke._store';
       data: unknown;
@@ -13,26 +13,28 @@ export interface Typegen0 {
       data: unknown;
       __tip: 'See the XState TS docs to learn how to strongly type this.';
     };
-    'error.platform._store': { type: 'error.platform._store'; data: unknown };
-    'error.platform.store.resettingStorage:invocation[0]': {
-      type: 'error.platform.store.resettingStorage:invocation[0]';
-      data: unknown;
-    };
-    'xstate.init': { type: 'xstate.init' };
+    'error.platform._store': {type: 'error.platform._store'; data: unknown};
+    'xstate.init': {type: 'xstate.init'};
   };
-  'invokeSrcNameMap': {
+  invokeSrcNameMap: {
+    checkStorageInitialisedOrNot: 'done.invoke.store.checkStorageInitialisation:invocation[0]';
     clear: 'done.invoke.store.resettingStorage:invocation[0]';
     generateEncryptionKey: 'done.invoke.store.generatingEncryptionKey:invocation[0]';
     getEncryptionKey: 'done.invoke.store.gettingEncryptionKey:invocation[0]';
+    hasAndroidEncryptionKey: 'done.invoke.store.checkEncryptionKey:invocation[0]';
     store: 'done.invoke._store';
   };
-  'missingImplementations': {
+  missingImplementations: {
     actions: never;
-    services: never;
-    guards: never;
     delays: never;
+    guards: never;
+    services: never;
   };
-  'eventsCausingActions': {
+  eventsCausingActions: {
+    cacheVCFilesData:
+      | 'KEY_RECEIVED'
+      | 'READY'
+      | 'done.invoke.store.resettingStorage:invocation[0]';
     forwardStoreRequest:
       | 'APPEND'
       | 'CLEAR'
@@ -40,24 +42,37 @@ export interface Typegen0 {
       | 'PREPEND'
       | 'REMOVE'
       | 'REMOVE_ITEMS'
-      | 'SET';
+      | 'REMOVE_VC_METADATA'
+      | 'SET'
+      | 'UPDATE';
     notifyParent:
       | 'KEY_RECEIVED'
+      | 'READY'
       | 'done.invoke.store.resettingStorage:invocation[0]';
     setEncryptionKey: 'KEY_RECEIVED';
   };
-  'eventsCausingServices': {
-    clear: 'KEY_RECEIVED';
-    generateEncryptionKey: 'ERROR';
-    getEncryptionKey: 'xstate.init';
-    store: 'KEY_RECEIVED' | 'done.invoke.store.resettingStorage:invocation[0]';
+  eventsCausingDelays: {};
+  eventsCausingGuards: {
+    isCustomSecureKeystore: 'KEY_RECEIVED';
   };
-  'eventsCausingGuards': {};
-  'eventsCausingDelays': {};
-  'matchesStates':
+  eventsCausingServices: {
+    checkStorageInitialisedOrNot: 'ERROR';
+    clear: 'KEY_RECEIVED';
+    generateEncryptionKey: 'ERROR' | 'IGNORE' | 'READY';
+    getEncryptionKey: 'TRY_AGAIN';
+    hasAndroidEncryptionKey: never;
+    store:
+      | 'KEY_RECEIVED'
+      | 'READY'
+      | 'done.invoke.store.resettingStorage:invocation[0]';
+  };
+  matchesStates:
+    | 'checkEncryptionKey'
+    | 'checkStorageInitialisation'
+    | 'failedReadingKey'
     | 'generatingEncryptionKey'
     | 'gettingEncryptionKey'
     | 'ready'
     | 'resettingStorage';
-  'tags': never;
+  tags: never;
 }

@@ -1,50 +1,47 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
-
-import { DeviceInfoList } from '../../components/DeviceInfoList';
-import { Button, Column, Row, Text } from '../../components/ui';
-import { Colors } from '../../components/ui/styleUtils';
-import { VcDetails } from '../../components/VcDetails';
-import { useReceiveVcScreen } from './ReceiveVcScreenController';
-import { VerifyIdentityOverlay } from '../VerifyIdentityOverlay';
-import { MessageOverlay } from '../../components/MessageOverlay';
+import {useTranslation} from 'react-i18next';
+import {DeviceInfoList} from '../../components/DeviceInfoList';
+import {Button, Column, Row, Text} from '../../components/ui';
+import {Theme} from '../../components/ui/styleUtils';
+import {useReceiveVcScreen} from './ReceiveVcScreenController';
+import {VerifyIdentityOverlay} from '../VerifyIdentityOverlay';
+import {
+  ErrorMessageOverlay,
+  MessageOverlay,
+} from '../../components/MessageOverlay';
+import {useOverlayVisibleAfterTimeout} from '../../shared/hooks/useOverlayVisibleAfterTimeout';
+import {VcDetailsContainer} from '../../components/VC/VcDetailsContainer';
 
 export const ReceiveVcScreen: React.FC = () => {
-  const { t } = useTranslation('ReceiveVcScreen');
+  const {t} = useTranslation('ReceiveVcScreen');
   const controller = useReceiveVcScreen();
+  const savingOverlayVisible = useOverlayVisibleAfterTimeout(
+    controller.isAccepting,
+  );
+  const storeErrorTranslationPath = 'errors.savingFailed';
 
   return (
     <React.Fragment>
-      <Column scroll padding="24 0 48 0" backgroundColor={Colors.LightGrey}>
+      <Column
+        scroll
+        padding="24 0 48 0"
+        backgroundColor={Theme.Colors.lightGreyBackgroundColor}>
         <Column>
           <DeviceInfoList of="sender" deviceInfo={controller.senderInfo} />
           <Text weight="semibold" margin="24 24 0 24">
-            {t('header', { vcLabel: controller.vcLabel.singular })}
+            {t('header')}
           </Text>
-          <VcDetails vc={controller.incomingVc} />
+          <VcDetailsContainer
+            vc={controller.incomingVc}
+            isBindingPending={false}
+            activeTab={1}
+          />
         </Column>
         <Column padding="0 24" margin="32 0 0 0">
-          {controller.isIncomingVp ? (
-            <Button
-              type="outline"
-              title={t('acceptRequestAndVerify')}
-              margin="12 0 12 0"
-              onPress={controller.ACCEPT_AND_VERIFY}
-            />
-          ) : (
-            <Button
-              title={t('acceptRequest', {
-                vcLabel: controller.vcLabel.singular,
-              })}
-              margin="12 0 12 0"
-              onPress={controller.ACCEPT}
-            />
-          )}
           <Button
-            type="clear"
-            title={t('reject')}
+            title={t('goToReceivedVCTab')}
             margin="0 0 12 0"
-            onPress={controller.REJECT}
+            onPress={controller.GO_TO_RECEIVED_VC_TAB}
           />
         </Column>
       </Column>
@@ -61,12 +58,14 @@ export const ReceiveVcScreen: React.FC = () => {
         isVisible={controller.isInvalidIdentity}
         title={t('VerifyIdentityOverlay:errors.invalidIdentity.title')}
         message={t('VerifyIdentityOverlay:errors.invalidIdentity.message')}
+        customHeight={'auto'}
+        // DOUBT^: when does the above message show up in verifier device if it's never communicated explicitly?
         onBackdropPress={controller.DISMISS}>
         <Row>
           <Button
             fill
             type="clear"
-            title={t('common:cancel')}
+            title={t('common:dismiss')}
             onPress={controller.DISMISS}
             margin={[0, 8, 0, 0]}
           />
@@ -77,6 +76,18 @@ export const ReceiveVcScreen: React.FC = () => {
           />
         </Row>
       </MessageOverlay>
+
+      <MessageOverlay
+        isVisible={savingOverlayVisible}
+        message={t('saving')}
+        progress={true}
+      />
+      <ErrorMessageOverlay
+        isVisible={controller.IsSavingFailedInIdle}
+        error={storeErrorTranslationPath}
+        translationPath={'ReceiveVcScreen'}
+        onDismiss={controller.DISMISS}
+      />
     </React.Fragment>
   );
 };

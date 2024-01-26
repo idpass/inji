@@ -1,36 +1,41 @@
-import React from 'react';
-import { Dimensions, Modal as RNModal, StyleSheet } from 'react-native';
-import { Icon } from 'react-native-elements';
-import { PasscodeVerify } from '../components/PasscodeVerify';
-import { Column, Text } from '../components/ui';
-import { Colors } from '../components/ui/styleUtils';
+import React, {useEffect} from 'react';
+import {Modal as RNModal} from 'react-native';
+import {Icon} from 'react-native-elements';
+import {PasscodeVerify} from '../components/PasscodeVerify';
+import {Column, Text} from '../components/ui';
+import {Theme} from '../components/ui/styleUtils';
+import {
+  getImpressionEventData,
+  sendImpressionEvent,
+} from '../shared/telemetry/TelemetryUtils';
 
-const styles = StyleSheet.create({
-  modal: {
-    width: Dimensions.get('screen').width,
-    height: Dimensions.get('screen').height,
-  },
-});
+export const Passcode: React.FC<PasscodeProps> = props => {
+  useEffect(() => {
+    sendImpressionEvent(getImpressionEventData('App Login', 'Passcode'));
+  }, []);
 
-export const Passcode: React.FC<PasscodeProps> = (props) => {
   return (
     <RNModal
       animationType="slide"
-      style={styles.modal}
+      style={Theme.PasscodeStyles.modal}
       visible={true}
       onRequestClose={props.onDismiss}>
-      <Column fill padding="32" backgroundColor={Colors.White}>
-        <Icon name="lock" color={Colors.Orange} size={60} />
+      <Column
+        fill
+        padding="32"
+        backgroundColor={Theme.Colors.whiteBackgroundColor}>
+        <Icon name="lock" color={Theme.Colors.Icon} size={60} />
         <Column fill align="space-between" width="100%">
           <Text align="center">{props.message || 'Enter your passcode'}</Text>
           <PasscodeVerify
             onSuccess={props.onSuccess}
             onError={props.onError}
             passcode={props.storedPasscode}
+            salt={props.salt}
           />
         </Column>
         <Column fill>
-          <Text align="center" color={Colors.Red}>
+          <Text align="center" color={Theme.Colors.errorMessage}>
             {props.error}
           </Text>
         </Column>
@@ -43,6 +48,7 @@ interface PasscodeProps {
   message?: string;
   error: string;
   storedPasscode: string;
+  salt: string;
   onSuccess: () => void;
   onError: (value: string) => void;
   onDismiss: () => void;

@@ -1,72 +1,77 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Icon } from 'react-native-elements';
-
-import { Colors } from '../../components/ui/styleUtils';
-import { SendVcScreen } from './SendVcScreen';
-import { MessageOverlay } from '../../components/MessageOverlay';
-import { useScanLayout } from './ScanLayoutController';
-import { LanguageSelector } from '../../components/LanguageSelector';
-import { ScanScreen } from './ScanScreen';
-import { I18nManager, Platform } from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {SendVcScreen} from './SendVcScreen';
+import {useScanLayout} from './ScanLayoutController';
+import {ScanScreen} from './ScanScreen';
+import {ProgressingModal} from '../../components/ProgressingModal';
+import {SCAN_ROUTES} from '../../routes/routesConstants';
+import {SharingSuccessModal} from './SuccessfullySharedModal';
+import {Theme} from '../../components/ui/styleUtils';
+import {Icon} from 'react-native-elements';
 
 const ScanStack = createNativeStackNavigator();
 
 export const ScanLayout: React.FC = () => {
-  const { t } = useTranslation('ScanScreen');
+  const {t} = useTranslation('ScanScreen');
   const controller = useScanLayout();
 
   return (
     <React.Fragment>
-      <ScanStack.Navigator
-        initialRouteName="ScanScreen"
-        screenOptions={{
-          headerTitleAlign: 'center',
-          headerRight: () =>
-            I18nManager.isRTL && Platform.OS !== 'ios' ? null : (
-              <LanguageSelector
-                triggerComponent={
-                  <Icon name="language" color={Colors.Orange} />
-                }
-              />
-            ),
-          headerLeft: () =>
-            I18nManager.isRTL && Platform.OS !== 'ios' ? (
-              <LanguageSelector
-                triggerComponent={
-                  <Icon name="language" color={Colors.Orange} />
-                }
-              />
-            ) : null,
-        }}>
+      <ScanStack.Navigator initialRouteName="ScanScreen">
         {!controller.isDone && (
           <ScanStack.Screen
-            name="SendVcScreen"
+            name={SCAN_ROUTES.SendVcScreen}
             component={SendVcScreen}
             options={{
-              title: t('sharingVc', {
-                vcLabel: controller.vcLabel.singular,
-              }),
+              title: t('sharingVc'),
+              headerBackVisible: false,
+              headerRight: () => (
+                <Icon
+                  name="close"
+                  color={Theme.Colors.blackIcon}
+                  onPress={controller.CANCEL}
+                />
+              ),
             }}
           />
         )}
         <ScanStack.Screen
-          name="ScanScreen"
+          name={SCAN_ROUTES.ScanScreen}
           component={ScanScreen}
           options={{
-            title: t('scan').toUpperCase(),
+            headerTitleStyle: {fontSize: 30, fontFamily: 'Inter_600SemiBold'},
+            title: t('MainLayout:scan'),
           }}
         />
       </ScanStack.Navigator>
 
-      <MessageOverlay
-        isVisible={controller.statusOverlay != null}
-        message={controller.statusOverlay?.message}
+      <ProgressingModal
+        isVisible={controller.statusOverlay != null && !controller.isAccepted}
+        title={controller.statusOverlay?.title}
         hint={controller.statusOverlay?.hint}
-        onCancel={controller.statusOverlay?.onCancel}
-        progress={!controller.isInvalid}
-        onBackdropPress={controller.DISMISS_INVALID}
+        onCancel={controller.statusOverlay?.onButtonPress}
+        onStayInProgress={controller.statusOverlay?.onStayInProgress}
+        isHintVisible={controller.isStayInProgress}
+        isBleErrorVisible={controller.isBleError}
+        onRetry={controller.statusOverlay?.onRetry}
+        progress={controller.statusOverlay?.progress}
+        requester={controller.statusOverlay?.requester}
+      />
+
+      <SharingSuccessModal
+        isVisible={controller.isAccepted}
+        testId={'sharingSuccessModal'}
+      />
+
+      <ProgressingModal
+        isVisible={controller.isDisconnected}
+        title={t('RequestScreen:status.disconnected.title')}
+        isHintVisible={true}
+        hint={t('RequestScreen:status.disconnected.message')}
+        onCancel={controller.DISMISS}
+        onRetry={controller.onRetry}
+        progress
       />
     </React.Fragment>
   );

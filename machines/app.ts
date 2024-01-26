@@ -1,47 +1,65 @@
-import NetInfo, { NetInfoStateType } from '@react-native-community/netinfo';
-import { AppState, AppStateStatus, Platform } from 'react-native';
+import NetInfo, {NetInfoStateType} from '@react-native-community/netinfo';
+import {AppState, AppStateStatus, Platform} from 'react-native';
+import {getDeviceId, getDeviceName} from 'react-native-device-info';
+import {assign, EventFrom, send, spawn, StateFrom} from 'xstate';
+import {createModel} from 'xstate/lib/model';
+import {authMachine, createAuthMachine} from './auth';
+import {createSettingsMachine, settingsMachine} from './settings';
+import {StoreEvents, storeMachine} from './store';
+import {createVcMachine, vcMachine} from './vc';
+import {activityLogMachine, createActivityLogMachine} from './activityLog';
 import {
-  getDeviceId,
-  getDeviceName,
-  getDeviceNameSync,
-} from 'react-native-device-info';
-import { EventFrom, spawn, StateFrom, send, assign, AnyState } from 'xstate';
-import { createModel } from 'xstate/lib/model';
-import { authMachine, createAuthMachine } from './auth';
-import { createSettingsMachine, settingsMachine } from './settings';
-import { storeMachine } from './store';
-import { createVcMachine, vcMachine } from './vc';
-import { createActivityLogMachine, activityLogMachine } from './activityLog';
-import { createRequestMachine, requestMachine } from './request';
-import { createScanMachine, scanMachine } from './scan';
-import { createRevokeMachine, revokeVidsMachine } from './revoke';
-
-import { pure, respond } from 'xstate/lib/actions';
-import { AppServices } from '../shared/GlobalContext';
-import { request } from '../shared/request';
+  createRequestMachine,
+  requestMachine,
+} from './bleShare/request/requestMachine';
+import {createScanMachine, scanMachine} from './bleShare/scan/scanMachine';
+import {createRevokeMachine, revokeVidsMachine} from './revoke';
+import {pure, respond} from 'xstate/lib/actions';
+import {AppServices} from '../shared/GlobalContext';
+import {
+  changeCrendetialRegistry,
+  changeEsignetUrl,
+  ESIGNET_BASE_URL,
+  isAndroid,
+  MIMOTO_BASE_URL,
+  SETTINGS_STORE_KEY,
+} from '../shared/constants';
+import {logState} from '../shared/commonUtil';
 
 const model = createModel(
   {
     info: {} as AppInfo,
-    backendInfo: {} as BackendInfo,
     serviceRefs: {} as AppServices,
+    isReadError: false,
+    isDecryptError: false,
+    isKeyInvalidateError: false,
   },
   {
     events: {
       ACTIVE: () => ({}),
       INACTIVE: () => ({}),
+      ERROR: () => ({}),
+      DECRYPT_ERROR: () => ({}),
+      DECRYPT_ERROR_DISMISS: () => ({}),
+      KEY_INVALIDATE_ERROR: () => ({}),
       OFFLINE: () => ({}),
-      ONLINE: (networkType: NetInfoStateType) => ({ networkType }),
+      ONLINE: (networkType: NetInfoStateType) => ({networkType}),
       REQUEST_DEVICE_INFO: () => ({}),
-      READY: (data?: unknown) => ({ data }),
-      APP_INFO_RECEIVED: (info: AppInfo) => ({ info }),
-      BACKEND_INFO_RECEIVED: (info: BackendInfo) => ({ info }),
+      READY: (data?: unknown) => ({data}),
+      APP_INFO_RECEIVED: (info: AppInfo) => ({info}),
+      STORE_RESPONSE: (response: unknown) => ({response}),
+      RESET_KEY_INVALIDATE_ERROR_DISMISS: () => ({}),
     },
-  }
+  },
 );
+
+export const APP_EVENTS = model.events;
 
 export const appMachine = model.createMachine(
   {
+    /** @xstate-layout N4IgpgJg5mDOIC5QEMAOqB0BLAdlgLhrPgPYBOYAxAEoCiAggCICaA2gAwC6ioqJsBLCRw8QAD0QBmdgE4MMgIwAmSaoDsADmkb2agDQgAnoiUAWJRnNqZayVvYKArDdMBfVwbSZcBIqQqUtNTUAPLUHNxIIHwC+EIiURIICpJypgBsaqaOSjmOqfmmBsbJjuzyaimaMpJq7BqOOe6e6Nh4hLBgZABuWADGcDQMLBGiMYLCokmZ6RiSSro5NQrsjcUm5pZK1rb2Ti7NIF5tvn0UEGA4ccgANtRgUFjEZIaUAMoAKmG0APp0bwAFEIAOTetFGUXGcUmiUQCgU6VMFW0tVkOXY6XWCCUCjkakqBNMMl0ZjcHiOrR8hFwADMSJR6ACAT8AJLAgBiIT+tAAwrQWQA1WiMCG8fgTBKgJIIjJzdRqRGmDQEjRYnF4gkKLLEtSkw7HKkYC69HB0ygAIXoPIA0rRgYxWRyuXQ+YLhaLouLoZLxCZlI55DjTJJ0jV0vlJGrcRh8VqtUSSaYyS1MBRkBBXnQAIoAVVonx+jFoApZfMdnI9UPiUxM9Rj6URGmJMh0Zg0mKMiEc6Q0GA0GmyPd180kyYpqbA6cMGDpfQArrAGTyPm7K17q7Dkroscre+l2KknAoB8qbPrWmmMzOSPPF2yrSuhWvYhupXDt52EDIbBhGnVJN27CyA2SjnhOU4YDgYD4AA7uQADWlAggAMmy4JcGM64wm+W76J+yhEpYaiOKYGL4jI+4hmBGCXtOUGwQhSHsuyqHAuhkRii+2G+rhWIpD2WwNNsuLdjI7jkjgJAXPAUReJhXE+kkAC0tRYkpZgYEBWnaTpajUVS8kSjW2IyFi6SSJYDS2FqjgaPCMi2fp7R+OQYCGd6xn4mqGKWKimimMoTaOLqTm+J0PT9HA7mvjx5gWeYChJmYEbth2JQLLMwZ1P5gUOSF5IGs5ZyQJc1x3A8Tz4C80XcUk1R9koLbpAiDghgoUZpNImgkSsGhmLUoXUqaJA1YpcJJrM4aVCkShaDI5hFJ+6q+bouz4tIqgaINRpgCadKjcZx7pBYDakZoo6OCkjgdSt1ihkmF1UQVF6ThmB2bvCZmqBgIGaPU5FONRtHXre704c4WK6goGCJQOs2rD2Ohic94FXrOC4YH0AAWYB9PBuBQGDPHwtDWoLDUtn1LN35YjUcgYhRiUNhiTbIymNGvdO6OwBgyB9HE3RuZCWFjdipE-YopE1O2f12DujQ-WR0jNUBl2OEDnMgxjuB8wLQucUZm5mOUoaJbIdiZDocufi4v7OA0KxKM1tRbSjHMQfRcFkPBRNJBD+GyBYDjfri4YtRkGse9BXvwZjON4wTvvvnhJQpLI8gBSsx2NAFdiR1ensIRgwg3Lg+uegpxkqBYo66ko9e5MoZh8fXmWaA3CymPiTRu8Dhfe8XNI0qXUFJ9i8xzF3HeN-Xi2pxdvkpOYx31M16Tia4QA */
+    predictableActionArguments: true,
+    preserveActionOrder: true,
     tsTypes: {} as import('./app.typegen').Typegen0,
     schema: {
       context: model.initialContext,
@@ -49,6 +67,22 @@ export const appMachine = model.createMachine(
     },
     id: 'app',
     initial: 'init',
+    on: {
+      DECRYPT_ERROR: {
+        actions: ['setIsDecryptError'],
+      },
+      DECRYPT_ERROR_DISMISS: {
+        actions: ['unsetIsDecryptError'],
+      },
+      KEY_INVALIDATE_ERROR: {
+        actions: ['updateKeyInvalidateError'],
+        target: 'waiting',
+      },
+      RESET_KEY_INVALIDATE_ERROR_DISMISS: {
+        actions: ['resetKeyInvalidateError'],
+        target: 'init',
+      },
+    },
     states: {
       init: {
         initial: 'store',
@@ -56,13 +90,38 @@ export const appMachine = model.createMachine(
           store: {
             entry: ['spawnStoreActor', 'logStoreEvents'],
             on: {
-              READY: 'services',
+              READY: {
+                actions: [
+                  'unsetIsReadError',
+                  'unsetIsDecryptError',
+                  'resetKeyInvalidateError',
+                ],
+                target: 'services',
+              },
+              ERROR: {
+                actions: ['setIsReadError', 'updateKeyInvalidateError'],
+              },
             },
           },
           services: {
             entry: ['spawnServiceActors', 'logServiceEvents'],
             on: {
-              READY: 'info',
+              READY: 'credentialRegistry',
+            },
+          },
+          credentialRegistry: {
+            entry: [
+              'loadCredentialRegistryHostFromStorage',
+              'loadEsignetHostFromStorage',
+            ],
+            on: {
+              STORE_RESPONSE: {
+                actions: [
+                  'loadCredentialRegistryInConstants',
+                  'loadEsignetHostFromConstants',
+                ],
+                target: 'info',
+              },
             },
           },
           info: {
@@ -71,19 +130,8 @@ export const appMachine = model.createMachine(
             },
             on: {
               APP_INFO_RECEIVED: {
-                target: 'devinfo',
-                actions: ['setAppInfo'],
-              },
-            },
-          },
-          devinfo: {
-            invoke: {
-              src: 'getBackendInfo',
-            },
-            on: {
-              BACKEND_INFO_RECEIVED: {
                 target: '#ready',
-                actions: ['setBackendInfo'],
+                actions: ['setAppInfo'],
               },
             },
           },
@@ -138,17 +186,42 @@ export const appMachine = model.createMachine(
           },
         },
       },
+      waiting: {},
     },
   },
   {
     actions: {
       forwardToServices: pure((context, event) =>
-        Object.values(context.serviceRefs).map((serviceRef) =>
-          send({ ...event, type: `APP_${event.type}` }, { to: serviceRef })
-        )
+        Object.values(context.serviceRefs).map(serviceRef =>
+          send({...event, type: `APP_${event.type}`}, {to: serviceRef}),
+        ),
       ),
+      setIsReadError: assign({
+        isReadError: true,
+      }),
+      setIsDecryptError: assign({
+        isDecryptError: true,
+      }),
+      unsetIsDecryptError: assign({
+        isDecryptError: false,
+      }),
+      unsetIsReadError: assign({
+        isReadError: false,
+      }),
 
-      requestDeviceInfo: respond((context) => ({
+      updateKeyInvalidateError: model.assign({
+        isKeyInvalidateError: (_, event) => {
+          if (event.type === 'KEY_INVALIDATE_ERROR') {
+            return true;
+          }
+        },
+      }),
+
+      resetKeyInvalidateError: model.assign({
+        isKeyInvalidateError: false,
+      }),
+
+      requestDeviceInfo: respond(context => ({
         type: 'RECEIVE_DEVICE_INFO',
         info: {
           ...context.info,
@@ -157,68 +230,74 @@ export const appMachine = model.createMachine(
       })),
 
       spawnStoreActor: assign({
-        serviceRefs: (context) => ({
+        serviceRefs: context => ({
           ...context.serviceRefs,
           store: spawn(storeMachine, storeMachine.id),
         }),
       }),
 
-      logStoreEvents: (context) => {
+      logStoreEvents: context => {
         if (__DEV__) {
           context.serviceRefs.store.subscribe(logState);
         }
       },
 
       spawnServiceActors: model.assign({
-        serviceRefs: (context) => {
+        serviceRefs: context => {
           const serviceRefs = {
             ...context.serviceRefs,
           };
 
           serviceRefs.auth = spawn(
             createAuthMachine(serviceRefs),
-            authMachine.id
+            authMachine.id,
           );
 
           serviceRefs.vc = spawn(createVcMachine(serviceRefs), vcMachine.id);
 
           serviceRefs.settings = spawn(
             createSettingsMachine(serviceRefs),
-            settingsMachine.id
+            settingsMachine.id,
           );
 
           serviceRefs.activityLog = spawn(
             createActivityLogMachine(serviceRefs),
-            activityLogMachine.id
+            activityLogMachine.id,
           );
 
           serviceRefs.scan = spawn(
             createScanMachine(serviceRefs),
-            scanMachine.id
+            scanMachine.id,
           );
 
-          serviceRefs.request = spawn(
-            createRequestMachine(serviceRefs),
-            requestMachine.id
-          );
+          if (isAndroid()) {
+            serviceRefs.request = spawn(
+              createRequestMachine(serviceRefs),
+              requestMachine.id,
+            );
+          }
 
           serviceRefs.revoke = spawn(
             createRevokeMachine(serviceRefs),
-            revokeVidsMachine.id
+            revokeVidsMachine.id,
           );
 
           return serviceRefs;
         },
       }),
 
-      logServiceEvents: (context) => {
+      logServiceEvents: context => {
         if (__DEV__) {
           context.serviceRefs.auth.subscribe(logState);
           context.serviceRefs.vc.subscribe(logState);
           context.serviceRefs.settings.subscribe(logState);
           context.serviceRefs.activityLog.subscribe(logState);
           context.serviceRefs.scan.subscribe(logState);
-          context.serviceRefs.request.subscribe(logState);
+
+          if (isAndroid()) {
+            context.serviceRefs.request.subscribe(logState);
+          }
+
           context.serviceRefs.revoke.subscribe(logState);
         }
       },
@@ -227,13 +306,36 @@ export const appMachine = model.createMachine(
         info: (_, event) => event.info,
       }),
 
-      setBackendInfo: model.assign({
-        backendInfo: (_, event) => event.info,
+      loadCredentialRegistryHostFromStorage: send(
+        StoreEvents.GET(SETTINGS_STORE_KEY),
+        {
+          to: context => context.serviceRefs.store,
+        },
+      ),
+
+      loadEsignetHostFromStorage: send(StoreEvents.GET(SETTINGS_STORE_KEY), {
+        to: context => context.serviceRefs.store,
       }),
+
+      loadCredentialRegistryInConstants: (_context, event) => {
+        changeCrendetialRegistry(
+          !event.response?.credentialRegistry
+            ? MIMOTO_BASE_URL
+            : event.response?.credentialRegistry,
+        );
+      },
+
+      loadEsignetHostFromConstants: (_context, event) => {
+        changeEsignetUrl(
+          !event.response?.esignetHostUrl
+            ? ESIGNET_BASE_URL
+            : event.response?.esignetHostUrl,
+        );
+      },
     },
 
     services: {
-      getAppInfo: () => async (callback) => {
+      getAppInfo: () => async callback => {
         const appInfo = {
           deviceId: getDeviceId(),
           deviceName: await getDeviceName(),
@@ -241,43 +343,25 @@ export const appMachine = model.createMachine(
         callback(model.events.APP_INFO_RECEIVED(appInfo));
       },
 
-      getBackendInfo: () => async (callback) => {
-        let backendInfo = {
-          application: {
-            name: '',
-            version: '',
-          },
-          build: {},
-          config: {},
-        };
-        try {
-          backendInfo = await request('GET', '/info');
-          callback(model.events.BACKEND_INFO_RECEIVED(backendInfo));
-        } catch {
-          callback(model.events.BACKEND_INFO_RECEIVED(backendInfo));
-        }
-      },
-
-      checkFocusState: () => (callback) => {
+      checkFocusState: () => callback => {
         const changeHandler = (newState: AppStateStatus) => {
           switch (newState) {
             case 'background':
             case 'inactive':
-              callback({ type: 'INACTIVE' });
+              callback({type: 'INACTIVE'});
               break;
             case 'active':
-              callback({ type: 'ACTIVE' });
+              callback({type: 'ACTIVE'});
               break;
           }
         };
 
-        const blurHandler = () => callback({ type: 'INACTIVE' });
-        const focusHandler = () => callback({ type: 'ACTIVE' });
+        const blurHandler = () => callback({type: 'INACTIVE'});
+        const focusHandler = () => callback({type: 'ACTIVE'});
 
         AppState.addEventListener('change', changeHandler);
 
-        // android only
-        if (Platform.OS === 'android') {
+        if (isAndroid()) {
           AppState.addEventListener('blur', blurHandler);
           AppState.addEventListener('focus', focusHandler);
         }
@@ -285,37 +369,29 @@ export const appMachine = model.createMachine(
         return () => {
           AppState.removeEventListener('change', changeHandler);
 
-          if (Platform.OS === 'android') {
+          if (isAndroid()) {
             AppState.removeEventListener('blur', blurHandler);
             AppState.removeEventListener('focus', focusHandler);
           }
         };
       },
 
-      checkNetworkState: () => (callback) => {
-        return NetInfo.addEventListener((state) => {
+      checkNetworkState: () => callback => {
+        return NetInfo.addEventListener(state => {
           if (state.isConnected) {
-            callback({ type: 'ONLINE', networkType: state.type });
+            callback({type: 'ONLINE', networkType: state.type});
           } else {
-            callback({ type: 'OFFLINE' });
+            callback({type: 'OFFLINE'});
           }
         });
       },
     },
-  }
+  },
 );
 
 interface AppInfo {
   deviceId: string;
   deviceName: string;
-}
-interface BackendInfo {
-  application: {
-    name: string;
-    version: string;
-  };
-  build: object;
-  config: object;
 }
 
 type State = StateFrom<typeof appMachine>;
@@ -323,11 +399,6 @@ type State = StateFrom<typeof appMachine>;
 export function selectAppInfo(state: State) {
   return state.context.info;
 }
-
-export function selectBackendInfo(state: State) {
-  return state.context.backendInfo;
-}
-
 export function selectIsReady(state: State) {
   return state.matches('ready');
 }
@@ -344,24 +415,14 @@ export function selectIsFocused(state: State) {
   return state.matches('ready.focus');
 }
 
-export function logState(state: AnyState) {
-  const data = JSON.stringify(
-    state.event,
-    (key, value) => {
-      if (key === 'type') return undefined;
-      if (typeof value === 'string' && value.length >= 100) {
-        return value.slice(0, 100) + '...';
-      }
-      return value;
-    },
-    2
-  );
-  console.log(
-    `[${getDeviceNameSync()}] ${state.machine.id}: ${
-      state.event.type
-    } -> ${state.toStrings().pop()}\n${
-      data.length > 300 ? data.slice(0, 300) + '...' : data
-    }
-    `
-  );
+export function selectIsReadError(state: State) {
+  return state.context.isReadError;
+}
+
+export function selectIsDecryptError(state: State) {
+  return state.context.isDecryptError;
+}
+
+export function selectIsKeyInvalidateError(state: State) {
+  return state.context.isKeyInvalidateError;
 }

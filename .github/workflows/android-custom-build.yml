@@ -1,55 +1,56 @@
-name: ID PASS - MOSIP Resident Application Custom build
-
-env:
-  backendServiceDefaultUrl: https://api-internal.qa4.mosip.net/residentmobileapp
+name: Android Custom Build
+run-name: ${{ inputs.buildName }}
 
 on:
   workflow_dispatch:
     inputs:
-      backendServiceUrl:
-        description: 'Backend service URL'
+      buildName:
+        description: 'Run name'
         required: true
-        default: 'https://api-internal.qa4.mosip.net/residentmobileapp'
+        default: 'Edit this name'
         type: string
+      mimotoBackendServiceUrl:
+        description: 'Mimoto backend service URL'
+        required: true
+        default: 'https://api.sandbox.mosip.net'
+        type: string
+      esignetBackendServiceUrl:
+        description: 'Esignet backend service URL'
+        required: true
+        default: 'https://api.sandbox.mosip.net'
+        type: string
+      allow_env_edit:
+        description: 'Edit ENV'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - false
+          - true
+      theme:
+        description: 'Application Theme'
+        required: true
+        default: 'orange'
+        type: choice
+        options:
+          - orange
+          - purple
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.1.0
-
-      # Cache stuff for faster build
-      - name: Cache local npm repository
-        uses: actions/cache@v3.0.11
-        with:
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          path: ~/.npm
-
-      - name: Cache local gradle repository
-        uses: actions/cache@v3.0.11
-        with:
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-
-      - name: Install npm dependencies
-        run: |
-          npm install
-      - name: Create .env.local file
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > .env.local > android/local.properties
-      - name: Build App Newlogic Release
-        run: |
-          cd android
-          if [ ! -z "$FIREBASE_SECRET" ] && [ -f app/google-services.json.gpg ];then rm -f app/google-services.json;gpg -o app/google-services.json --batch --passphrase="$FIREBASE_SECRET" -d app/google-services.json.gpg;fi
-          ./gradlew :app:assembleNewlogicRelease
-        env:
-          MIMOTO_HOST: ${{ github.event.inputs.backendServiceUrl }}
-          FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3.1.1
-        with:
-          name: apk-output
-          path: android/app/build/outputs/apk/newlogic/release/
-          retention-days: 10
+    uses: mosip/kattu/.github/workflows/android-build.yml@master
+    with:
+        NODE_VERSION: "16.x"
+        MIMOTO_HOST: ${{ inputs.mimotoBackendServiceUrl }}
+        ESIGNET_HOST: ${{ inputs.esignetBackendServiceUrl }}
+        APPLICATION_THEME: ${{ inputs.theme }}
+        ALLOW_ENV_EDIT: ${{ inputs.allow_env_edit }}
+        KEYSTORE_ALIAS: androidbuildkey
+        KEYSTORE_PASSWORD: 'password'
+        SERVICE_LOCATION: '.'
+        ANDROID_SERVICE_LOCATION: 'android'
+        BUILD_SCRIPT_LOCATION: 'scripts'
+        SCRIPT_NAME: './android-build.sh'
+        UPLOAD_TO_ACTIONS: 'true'
+        ANDROID_ARTIFACT_NAME: ${{ inputs.buildName }}
+        ANDROID_ARTIFACT_PATH: "android/app/build/outputs/apk/residentapp/release/Inji_universal.apk"

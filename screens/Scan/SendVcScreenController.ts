@@ -1,74 +1,59 @@
-import { useSelector } from '@xstate/react';
-import { useContext } from 'react';
-import { useTranslation } from 'react-i18next';
-import { MessageOverlayProps } from '../../components/MessageOverlay';
+import {useSelector} from '@xstate/react';
+import {useContext, useState} from 'react';
+import {ActorRefFrom} from 'xstate';
+import {selectShareableVcsMetadata} from '../../machines/vc';
+import {ExistingMosipVCItemMachine} from '../../machines/VCItemMachine/ExistingMosipVCItem/ExistingMosipVCItemMachine';
+import {GlobalContext} from '../../shared/GlobalContext';
 import {
-  ScanEvents,
-  selectIsAccepted,
+  selectIsSelectingVc,
   selectReason,
   selectReceiverInfo,
-  selectIsRejected,
-  selectIsSelectingVc,
-  selectIsSendingVc,
-  selectVcName,
-  selectIsSendingVcTimeout,
-  selectIsVerifyingIdentity,
-  selectIsInvalidIdentity,
   selectSelectedVc,
+  selectVcName,
+} from '../../machines/bleShare/scan/selectors';
+import {
   selectIsCancelling,
-} from '../../machines/scan';
-import { selectVcLabel } from '../../machines/settings';
-import { selectShareableVcs } from '../../machines/vc';
-import { GlobalContext } from '../../shared/GlobalContext';
-import { VC } from '../../types/vc';
+  selectIsInvalidIdentity,
+  selectIsVerifyingIdentity,
+} from '../../machines/bleShare/commonSelectors';
+import {ScanEvents} from '../../machines/bleShare/scan/scanMachine';
 
 export function useSendVcScreen() {
-  const { appService } = useContext(GlobalContext);
+  const {appService} = useContext(GlobalContext);
   const scanService = appService.children.get('scan');
-  const settingsService = appService.children.get('settings');
   const vcService = appService.children.get('vc');
 
-  const { t } = useTranslation('SendVcScreen');
-  const isSendingVc = useSelector(scanService, selectIsSendingVc);
-  const isSendingVcTimeout = useSelector(scanService, selectIsSendingVcTimeout);
   const CANCEL = () => scanService.send(ScanEvents.CANCEL());
 
-  let status: Pick<MessageOverlayProps, 'title' | 'hint' | 'onCancel'> = null;
-  if (isSendingVc) {
-    status = {
-      title: t('status.sharing.title'),
-    };
-  } else if (isSendingVcTimeout) {
-    status = {
-      title: t('status.sharing.title'),
-      hint: t('status.sharing.timeoutHint'),
-      onCancel: CANCEL,
-    };
-  }
+  const [selectedIndex, setSelectedIndex] = useState<number>(null);
 
   return {
-    status,
+    selectedIndex,
+    TOGGLE_USER_CONSENT: () =>
+      scanService.send(ScanEvents.TOGGLE_USER_CONSENT()),
+    SELECT_VC_ITEM:
+      (index: number) =>
+      (vcRef: ActorRefFrom<typeof ExistingMosipVCItemMachine>) => {
+        setSelectedIndex(index);
+        const {serviceRefs, ...vcData} = vcRef.getSnapshot().context;
+        scanService.send(ScanEvents.SELECT_VC(vcData));
+      },
+
     receiverInfo: useSelector(scanService, selectReceiverInfo),
     reason: useSelector(scanService, selectReason),
     vcName: useSelector(scanService, selectVcName),
-    vcLabel: useSelector(settingsService, selectVcLabel),
-    vcKeys: useSelector(vcService, selectShareableVcs),
+    shareableVcsMetadata: useSelector(vcService, selectShareableVcsMetadata),
     selectedVc: useSelector(scanService, selectSelectedVc),
 
     isSelectingVc: useSelector(scanService, selectIsSelectingVc),
-    isSendingVc,
-    isSendingVcTimeout,
-    isAccepted: useSelector(scanService, selectIsAccepted),
-    isRejected: useSelector(scanService, selectIsRejected),
     isVerifyingIdentity: useSelector(scanService, selectIsVerifyingIdentity),
     isInvalidIdentity: useSelector(scanService, selectIsInvalidIdentity),
     isCancelling: useSelector(scanService, selectIsCancelling),
 
-    ACCEPT_REQUEST: () => scanService.send(ScanEvents.ACCEPT_REQUEST()),
     CANCEL,
-    SELECT_VC: (vc: VC) => scanService.send(ScanEvents.SELECT_VC(vc)),
-    VERIFY_AND_SELECT_VC: (vc: VC) =>
-      scanService.send(ScanEvents.VERIFY_AND_SELECT_VC(vc)),
+    ACCEPT_REQUEST: () => scanService.send(ScanEvents.ACCEPT_REQUEST()),
+    VERIFY_AND_ACCEPT_REQUEST: () =>
+      scanService.send(ScanEvents.VERIFY_AND_ACCEPT_REQUEST()),
     DISMISS: () => scanService.send(ScanEvents.DISMISS()),
     UPDATE_REASON: (reason: string) =>
       scanService.send(ScanEvents.UPDATE_REASON(reason)),

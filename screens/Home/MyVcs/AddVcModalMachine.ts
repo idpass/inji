@@ -1,4 +1,4 @@
-import { TextInput } from 'react-native';
+import {TextInput} from 'react-native';
 import {
   assign,
   DoneInvokeEvent,
@@ -7,11 +7,20 @@ import {
   sendParent,
   StateFrom,
 } from 'xstate';
-import { createModel } from 'xstate/lib/model';
-import { BackendResponseError, request } from '../../../shared/request';
-import { VC_ITEM_STORE_KEY } from '../../../shared/constants';
-import { VcIdType } from '../../../types/vc';
+import {createModel} from 'xstate/lib/model';
+import {BackendResponseError, request} from '../../../shared/request';
+import {VcIdType} from '../../../types/VC/ExistingMosipVC/vc';
 import i18n from '../../../i18n';
+import {VCMetadata} from '../../../shared/VCMetadata';
+import {
+  getErrorEventData,
+  getImpressionEventData,
+  getInteractEventData,
+  sendErrorEvent,
+  sendImpressionEvent,
+  sendInteractEvent,
+} from '../../../shared/telemetry/TelemetryUtils';
+import {API_URLS} from '../../../shared/api';
 
 const model = createModel(
   {
@@ -23,17 +32,19 @@ const model = createModel(
     otpError: '',
     transactionId: '',
     requestId: '',
+    isPinned: false,
   },
   {
     events: {
-      INPUT_ID: (id: string) => ({ id }),
-      INPUT_OTP: (otp: string) => ({ otp }),
+      INPUT_ID: (id: string) => ({id}),
+      INPUT_OTP: (otp: string) => ({otp}),
+      RESEND_OTP: () => ({}),
       VALIDATE_INPUT: () => ({}),
-      READY: (idInputRef: TextInput) => ({ idInputRef }),
+      READY: (idInputRef: TextInput) => ({idInputRef}),
       DISMISS: () => ({}),
-      SELECT_ID_TYPE: (idType: VcIdType) => ({ idType }),
+      SELECT_ID_TYPE: (idType: VcIdType) => ({idType}),
     },
-  }
+  },
 );
 
 export const AddVcModalEvents = model.events;
@@ -42,6 +53,8 @@ export const AddVcModalMachine =
   /** @xstate-layout N4IgpgJg5mDOIC5QEEIQGoGMCyB7CAhgDYB0BmmYADgC4CWAdlAJITMNUCuNJATmAwhhejKAGIASgFFkAEQCaiUFVyw69XAyUgAHogC0ARgAsATgDMJAEynjhgBzmArE-v2AbDYA0IAJ4GrAHZ3EkCnKxMrc0NDc1NA+ycAXySfVAwcfGIyCmp6JlZ2Lh4AM1xMTjUmMR1YGgIaMDISxt4ACkMABk6ASjF0rDxCUnJKWlFCjm4SMoqqqG0VNQ0tJF0DWM6QwOjXQydjYyDbH38EIycQ+M6PI6t7TsNTdxS0tEGskdzxgrYpnjoECIYDEzAAcgAFACqABUAPrMWSLVTqOiabR6c4mYLWdzmTr4wIxMwJU6IKxWYwkeyGdxOQKmWnOUxWS6vEADTLDHJjfIsP7FEiA4FidDIAAyiOQMKkCMhsORyzRq1AmKMrKc1np5kCQUCDJ29jJCCCmvx9hs5nspmeOqc5nZnKG2VGeQmAumwpBAGUpOKpABheGIuEw+QQqSK1HotZq-adKwkTqHJ5RUydFmdQLGoz4kjGQI3ImFws0ymO95cl3fPmTQWMABuxEBoPlwaRayW0ZV6yxBO2BKcWYL9s69Jz8WsVtpHhcVjH5gdqQ5ledX157qKnoYTaILbFktk0tl4OhMKjKwxBmMi5I+xZ2IziWTxoiVLHjjxOvMN4J9grGRrjybq-FuAI7s2EBiL6-pBgisihuGkadiil6xhsY6dCQjJOM8rijou7jGu4pjYdaurWsmjgJKYAEfNyro-PyYF8GAACOnBwHyADyNBUGIECaE0ja4AA1k0TqfMBTF1tM-AcVxoi8VQCAiZgDTKgA2p0AC6F7KlefZuPmiRDmOjJZuYxpdLEd4OB47hEoSP50VW64gcx-ysQpdRKXxYjCLwuC8CQVBEA0ZS8AAtiQkkMTWm5efJnG+UwymqTu5QaZo2l6ShSoxqqBjxPYdlbIYQTuMmsSGMaZghE4DjdA8-aOS8y5xdWG6gf8YiyMw3rYAN3r6YVvb6MY7hUlNOoxOYniEVZfiIG4hgkPN6ZdOEhxVe1byAVJjE8XxYGtmecLcTCEKjT2cZxKRlKuDqwSeAkRHLQgMQmEmFpHLhTzXP+HWrodCVpSdvX9YNw03YZRhVYmQ7pvSQSHAWxr2AWd5WrhHhhIuzyuUByWKUwAb8EIDD0MQAlCUKmXibFIPciTqVQOTkACNTRAZQ2WUrLlsPoVi+yBPmURWu4mNRGETjWWmoSGAkXTGPaLLGED+30dkrN8hzlPcwFvBBSFYURcFMWdaQuuiPrXN0MQvP81pulC0VWKq5YngZkEWyDkr1k6iE1o6hY5hWI56aBCky4MPgcDaFb0m1h6PD8IIwiiG7420gyJBTSyhZPDsGvGDmEeWGEERfrYVpbEToPdZ5gqzJUWf5d2cM1YmhYEqYlwuBadLl3ioThEycQ3g8e0rgd8VN7JAJAmA2dxjeVIS7hFi9yYpjGkSZHxJVxg3OHhgN-PHmL-Tu6AiQYBRbQZzKKhBnC-oOxi-YuqePaqt90tM4DhEwfmnJHWkyYL5dSvqnG+kEZgWwaKvAwwREb2jcESRqphMZGg+j+MW5p7jf3pASaIUD3IyVgY2eBAAjcg4lBDIPOCRNaC4HKXC2LhQBiAkYkEag8EwBYg5kOBnPaBlCWLUL3BAJhH8PB8PQd-fYTwcF1RCKA4I1U2oJHIcnRKgobbgyoLImIWZqTOA1lgnUDliI6mwiyRy5FkxxBnknI6+juAmMLF7Mwvti4-kxjmG82xx5Dh2N0E+59RHawocdKgYETFfj4XSCOhxJ5WlwWcbBa0YiUVsDSKaDhdGGPZhTe2xATGTRCAWIk9xSH2mzB9CqQRrBK0cI4PurJjC6MEgwFeHc0Lu30G4RMStLjfxvAybojSgGsh7m02kDh+5PGSNEtyXiWkFz8fEAJZcPr6F4VXEw04CwRyBikIAA */
   model.createMachine(
     {
+      predictableActionArguments: true,
+      preserveActionOrder: true,
       tsTypes: {} as import('./AddVcModalMachine.typegen').Typegen0,
       schema: {
         context: model.initialContext,
@@ -49,6 +62,14 @@ export const AddVcModalMachine =
       },
       id: 'AddVcModal',
       initial: 'acceptingIdInput',
+      on: {
+        INPUT_ID: {
+          actions: 'setId',
+        },
+        SELECT_ID_TYPE: {
+          actions: ['clearIdError', 'setIdType'],
+        },
+      },
       states: {
         acceptingIdInput: {
           entry: ['setTransactionId', 'clearOtp'],
@@ -87,11 +108,12 @@ export const AddVcModalMachine =
                     target: '#AddVcModal.acceptingIdInput.invalid.format',
                   },
                   {
+                    actions: 'clearIdError',
                     target: 'requestingOtp',
                   },
                 ],
                 SELECT_ID_TYPE: {
-                  actions: ['setIdType', 'clearId'],
+                  actions: ['clearIdError', 'setIdType', 'clearId'],
                 },
               },
             },
@@ -121,11 +143,12 @@ export const AddVcModalMachine =
                     target: '.format',
                   },
                   {
+                    actions: 'clearIdError',
                     target: 'requestingOtp',
                   },
                 ],
                 SELECT_ID_TYPE: {
-                  actions: ['setIdType', 'clearId'],
+                  actions: ['clearIdError', 'setIdType', 'clearId'],
                   target: 'idle',
                 },
               },
@@ -135,6 +158,7 @@ export const AddVcModalMachine =
                 src: 'requestOtp',
                 onDone: [
                   {
+                    actions: 'sendImpressionEvent',
                     target: '#AddVcModal.acceptingOtpInput',
                   },
                 ],
@@ -164,6 +188,29 @@ export const AddVcModalMachine =
               actions: 'resetIdInputRef',
               target: 'acceptingIdInput',
             },
+            RESEND_OTP: {
+              target: '.resendOTP',
+            },
+          },
+          initial: 'idle',
+          states: {
+            idle: {},
+            resendOTP: {
+              invoke: {
+                src: 'requestOtp',
+                onDone: [
+                  {
+                    target: 'idle',
+                  },
+                ],
+                onError: [
+                  {
+                    actions: 'setIdBackendError',
+                    target: '#AddVcModal.acceptingIdInput.invalid.backend',
+                  },
+                ],
+              },
+            },
           },
         },
         requestingCredential: {
@@ -190,7 +237,7 @@ export const AddVcModalMachine =
         },
         done: {
           type: 'final',
-          data: (context) => VC_ITEM_STORE_KEY(context),
+          data: context => new VCMetadata(context),
         },
       },
     },
@@ -227,28 +274,39 @@ export const AddVcModalMachine =
               'VID invalid': 'invalidVid',
               'UIN not available in database': 'missingUin',
               'VID not available in database': 'missingVid',
+              'No message available': 'noMessageAvailable',
+              'while generating otp error is occured':
+                'whileGeneratingOtpErrorIsOccured',
+              'Network request failed': 'networkRequestFailed',
               'Invalid Input Parameter - individualId':
                 context.idType === 'UIN' ? 'invalidUin' : 'invalidVid',
+              'VID is expired/deactivated': 'deactivatedVid',
             };
-            return ID_ERRORS_MAP[message]
+            const backendError = ID_ERRORS_MAP[message]
               ? i18n.t(`errors.backend.${ID_ERRORS_MAP[message]}`, {
                   ns: 'AddVcModal',
                 })
-              : message;
+              : i18n.t(`errors.genericError`, {
+                  ns: 'common',
+                });
+            sendErrorEvent(
+              getErrorEventData('VC Download', message, backendError),
+            );
+            return backendError;
           },
         }),
 
-        clearId: model.assign({ id: '' }),
+        clearId: model.assign({id: ''}),
 
-        clearIdError: model.assign({ idError: '' }),
+        clearIdError: model.assign({idError: ''}),
 
         setIdErrorEmpty: model.assign({
-          idError: () => i18n.t('errors.input.empty', { ns: 'AddVcModal' }),
+          idError: () => i18n.t('errors.input.empty', {ns: 'AddVcModal'}),
         }),
 
         setIdErrorWrongFormat: model.assign({
           idError: () =>
-            i18n.t('errors.input.invalidFormat', { ns: 'AddVcModal' }),
+            i18n.t('errors.input.invalidFormat', {ns: 'AddVcModal'}),
         }),
 
         setOtpError: assign({
@@ -256,6 +314,7 @@ export const AddVcModalMachine =
             const message = (event as ErrorPlatformEvent).data.message;
             const OTP_ERRORS_MAP = {
               'OTP is invalid': 'invalidOtp',
+              'OTP has expired': 'expiredOtp',
             };
             return OTP_ERRORS_MAP[message]
               ? i18n.t(`errors.backend.${OTP_ERRORS_MAP[message]}`, {
@@ -273,39 +332,59 @@ export const AddVcModalMachine =
           idInputRef: null,
         }),
 
-        clearOtp: assign({ otp: '' }),
+        clearOtp: assign({otp: ''}),
 
-        focusInput: (context) => context.idInputRef.focus(),
+        focusInput: context => context.idInputRef.focus(),
+
+        sendImpressionEvent: () => {
+          sendImpressionEvent(
+            getImpressionEventData('VC Download', 'OTP Verification'),
+          );
+        },
       },
 
       services: {
-        requestOtp: async (context) => {
-          return request('POST', '/req/otp', {
-            individualId: context.id,
-            individualIdType: context.idType,
-            otpChannel: ['EMAIL', 'PHONE'],
-            transactionID: context.transactionId,
-          });
+        requestOtp: async context => {
+          sendInteractEvent(
+            getInteractEventData('VC Download', 'CLICK', 'Requesting OTP'),
+          );
+          return request(
+            API_URLS.requestOtp.method,
+            API_URLS.requestOtp.buildURL(),
+            {
+              id: 'mosip.identity.otp.internal',
+              individualId: context.id,
+              metadata: {},
+              otpChannel: ['PHONE', 'EMAIL'],
+              requestTime: String(new Date().toISOString()),
+              transactionID: context.transactionId,
+              version: '1.0',
+            },
+          );
         },
 
-        requestCredential: async (context) => {
+        requestCredential: async context => {
           // force wait to fix issue with hanging overlay
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 1000));
 
-          const response = await request('POST', '/credentialshare/request', {
-            individualId: context.id,
-            individualIdType: context.idType,
-            otp: context.otp,
-            transactionID: context.transactionId,
-          });
+          const response = await request(
+            API_URLS.credentialRequest.method,
+            API_URLS.credentialRequest.buildURL(),
+            {
+              individualId: context.id,
+              individualIdType: context.idType,
+              otp: context.otp,
+              transactionID: context.transactionId,
+            },
+          );
           return response.response.requestId;
         },
       },
 
       guards: {
-        isEmptyId: ({ id }) => !id || !id.length,
+        isEmptyId: ({id}) => !id || !id.length,
 
-        isWrongIdFormat: ({ idType, id }) => {
+        isWrongIdFormat: ({idType, id}) => {
           const validIdType =
             idType === 'UIN' ? id.length === 10 : id.length === 16;
           return !(/^\d{10,16}$/.test(id) && validIdType);
@@ -313,10 +392,10 @@ export const AddVcModalMachine =
 
         isIdInvalid: (_context, event: unknown) =>
           ['IDA-MLC-009', 'RES-SER-29', 'IDA-MLC-018'].includes(
-            (event as BackendResponseError).name
+            (event as BackendResponseError).name,
           ),
       },
-    }
+    },
   );
 
 type State = StateFrom<typeof AddVcModalMachine>;

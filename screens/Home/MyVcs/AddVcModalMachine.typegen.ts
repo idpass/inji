@@ -2,7 +2,7 @@
 
 export interface Typegen0 {
   '@@xstate/typegen': true;
-  'internalEvents': {
+  internalEvents: {
     'done.invoke.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]': {
       type: 'done.invoke.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]';
       data: unknown;
@@ -17,6 +17,10 @@ export interface Typegen0 {
       type: 'error.platform.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]';
       data: unknown;
     };
+    'error.platform.AddVcModal.acceptingOtpInput.resendOTP:invocation[0]': {
+      type: 'error.platform.AddVcModal.acceptingOtpInput.resendOTP:invocation[0]';
+      data: unknown;
+    };
     'error.platform.AddVcModal.requestingCredential:invocation[0]': {
       type: 'error.platform.AddVcModal.requestingCredential:invocation[0]';
       data: unknown;
@@ -24,24 +28,27 @@ export interface Typegen0 {
     'xstate.after(100)#AddVcModal.acceptingIdInput.focusing': {
       type: 'xstate.after(100)#AddVcModal.acceptingIdInput.focusing';
     };
-    'xstate.init': { type: 'xstate.init' };
+    'xstate.init': {type: 'xstate.init'};
   };
-  'invokeSrcNameMap': {
+  invokeSrcNameMap: {
     requestCredential: 'done.invoke.AddVcModal.requestingCredential:invocation[0]';
-    requestOtp: 'done.invoke.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]';
+    requestOtp:
+      | 'done.invoke.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]'
+      | 'done.invoke.AddVcModal.acceptingOtpInput.resendOTP:invocation[0]';
   };
-  'missingImplementations': {
+  missingImplementations: {
     actions: never;
-    services: never;
-    guards: never;
     delays: never;
+    guards: never;
+    services: never;
   };
-  'eventsCausingActions': {
+  eventsCausingActions: {
     clearId: 'SELECT_ID_TYPE';
-    clearIdError: 'INPUT_ID';
+    clearIdError: 'INPUT_ID' | 'SELECT_ID_TYPE' | 'VALIDATE_INPUT';
     clearOtp:
       | 'DISMISS'
       | 'done.invoke.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]'
+      | 'error.platform.AddVcModal.acceptingOtpInput.resendOTP:invocation[0]'
       | 'error.platform.AddVcModal.requestingCredential:invocation[0]'
       | 'xstate.init';
     focusInput:
@@ -49,6 +56,7 @@ export interface Typegen0 {
       | 'SELECT_ID_TYPE'
       | 'VALIDATE_INPUT'
       | 'error.platform.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]'
+      | 'error.platform.AddVcModal.acceptingOtpInput.resendOTP:invocation[0]'
       | 'error.platform.AddVcModal.requestingCredential:invocation[0]'
       | 'xstate.after(100)#AddVcModal.acceptingIdInput.focusing';
     forwardToParent: 'DISMISS';
@@ -56,6 +64,7 @@ export interface Typegen0 {
     setId: 'INPUT_ID';
     setIdBackendError:
       | 'error.platform.AddVcModal.acceptingIdInput.requestingOtp:invocation[0]'
+      | 'error.platform.AddVcModal.acceptingOtpInput.resendOTP:invocation[0]'
       | 'error.platform.AddVcModal.requestingCredential:invocation[0]';
     setIdErrorEmpty: 'VALIDATE_INPUT';
     setIdErrorWrongFormat: 'VALIDATE_INPUT';
@@ -66,20 +75,21 @@ export interface Typegen0 {
     setRequestId: 'done.invoke.AddVcModal.requestingCredential:invocation[0]';
     setTransactionId:
       | 'DISMISS'
+      | 'error.platform.AddVcModal.acceptingOtpInput.resendOTP:invocation[0]'
       | 'error.platform.AddVcModal.requestingCredential:invocation[0]'
       | 'xstate.init';
   };
-  'eventsCausingServices': {
-    requestCredential: 'INPUT_OTP';
-    requestOtp: 'VALIDATE_INPUT';
-  };
-  'eventsCausingGuards': {
+  eventsCausingDelays: {};
+  eventsCausingGuards: {
     isEmptyId: 'VALIDATE_INPUT';
     isIdInvalid: 'error.platform.AddVcModal.requestingCredential:invocation[0]';
     isWrongIdFormat: 'VALIDATE_INPUT';
   };
-  'eventsCausingDelays': {};
-  'matchesStates':
+  eventsCausingServices: {
+    requestCredential: 'INPUT_OTP';
+    requestOtp: 'RESEND_OTP' | 'VALIDATE_INPUT';
+  };
+  matchesStates:
     | 'acceptingIdInput'
     | 'acceptingIdInput.focusing'
     | 'acceptingIdInput.idle'
@@ -90,6 +100,8 @@ export interface Typegen0 {
     | 'acceptingIdInput.rendering'
     | 'acceptingIdInput.requestingOtp'
     | 'acceptingOtpInput'
+    | 'acceptingOtpInput.idle'
+    | 'acceptingOtpInput.resendOTP'
     | 'done'
     | 'requestingCredential'
     | {
@@ -99,7 +111,8 @@ export interface Typegen0 {
           | 'invalid'
           | 'rendering'
           | 'requestingOtp'
-          | { invalid?: 'backend' | 'empty' | 'format' };
+          | {invalid?: 'backend' | 'empty' | 'format'};
+        acceptingOtpInput?: 'idle' | 'resendOTP';
       };
-  'tags': never;
+  tags: never;
 }

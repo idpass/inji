@@ -1,37 +1,47 @@
 import React from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
-import { Icon, Overlay } from 'react-native-elements';
-import { FaceScanner } from '../components/FaceScanner';
-import { Column, Row } from '../components/ui';
-import { Colors } from '../components/ui/styleUtils';
-import { VC } from '../types/vc';
+import {Icon, Overlay} from 'react-native-elements';
 
-const styles = StyleSheet.create({
-  content: {
-    width: Dimensions.get('screen').width,
-    height: Dimensions.get('screen').height,
-    backgroundColor: Colors.White,
-  },
-});
+import {FaceScanner} from '../components/FaceScanner';
+import {Column, Row} from '../components/ui';
+import {Theme} from '../components/ui/styleUtils';
+import {VC} from '../types/VC/ExistingMosipVC/vc';
+import {Modal} from '../components/ui/Modal';
+import {t} from 'i18next';
+import {useTranslation} from 'react-i18next';
+import {VCMetadata} from '../shared/VCMetadata';
 
-export const VerifyIdentityOverlay: React.FC<VerifyIdentityOverlayProps> = (
-  props
-) => {
+export const VerifyIdentityOverlay: React.FC<
+  VerifyIdentityOverlayProps
+> = props => {
+  const {t} = useTranslation('VerifyIdentityOverlay');
+  const isOpenId4VCI =
+    props.vc?.vcMetadata &&
+    VCMetadata.fromVC(props.vc?.vcMetadata).isFromOpenId4VCI();
+  const credential = isOpenId4VCI
+    ? props.vc?.verifiableCredential
+    : props.vc?.credential;
+  const vcImage = isOpenId4VCI
+    ? props.vc?.verifiableCredential.credential.credentialSubject.face
+    : props.vc?.credential?.biometrics.face;
   return (
-    <Overlay isVisible={props.isVisible}>
-      <Row align="flex-end" padding="16">
-        <Icon name="close" color={Colors.Orange} onPress={props.onCancel} />
-      </Row>
-      <Column fill style={styles.content} align="center">
-        {props.vc?.credential != null && (
+    <Modal
+      isVisible={props.isVisible}
+      arrowLeft={<Icon name={''} />}
+      headerTitle={t('faceAuth')}
+      onDismiss={props.onCancel}>
+      <Column
+        fill
+        style={Theme.VerifyIdentityOverlayStyles.content}
+        align="center">
+        {credential != null && (
           <FaceScanner
-            vcImage={props.vc.credential.biometrics.face}
+            vcImage={vcImage}
             onValid={props.onFaceValid}
             onInvalid={props.onFaceInvalid}
           />
         )}
       </Column>
-    </Overlay>
+    </Modal>
   );
 };
 

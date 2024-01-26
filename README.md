@@ -15,6 +15,7 @@ Be sure to have the following build tools installed before proceeding:
 ## Generate keystore for APK signing
 
 ```shell
+ # Generate and use Debug keystore for development and testing purposes
 keytool \
  -genkey -v \
  -storetype PKCS12 \
@@ -23,6 +24,21 @@ keytool \
  -validity 10000 \
  -storepass 'android' \
  -keypass 'android' \
+ -alias androiddebugkey \
+ -keystore android/app/debug.keystore \
+ -dname "CN=io.mosip.residentapp,OU=,O=,L=,S=,C=US"
+```
+
+```shell
+ # Generate and use Release keystore for Publishing to Play store
+ keytool \
+ -genkey -v \
+ -storetype PKCS12 \
+ -keyalg RSA \
+ -keysize 2048 \
+ -validity 10000 \
+ -storepass '<USE-YOUR-RELEASE-PASSWORD-HERE>' \
+ -keypass '<USE-YOUR-RELEASE-PASSWORD-HERE>' \
  -alias androidreleasekey \
  -keystore android/app/release.keystore \
  -dname "CN=io.mosip.residentapp,OU=,O=,L=,S=,C=US"
@@ -36,14 +52,9 @@ Create a `.env.local` file using `.env` as your template:
 
 ```
 MIMOTO_HOST=
-GOOGLE_NEARBY_MESSAGES_API_KEY=
 ```
 
 And `android/local.properties`:
-
-```
-GOOGLE_NEARBY_MESSAGES_API_KEY=
-```
 
 More info here: [Setup Google Nearby Messages in React](https://github.com/mrousavy/react-native-google-nearby-messages#usage)
 
@@ -93,14 +104,18 @@ You need Android SDK CLI to build APK.
 # 1. Install dependencies
 npm install
 
-# Setup the environment variable for keystore
-export RELEASE_KEYSTORE=release.keystore
+# 2. Setup the environment variables for the keystore
+
+# Debug keystore
+export DEBUG_KEYSTORE_ALIAS=androiddebugkey
+export DEBUG_KEYSTORE_PASSWORD=android
+
+# Release keystore
 export RELEASE_KEYSTORE_ALIAS=androidreleasekey
-export RELEASE_KEYSTORE_PASSWORD=android
+export RELEASE_KEYSTORE_PASSWORD=<USE-YOUR-RELEASE-PASSWORD-HERE>
+
 # https://hostname/residentmobileapp is the Mimoto service url
 export BACKEND_SERVICE_URL=https://hostname/residentmobileapp
-
-# Use DEBUG_KEYSTORE, DEBUG_KEYSTORE_ALIAS, DEBUG_KEYSTORE_PASSWORD for debug build
 
 # Use one of following command to build the flavor you need.
 # Build for Mosip Philippines test
@@ -143,6 +158,38 @@ More info here:
 - [React Native - Publishing to the App Store](https://reactnative.dev/docs/publishing-to-app-store)
 - [Apple Developer - Distributing Your App for Beta Testing and Releases](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases)
 
+## View the complete DB :
+
+1. Connect your phone to the laptop and open Android Studio.
+2. On the bottom right vertical tab you will find a `Device File Explorer` button. Click on it and select you phone.
+3. Navigate to `data -> data -> io.mosip.residentapp ->databases`. You will find a file named `RKStorage` in it. Download it.
+4. Download [DB Browser for SQLite](https://sqlitebrowser.org/dl/) .
+5. Open the file in this application. Click on `Browse Data` button and select `catalystLocalStorage` table. Now you should be able to view the entire DB of Inji.
+
 ## Credits
 
 Credits listed [here](/Credits.md)
+
+## Congratulations! :tada:
+
+You've successfully run and modified your React Native App. :partying_face:
+
+### Now what?
+
+- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
+- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+
+# Troubleshooting
+
+If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+
+# Learn More
+
+To learn more about React Native, take a look at the following resources:
+
+- [React Native Website](https://reactnative.dev) - learn more about React Native.
+- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
+- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
+- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
+- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+

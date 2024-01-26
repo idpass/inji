@@ -1,6 +1,8 @@
-import { createModel } from 'xstate/lib/model';
+import {createModel} from 'xstate/lib/model';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { EventFrom, MetaObject, StateFrom } from 'xstate';
+import {EventFrom, MetaObject, StateFrom} from 'xstate';
+import {Platform} from 'react-native';
+import {isAndroid} from '../shared/constants';
 
 // ----- CREATE MODEL ---------------------------------------------------------
 const model = createModel(
@@ -10,24 +12,27 @@ const model = createModel(
     isEnrolled: false,
     status: null,
     retry: false,
+    error: {},
   },
   {
     events: {
-      SET_IS_AVAILABLE: (data: boolean) => ({ data }),
-      SET_AUTH: (data: unknown[]) => ({ data }),
-      SET_IS_ENROLLED: (data: boolean) => ({ data }),
-      SET_STATUS: (data: boolean) => ({ data }),
+      SET_IS_AVAILABLE: (data: boolean) => ({data}),
+      SET_AUTH: (data: unknown[]) => ({data}),
+      SET_IS_ENROLLED: (data: boolean) => ({data}),
+      SET_STATUS: (data: boolean) => ({data}),
 
       AUTHENTICATE: () => ({}),
       RETRY_AUTHENTICATE: () => ({}),
     },
-  }
+  },
 );
 // ----------------------------------------------------------------------------
 
 // ----- CREATE MACHINE -------------------------------------------------------
 export const biometricsMachine = model.createMachine(
   {
+    predictableActionArguments: true,
+    preserveActionOrder: true,
     id: 'biometrics',
     context: model.initialContext,
     initial: 'init',
@@ -95,6 +100,9 @@ export const biometricsMachine = model.createMachine(
       authenticating: {
         invoke: {
           src: () => async () => {
+            if (isAndroid()) {
+              await LocalAuthentication.cancelAuthenticate();
+            }
             const res = await LocalAuthentication.authenticateAsync({
               promptMessage: 'Biometric Authentication',
 
@@ -102,13 +110,27 @@ export const biometricsMachine = model.createMachine(
               // disableDeviceFallback: true,
               // fallbackLabel: 'Invalid fingerprint attempts, Please try again.'
             });
+
+            if (res.error) {
+              throw new Error(JSON.stringify(res));
+            }
+
             return res.success;
           },
-          onError: 'failure',
+          onError: [
+            {
+              target: 'failure',
+              actions: ['sendFailedEndEvent'],
+            },
+          ],
+
           onDone: {
             target: 'authentication',
             actions: ['setStatus'],
           },
+        },
+        on: {
+          AUTHENTICATE: 'authenticating',
         },
       },
 
@@ -143,6 +165,7 @@ export const biometricsMachine = model.createMachine(
           SET_IS_AVAILABLE: {
             target: '#biometrics.available',
           },
+          AUTHENTICATE: 'authenticating',
         },
       },
 
@@ -182,7 +205,11 @@ export const biometricsMachine = model.createMachine(
             meta: {
               message: 'errors.generic',
             },
+            exit: 'resetError',
           },
+        },
+        on: {
+          AUTHENTICATE: 'authenticating',
         },
       },
     },
@@ -209,15 +236,26 @@ export const biometricsMachine = model.createMachine(
       setRetry: model.assign({
         retry: () => true,
       }),
+
+      sendFailedEndEvent: model.assign({
+        error: (_context, event) => {
+          const res = JSON.parse((event.data as Error).message);
+          return {res: res, stacktrace: event};
+        },
+      }),
+
+      resetError: model.assign({
+        error: () => null,
+      }),
     },
     guards: {
-      isStatusSuccess: (ctx) => ctx.status,
-      isStatusFail: (ctx) => !ctx.status,
-      checkIfAvailable: (ctx) => ctx.isAvailable && ctx.isEnrolled,
-      checkIfUnavailable: (ctx) => !ctx.isAvailable,
-      checkIfUnenrolled: (ctx) => !ctx.isEnrolled,
+      isStatusSuccess: ctx => ctx.status,
+      isStatusFail: ctx => !ctx.status,
+      checkIfAvailable: ctx => ctx.isAvailable && ctx.isEnrolled,
+      checkIfUnavailable: ctx => !ctx.isAvailable,
+      checkIfUnenrolled: ctx => !ctx.isEnrolled,
     },
-  }
+  },
 );
 
 // ----------------------------------------------------------------------------
@@ -240,7 +278,7 @@ export function selectFailMessage(state: State) {
 }
 
 export function selectIsEnabled(state: State) {
-  return state.matches('available') || state.matches({ failure: 'unenrolled' });
+  return state.matches('available') || state.matches({failure: 'unenrolled'});
 }
 
 export function selectIsAvailable(state: State) {
@@ -248,11 +286,11 @@ export function selectIsAvailable(state: State) {
 }
 
 export function selectIsUnvailable(state: State) {
-  return state.matches({ failure: 'unavailable' });
+  return state.matches({failure: 'unavailable'});
 }
 
 export function selectIsUnenrolled(state: State) {
-  return state.matches({ failure: 'unenrolled' });
+  return state.matches({failure: 'unenrolled'});
 }
 
 export function selectIsSuccess(state: State) {
@@ -260,11 +298,15 @@ export function selectIsSuccess(state: State) {
 }
 
 export function selectError(state: State) {
-  return state.matches({ failure: 'error' }) ? selectFailMessage(state) : null;
+  return state.matches({failure: 'error'}) ? selectFailMessage(state) : null;
 }
 
 export function selectUnenrolledNotice(state: State) {
-  return state.matches({ failure: 'unenrolled' }) && state.context.retry
+  return state.matches({failure: 'unenrolled'}) && state.context.retry
     ? selectFailMessage(state)
     : null;
+}
+
+export function selectErrorResponse(state: State) {
+  return state.context.error;
 }

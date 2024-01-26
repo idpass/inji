@@ -1,49 +1,87 @@
 import React from 'react';
-import { Dimensions, Modal as RNModal, StyleSheet, View } from 'react-native';
-import { Icon } from 'react-native-elements';
-import { Column, Row, Text } from '.';
-import { Colors, ElevationLevel } from './styleUtils';
+import {I18nManager, Modal as RNModal, View} from 'react-native';
+import {Icon} from 'react-native-elements';
+import {Column, Row, Text} from '.';
+import {useSendVcScreen} from '../../screens/Scan/SendVcScreenController';
+import {DeviceInfoList} from '../DeviceInfoList';
+import {ElevationLevel, Theme} from './styleUtils';
+import testIDProps from '../../shared/commonUtil';
 
-const styles = StyleSheet.create({
-  modal: {
-    width: Dimensions.get('screen').width,
-    height: Dimensions.get('screen').height,
-  },
-});
+export const Modal: React.FC<ModalProps> = props => {
+  const controller = useSendVcScreen();
 
-export const Modal: React.FC<ModalProps> = (props) => {
   return (
     <RNModal
+      {...testIDProps(props.testID)}
       animationType="slide"
-      style={styles.modal}
+      style={props.modalStyle}
       visible={props.isVisible}
+      onShow={props.onShow}
       onRequestClose={props.onDismiss}>
       <Column fill safe>
         <Row elevation={props.headerElevation}>
-          <View
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              marginHorizontal: 16,
-              marginVertical: 16,
-            }}>
+          <View style={props.modalStyle}>
             {props.headerRight ? (
               <Icon
-                name="chevron-left"
+                {...testIDProps('closeModal')}
+                name={I18nManager.isRTL ? 'chevron-right' : 'chevron-left'}
                 onPress={props.onDismiss}
-                color={Colors.Orange}
+                color={Theme.Colors.Icon}
               />
             ) : null}
-            <Row fill align="center">
-              <Text weight="semibold">{props.headerTitle}</Text>
-            </Row>
-            {props.headerRight || (
+            {props.arrowLeft ? (
               <Icon
-                name="close"
+                {...testIDProps('arrowLeft')}
+                name="arrow-left"
+                type="material-community"
                 onPress={props.onDismiss}
-                color={Colors.Orange}
+                containerStyle={Theme.Styles.backArrowContainer}
+                color={Theme.Colors.Icon}
               />
-            )}
+            ) : null}
+            <Row
+              fill
+              align={props.headerLeft ? 'flex-start' : 'center'}
+              margin={'16 0 0 0'}>
+              <Column>
+                <Text
+                  testID={props.testID}
+                  style={Theme.TextStyles.header}
+                  margin="0 0 0 -15">
+                  {props.headerTitle || props.headerLeft}
+                </Text>
+                {!props.requester ? (
+                  <Text
+                    weight="semibold"
+                    style={Theme.TextStyles.small}
+                    color={
+                      props.headerLabelColor
+                        ? props.headerLabelColor
+                        : Theme.Colors.textLabel
+                    }>
+                    {props.headerLabel}
+                  </Text>
+                ) : (
+                  <Text
+                    weight="semibold"
+                    style={Theme.TextStyles.small}
+                    color={Theme.Colors.IconBg}>
+                    <DeviceInfoList deviceInfo={controller.receiverInfo} />
+                  </Text>
+                )}
+              </Column>
+            </Row>
+            {props.headerRight ||
+              props.arrowLeft ||
+              (props.showClose && (
+                <Icon
+                  {...testIDProps('close')}
+                  name="close"
+                  onPress={props.onDismiss}
+                  color={Theme.Colors.Details}
+                  size={27}
+                />
+              ))}
           </View>
         </Row>
         {props.children}
@@ -52,10 +90,24 @@ export const Modal: React.FC<ModalProps> = (props) => {
   );
 };
 
+Modal.defaultProps = {
+  modalStyle: Theme.ModalStyles.defaultModal,
+  showClose: true,
+};
+
 export interface ModalProps {
+  testID?: string;
   isVisible: boolean;
-  onDismiss: () => void;
+  requester?: boolean;
+  showClose?: boolean;
+  modalStyle?: Object;
+  onDismiss?: () => void;
   headerTitle?: string;
   headerElevation?: ElevationLevel;
+  headerLabel?: string;
+  headerLabelColor?: string;
   headerRight?: React.ReactElement;
+  headerLeft?: React.ReactElement;
+  arrowLeft?: React.ReactElement;
+  onShow?: () => void;
 }
