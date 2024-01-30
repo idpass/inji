@@ -2,18 +2,20 @@ import React from 'react';
 import {
   FlexStyle,
   StyleProp,
-  SafeAreaView,
+  View,
   ViewStyle,
   StyleSheet,
   ScrollView,
   RefreshControlProps,
+  SafeAreaView,
 } from 'react-native';
-import { elevation, ElevationLevel, spacing } from './styleUtils';
+import {Theme, ElevationLevel, Spacing} from './styleUtils';
+import testIDProps from '../../shared/commonUtil';
 
 function createLayout(
   direction: FlexStyle['flexDirection'],
   mainAlign?: FlexStyle['justifyContent'],
-  crossAlign?: FlexStyle['alignItems']
+  crossAlign?: FlexStyle['alignItems'],
 ) {
   const layoutStyles = StyleSheet.create({
     base: {
@@ -26,29 +28,36 @@ function createLayout(
     },
   });
 
-  const Layout: React.FC<LayoutProps> = (props) => {
+  const Layout: React.FC<LayoutProps> = props => {
     const styles: StyleProp<ViewStyle> = [
       layoutStyles.base,
       props.fill ? layoutStyles.fill : null,
-      props.padding ? spacing('padding', props.padding) : null,
-      props.margin ? spacing('margin', props.margin) : null,
-      props.backgroundColor ? { backgroundColor: props.backgroundColor } : null,
-      props.width ? { width: props.width } : null,
-      props.height ? { height: props.height } : null,
-      props.align ? { justifyContent: props.align } : null,
-      props.crossAlign ? { alignItems: props.crossAlign } : null,
-      props.elevation ? elevation(props.elevation) : null,
+      props.padding ? Theme.spacing('padding', props.padding) : null,
+      props.margin ? Theme.spacing('margin', props.margin) : null,
+      props.backgroundColor ? {backgroundColor: props.backgroundColor} : null,
+      props.width ? {width: props.width} : null,
+      props.height ? {height: props.height} : null,
+      props.align ? {justifyContent: props.align} : null,
+      props.crossAlign ? {alignItems: props.crossAlign} : null,
+      props.elevation ? Theme.elevation(props.elevation) : null,
       props.style ? props.style : null,
+      props.pY ? {paddingVertical: props.pY} : null,
+      props.pX ? {paddingHorizontal: props.pX} : null,
     ];
+
+    const ViewType = props.safe ? SafeAreaView : View;
 
     return props.scroll ? (
       <ScrollView
+        {...testIDProps(props.testID)}
         contentContainerStyle={styles}
         refreshControl={props.refreshControl}>
         {props.children}
       </ScrollView>
     ) : (
-      <SafeAreaView style={styles}>{props.children}</SafeAreaView>
+      <ViewType {...testIDProps(props.testID)} style={styles}>
+        {props.children}
+      </ViewType>
     );
   };
 
@@ -61,12 +70,19 @@ export const Column = createLayout('column');
 
 export const Centered = createLayout('column', 'center', 'center');
 
+export const HorizontallyCentered = createLayout(
+  'column',
+  'flex-start',
+  'center',
+);
+
 interface LayoutProps {
+  testID?: string;
   fill?: boolean;
   align?: FlexStyle['justifyContent'];
   crossAlign?: FlexStyle['alignItems'];
-  padding?: string;
-  margin?: string;
+  padding?: Spacing;
+  margin?: Spacing;
   backgroundColor?: string;
   width?: number | string;
   height?: number | string;
@@ -74,4 +90,7 @@ interface LayoutProps {
   scroll?: boolean;
   refreshControl?: React.ReactElement<RefreshControlProps>;
   style?: StyleProp<ViewStyle>;
+  pY?: number | string | undefined;
+  pX?: number | string | undefined;
+  safe?: boolean;
 }

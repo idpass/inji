@@ -2,39 +2,64 @@
 
 export interface Typegen0 {
   '@@xstate/typegen': true;
-  'eventsCausingActions': {
-    setSelectedVc: 'VIEW_VC';
-    spawnTabActors: 'xstate.init';
-    resetSelectedVc: 'DISMISS_MODAL';
-  };
-  'internalEvents': {
+  internalEvents: {
+    'done.invoke.HomeScreen.tabs.checkStorage:invocation[0]': {
+      type: 'done.invoke.HomeScreen.tabs.checkStorage:invocation[0]';
+      data: unknown;
+      __tip: 'See the XState TS docs to learn how to strongly type this.';
+    };
     'xstate.after(100)#HomeScreen.tabs.init': {
       type: 'xstate.after(100)#HomeScreen.tabs.init';
     };
-    'xstate.init': { type: 'xstate.init' };
+    'xstate.init': {type: 'xstate.init'};
   };
-  'invokeSrcNameMap': {};
-  'missingImplementations': {
+  invokeSrcNameMap: {
+    checkStorageAvailability: 'done.invoke.HomeScreen.tabs.checkStorage:invocation[0]';
+  };
+  missingImplementations: {
     actions: never;
-    services: never;
-    guards: never;
     delays: never;
+    guards: never;
+    services: never;
   };
-  'eventsCausingServices': {};
-  'eventsCausingGuards': {};
-  'eventsCausingDelays': {};
-  'matchesStates':
-    | 'tabs'
-    | 'tabs.init'
-    | 'tabs.myVcs'
-    | 'tabs.receivedVcs'
-    | 'tabs.history'
+  eventsCausingActions: {
+    resetSelectedVc: 'DISMISS_MODAL' | 'xstate.init';
+    sendAddEvent: 'DOWNLOAD_ID';
+    setSelectedVc: 'VIEW_VC';
+    spawnTabActors: 'xstate.init';
+  };
+  eventsCausingDelays: {};
+  eventsCausingGuards: {
+    isMinimumStorageLimitReached: 'done.invoke.HomeScreen.tabs.checkStorage:invocation[0]';
+  };
+  eventsCausingServices: {
+    checkStorageAvailability: 'GOTO_ISSUERS';
+    issuersMachine: 'done.invoke.HomeScreen.tabs.checkStorage:invocation[0]';
+  };
+  matchesStates:
     | 'modals'
     | 'modals.none'
     | 'modals.viewingVc'
+    | 'tabs'
+    | 'tabs.checkStorage'
+    | 'tabs.gotoIssuers'
+    | 'tabs.history'
+    | 'tabs.idle'
+    | 'tabs.init'
+    | 'tabs.myVcs'
+    | 'tabs.receivedVcs'
+    | 'tabs.storageLimitReached'
     | {
-        tabs?: 'init' | 'myVcs' | 'receivedVcs' | 'history';
         modals?: 'none' | 'viewingVc';
+        tabs?:
+          | 'checkStorage'
+          | 'gotoIssuers'
+          | 'history'
+          | 'idle'
+          | 'init'
+          | 'myVcs'
+          | 'receivedVcs'
+          | 'storageLimitReached';
       };
-  'tags': never;
+  tags: never;
 }

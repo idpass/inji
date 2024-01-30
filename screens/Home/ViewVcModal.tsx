@@ -1,67 +1,114 @@
 import React from 'react';
-import { Icon } from 'react-native-elements';
-import { TextEditOverlay } from '../../components/TextEditOverlay';
-import { Column } from '../../components/ui';
-import { Modal } from '../../components/ui/Modal';
-import { Colors } from '../../components/ui/styleUtils';
-import { VcDetails } from '../../components/VcDetails';
-import { MessageOverlay } from '../../components/MessageOverlay';
-import { ToastItem } from '../../components/ui/ToastItem';
-import { Passcode } from '../../components/Passcode';
-import { OtpVerificationModal } from './MyVcs/OtpVerificationModal';
-import { useViewVcModal, ViewVcModalProps } from './ViewVcModalController';
-import { useTranslation } from 'react-i18next';
+import {Column} from '../../components/ui';
+import {Modal} from '../../components/ui/Modal';
+import {MessageOverlay} from '../../components/MessageOverlay';
+import {ToastItem} from '../../components/ui/ToastItem';
+import {RevokeConfirmModal} from '../../components/RevokeConfirm';
+import {OIDcAuthenticationModal} from '../../components/OIDcAuth';
+import {useViewVcModal, ViewVcModalProps} from './ViewVcModalController';
+import {useTranslation} from 'react-i18next';
+import {BannerNotification} from '../../components/BannerNotification';
+import {TextEditOverlay} from '../../components/TextEditOverlay';
+import {OtpVerificationModal} from './MyVcs/OtpVerificationModal';
+import {BindingVcWarningOverlay} from './MyVcs/BindingVcWarningOverlay';
+import {VcDetailsContainer} from '../../components/VC/VcDetailsContainer';
 
-export const ViewVcModal: React.FC<ViewVcModalProps> = (props) => {
-  const { t } = useTranslation('ViewVcModal');
+export const ViewVcModal: React.FC<ViewVcModalProps> = props => {
+  const {t} = useTranslation('ViewVcModal');
   const controller = useViewVcModal(props);
+
+  const DATA = [
+    {
+      idType: 'VID',
+      label: t('revoke'),
+      icon: 'close-circle-outline',
+      onPress: controller.CONFIRM_REVOKE_VC,
+    },
+  ];
 
   return (
     <Modal
       isVisible={props.isVisible}
       onDismiss={props.onDismiss}
-      headerTitle={controller.vc.tag || controller.vc.id}
-      headerElevation={2}
-      headerRight={
-        <Icon name="edit" onPress={controller.EDIT_TAG} color={Colors.Orange} />
-      }>
-      <Column scroll backgroundColor={Colors.LightGrey}>
-        <Column>
-          <VcDetails vc={controller.vc} />
+      headerTitle={t('title')}
+      headerElevation={2}>
+      {controller.isBindingSuccess && (
+        <BannerNotification
+          message={t('activated')}
+          onClosePress={controller.DISMISS}
+          testId={'activatedVcPopup'}
+        />
+      )}
+      <Column scroll>
+        <Column fill>
+          <VcDetailsContainer
+            vc={controller.vc}
+            onBinding={controller.addtoWallet}
+            isBindingPending={controller.isWalletBindingPending}
+            activeTab={props.activeTab}
+          />
         </Column>
       </Column>
 
-      <TextEditOverlay
-        isVisible={controller.isEditingTag}
-        label={t('editTag')}
-        value={controller.vc.tag}
-        onDismiss={controller.DISMISS}
-        onSave={controller.SAVE_TAG}
-      />
+      {controller.isAcceptingRevokeInput && (
+        <OIDcAuthenticationModal
+          isVisible={controller.isAcceptingRevokeInput}
+          onDismiss={controller.DISMISS}
+          onVerify={() => {
+            controller.revokeVc('111111');
+          }}
+          error={controller.otpError}
+        />
+      )}
 
-      <OtpVerificationModal
-        isVisible={controller.isAcceptingOtpInput}
-        onDismiss={controller.DISMISS}
-        onInputDone={controller.inputOtp}
-        error={controller.otpError}
+      {controller.isAcceptingOtpInput && (
+        <OtpVerificationModal
+          isVisible={controller.isAcceptingOtpInput}
+          onDismiss={controller.DISMISS}
+          onInputDone={controller.inputOtp}
+          error={controller.otpError}
+          resend={controller.RESEND_OTP}
+        />
+      )}
+
+      {controller.isAcceptingBindingOtp && (
+        <OtpVerificationModal
+          isVisible={controller.isAcceptingBindingOtp}
+          onDismiss={controller.DISMISS}
+          onInputDone={controller.inputOtp}
+          error={controller.otpError}
+          resend={controller.RESEND_OTP}
+        />
+      )}
+
+      <BindingVcWarningOverlay
+        isVisible={controller.isBindingWarning}
+        onConfirm={controller.CONFIRM}
+        onCancel={controller.CANCEL}
       />
 
       <MessageOverlay
-        isVisible={controller.isRequestingOtp}
-        title={t('requestingOtp')}
-        hasProgress
+        isVisible={controller.isBindingError}
+        title={controller.walletBindingError}
+        onButtonPress={() => {
+          controller.CANCEL();
+        }}
       />
 
-      {controller.reAuthenticating !== '' &&
-        controller.reAuthenticating == 'passcode' && (
-          <Passcode
-            onSuccess={() => controller.onSuccess()}
-            onError={(value) => controller.onError(value)}
-            storedPasscode={controller.storedPasscode}
-            onDismiss={() => controller.setReAuthenticating('')}
-            error={controller.error}
-          />
-        )}
+      <MessageOverlay
+        isVisible={controller.isWalletBindingInProgress}
+        title={t('inProgress')}
+        progress
+      />
+
+      {controller.isRevoking && (
+        <RevokeConfirmModal
+          id={controller.vc.id}
+          onCancel={() => controller.setRevoking(false)}
+          onRevoke={controller.REVOKE_VC}
+        />
+      )}
+
       {controller.toastVisible && <ToastItem message={controller.message} />}
     </Modal>
   );

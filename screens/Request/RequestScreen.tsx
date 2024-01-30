@@ -1,84 +1,168 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
+import {TFunction, useTranslation} from 'react-i18next';
 import QRCode from 'react-native-qrcode-svg';
-import { Centered, Column, Text } from '../../components/ui';
-import { Colors } from '../../components/ui/styleUtils';
-import { MainRouteProps } from '../../routes/main';
-import { ReceiveVcModal } from './ReceiveVcModal';
-import { MessageOverlay } from '../../components/MessageOverlay';
-import { useRequestScreen } from './RequestScreenController';
-import { useTranslation } from 'react-i18next';
 
-export const RequestScreen: React.FC<MainRouteProps> = (props) => {
-  const { t } = useTranslation('RequestScreen');
-  const controller = useRequestScreen(props);
+import {Centered, Button, Column, Text} from '../../components/ui';
+import {Theme} from '../../components/ui/styleUtils';
+import {useRequestScreen} from './RequestScreenController';
+import BluetoothStateManager from 'react-native-bluetooth-state-manager';
+import {Platform} from 'react-native';
+import Storage from '../../shared/storage';
+import {ErrorMessageOverlay} from '../../components/MessageOverlay';
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
+import {MainBottomTabParamList} from '../../routes/main';
+import {BOTTOM_TAB_ROUTES} from '../../routes/routesConstants';
+import {ProgressingModal} from '../../components/ProgressingModal';
+import {isIOS} from '../../shared/constants';
+
+type RequestStackParamList = {
+  RequestScreen: undefined;
+  ReceiveVcScreen: undefined;
+};
+
+type RequestLayoutNavigation = NavigationProp<
+  RequestStackParamList & MainBottomTabParamList
+>;
+
+export const RequestScreen: React.FC = () => {
+  const {t} = useTranslation('RequestScreen');
+  const controller = useRequestScreen();
+  const props: RequestScreenProps = {t, controller};
+  const [isBluetoothOn, setIsBluetoothOn] = useState(false);
+  const navigation = useNavigation<RequestLayoutNavigation>();
+
+  useEffect(() => {
+    (async () => {
+      await BluetoothStateManager.onStateChange(state => {
+        if (state === 'PoweredOff') {
+          setIsBluetoothOn(false);
+        } else {
+          setIsBluetoothOn(true);
+        }
+      }, true);
+    })();
+  }, [isBluetoothOn]);
 
   return (
-    <Column fill padding="98 24 24 24" backgroundColor={Colors.LightGrey}>
-      <Column>
-        {controller.isBluetoothDenied ? (
-          <Text color={Colors.Red} align="center">
-            {t('bluetoothDenied', { vcLabel: controller.vcLabel.singular })}
-          </Text>
-        ) : (
-          controller.isWaitingForConnection && (
-            <Text align="center">
-              {t('showQrCode', { vcLabel: controller.vcLabel.singular })}
-            </Text>
-          )
-        )}
-      </Column>
-
-      <Centered fill>
-        {controller.isWaitingForConnection &&
-        controller.connectionParams !== '' ? (
-          <QRCode
-            size={200}
-            value={controller.connectionParams}
-            backgroundColor={Colors.LightGrey}
-          />
-        ) : null}
-      </Centered>
-
-      {controller.statusMessage !== '' && (
-        <Column elevation={1} padding="16 24">
-          <Text>{controller.statusMessage}</Text>
-        </Column>
+    <Column
+      fill
+      padding="24"
+      align="space-between"
+      backgroundColor={Theme.Colors.lightGreyBackgroundColor}>
+      {loadQRCode()}
+      {controller.isMinimumStorageLimitReached && (
+        <ErrorMessageOverlay
+          isVisible={controller.isMinimumStorageLimitReached}
+          error="errors.storageLimitReached"
+          onDismiss={() => {
+            navigation.navigate(BOTTOM_TAB_ROUTES.home);
+          }}
+          translationPath="RequestScreen"
+        />
       )}
+    </Column>
+  );
 
-      <ReceiveVcModal
-        isVisible={controller.isReviewing}
-        onDismiss={controller.REJECT}
-        onAccept={controller.ACCEPT}
-        onReject={controller.REJECT}
-        headerTitle={t('incomingVc', { vcLabel: controller.vcLabel.singular })}
-      />
+  function loadQRCode() {
+    if (controller.isNearByDevicesPermissionDenied) {
+      return <NearByPrompt {...props} />;
+    }
+    if (
+      (controller.isBluetoothDenied || !isBluetoothOn) &&
+      controller.isReadyForBluetoothStateCheck
+    ) {
+      return <BluetoothPrompt {...props} />;
+    }
+    if (
+      !controller.isCheckingBluetoothService &&
+      !controller.isBluetoothDenied
+    ) {
+      return (
+        <React.Fragment>
+          <Column align="flex-end" fill>
+            {controller.isWaitingForConnection && <SharingQR {...props} />}
+            <StatusMessage {...props} />
+          </Column>
+          <ProgressingModal
+            title={controller.statusTitle}
+            isVisible={
+              controller.isWaitingForVc || controller.isWaitingForVcTimeout
+            }
+            isHintVisible={false}
+            isBleErrorVisible={false}
+            progress={true}
+            onCancel={controller.CANCEL}
+          />
+        </React.Fragment>
+      );
+    }
+  }
+};
 
-      <MessageOverlay
-        isVisible={controller.isAccepted}
-        title={t('status.accepted.title')}
-        message={t('status.accepted.message', {
-          vcLabel: controller.vcLabel.singular,
-          sender: controller.senderInfo.deviceName,
-        })}
-        onBackdropPress={controller.DISMISS}
-      />
+const BluetoothPrompt: React.FC<RequestScreenProps> = ({t}) => {
+  return (
+    <Centered fill>
+      <Text color={Theme.Colors.errorMessage} align="center" margin="0 10">
+        {t(isIOS() ? 'bluetoothStateIos' : 'bluetoothStateAndroid')}
+      </Text>
+    </Centered>
+  );
+};
 
-      <MessageOverlay
-        isVisible={controller.isRejected}
-        title={t('status.rejected.title')}
-        message={t('status.rejected.message', {
-          vcLabel: controller.vcLabel.singular,
-          sender: controller.senderInfo.deviceName,
-        })}
-        onBackdropPress={controller.DISMISS}
-      />
-
-      <MessageOverlay
-        isVisible={controller.isDisconnected}
-        title={t('status.disconnected.title')}
-        message={t('status.disconnected.message')}
-        onBackdropPress={controller.DISMISS}
+const NearByPrompt: React.FC<RequestScreenProps> = ({t, controller}) => {
+  return (
+    <Column fill align="space-between">
+      <Centered fill>
+        <Text color={Theme.Colors.errorMessage} align="center">
+          {t('errors.nearbyDevicesPermissionDenied.message')}
+        </Text>
+      </Centered>
+      <Button
+        title={t('errors.nearbyDevicesPermissionDenied.button')}
+        onPress={controller.GOTO_SETTINGS}
       />
     </Column>
   );
 };
+
+const SharingQR: React.FC<RequestScreenProps> = ({t, controller}) => {
+  return (
+    <React.Fragment>
+      <Text align="center">{t('showQrCode')}</Text>
+
+      <Centered fill>
+        {controller.openId4VpUri !== '' ? (
+          <QRCode
+            size={200}
+            value={controller.openId4VpUri}
+            backgroundColor={Theme.Colors.QRCodeBackgroundColor}
+          />
+        ) : null}
+      </Centered>
+    </React.Fragment>
+  );
+};
+
+const StatusMessage: React.FC<RequestScreenProps> = ({t, controller}) => {
+  return (
+    controller.statusMessage !== '' && (
+      <Column elevation={1} padding="16 24">
+        <Text>{controller.statusMessage}</Text>
+        {controller.statusHint !== '' && (
+          <Text size="small" color={Theme.Colors.textLabel}>
+            {controller.statusHint}
+          </Text>
+        )}
+      </Column>
+    )
+  );
+};
+
+interface RequestScreenProps {
+  t: TFunction;
+  controller: ReturnType<typeof useRequestScreen>;
+}

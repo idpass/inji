@@ -1,29 +1,13 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, TextInput } from 'react-native';
-import { usePinInput } from '../machines/pinInput';
-import { Row } from './ui';
-import { Colors } from './ui/styleUtils';
+import React, {useEffect} from 'react';
+import {TextInput} from 'react-native';
+import {usePinInput} from '../machines/pinInput';
+import {Row} from './ui';
+import {Theme} from './ui/styleUtils';
 
-const styles = StyleSheet.create({
-  input: {
-    borderBottomWidth: 1,
-    borderColor: Colors.Grey,
-    color: Colors.Black,
-    flex: 1,
-    fontFamily: 'Poppins_600SemiBold',
-    fontSize: 18,
-    fontWeight: '600',
-    height: 40,
-    lineHeight: 28,
-    margin: 8,
-    textAlign: 'center',
-  },
-});
-
-export const PinInput: React.FC<PinInputProps> = (props) => {
-  const { state, send, events } = usePinInput(props.length);
-  const { inputRefs, values } = state.context;
-  const { UPDATE_INPUT, FOCUS_INPUT, KEY_PRESS } = events;
+export const PinInput: React.FC<PinInputProps> = props => {
+  const {state, send, events} = usePinInput(props.length);
+  const {inputRefs, values} = state.context;
+  const {UPDATE_INPUT, FOCUS_INPUT, KEY_PRESS} = events;
 
   useEffect(() => {
     if (props.onDone && values.filter(Boolean).length === inputRefs.length) {
@@ -32,19 +16,21 @@ export const PinInput: React.FC<PinInputProps> = (props) => {
   }, [state]);
 
   return (
-    <Row width="100%">
+    <Row width="100%" testID={props.testID} removeClippedSubviews={true}>
       {inputRefs.map((input, index) => (
         <TextInput
+          contextMenuHidden={true}
           selectTextOnFocus
           keyboardType="numeric"
           maxLength={1}
-          selectionColor={Colors.Orange}
-          style={styles.input}
+          secureTextEntry
+          selectionColor={Theme.Colors.inputSelection}
+          style={Theme.PinInputStyle.input}
           key={index}
           ref={input}
           value={values[index]}
           // KNOWN ISSUE: https://github.com/facebook/react-native/issues/19507
-          onKeyPress={({ nativeEvent }) => send(KEY_PRESS(nativeEvent.key))}
+          onKeyPress={({nativeEvent}) => send(KEY_PRESS(nativeEvent.key))}
           onChangeText={(value: string) =>
             send(UPDATE_INPUT(value.replace(/\D/g, ''), index))
           }
@@ -56,6 +42,7 @@ export const PinInput: React.FC<PinInputProps> = (props) => {
 };
 
 interface PinInputProps {
+  testID?: string;
   length: number;
   onDone?: (value: string) => void;
 }

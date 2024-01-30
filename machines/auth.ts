@@ -1,34 +1,40 @@
-import { ContextFrom, EventFrom, send, StateFrom } from 'xstate';
-import { log } from 'xstate/lib/actions';
-import { createModel } from 'xstate/lib/model';
-import { AppServices } from '../shared/GlobalContext';
-import { StoreEvents, StoreResponseEvent } from './store';
+import {assign, ContextFrom, EventFrom, send, StateFrom} from 'xstate';
+import {createModel} from 'xstate/lib/model';
+import {AppServices} from '../shared/GlobalContext';
+import {StoreEvents, StoreResponseEvent} from './store';
+import {generateSecureRandom} from 'react-native-securerandom';
+import binaryToBase64 from 'react-native/Libraries/Utilities/binaryToBase64';
 
 const model = createModel(
   {
     serviceRefs: {} as AppServices,
     passcode: '',
+    passcodeSalt: '',
     biometrics: '',
     canUseBiometrics: false,
+    selectLanguage: false,
   },
   {
     events: {
-      SETUP_PASSCODE: (passcode: string) => ({ passcode }),
-      SETUP_BIOMETRICS: (biometrics: string) => ({  biometrics }),
+      SETUP_PASSCODE: (passcode: string) => ({passcode}),
+      SETUP_BIOMETRICS: (biometrics: string) => ({biometrics}),
       LOGOUT: () => ({}),
       LOGIN: () => ({}),
-      STORE_RESPONSE: (response?: unknown) => ({ response }),
+      STORE_RESPONSE: (response?: unknown) => ({response}),
+      SELECT: () => ({}),
+      NEXT: () => ({}),
     },
-  }
+  },
 );
 
 export const AuthEvents = model.events;
-
 
 type SetupBiometricsEvent = EventFrom<typeof model, 'SETUP_BIOMETRICS'>;
 
 export const authMachine = model.createMachine(
   {
+    predictableActionArguments: true,
+    preserveActionOrder: true,
     tsTypes: {} as import('./auth.typegen').Typegen0,
     schema: {
       context: model.initialContext,
@@ -46,7 +52,7 @@ export const authMachine = model.createMachine(
               target: 'checkingAuth',
               actions: ['setContext'],
             },
-            { target: 'savingDefaults' },
+            {target: 'savingDefaults'},
           ],
         },
       },
@@ -58,21 +64,42 @@ export const authMachine = model.createMachine(
       },
       checkingAuth: {
         always: [
-          { cond: 'hasPasscodeSet', target: 'unauthorized' },
-          { cond: 'hasBiometricSet', target: 'unauthorized' },
-          { target: 'settingUp' },
+          {cond: 'hasLanguageset', target: 'languagesetup'},
+          {cond: 'hasPasscodeSet', target: 'unauthorized'},
+          {cond: 'hasBiometricSet', target: 'unauthorized'},
+          {target: 'settingUp'},
         ],
+      },
+      languagesetup: {
+        on: {
+          SELECT: {
+            target: 'introSlider',
+          },
+        },
+      },
+      introSlider: {
+        invoke: {
+          src: 'generatePasscodeSalt',
+          onDone: {
+            actions: ['setPasscodeSalt', 'storeContext'],
+          },
+        },
+        on: {
+          NEXT: {
+            target: 'settingUp',
+          },
+        },
       },
       settingUp: {
         on: {
           SETUP_PASSCODE: {
             target: 'authorized',
-            actions: ['setPasscode', 'storeContext'],
+            actions: ['setPasscode', 'setLanguage', 'storeContext'],
           },
           SETUP_BIOMETRICS: {
             // Note! dont authorized yet we need to setup passcode too as discuss
             // target: 'authorized',
-            actions: ['setBiometrics', 'storeContext'],
+            actions: ['setBiometrics', 'setLanguage', 'storeContext'],
           },
         },
       },
@@ -82,6 +109,12 @@ export const authMachine = model.createMachine(
         },
       },
       authorized: {
+        invoke: {
+          src: 'downloadFaceSdkModel',
+          onDone: {
+            actions: ['storeContext'],
+          },
+        },
         on: {
           LOGOUT: 'unauthorized',
           SETUP_BIOMETRICS: {
@@ -94,19 +127,19 @@ export const authMachine = model.createMachine(
   {
     actions: {
       requestStoredContext: send(StoreEvents.GET('auth'), {
-        to: (context) => context.serviceRefs.store,
+        to: context => context.serviceRefs.store,
       }),
 
       storeContext: send(
-        (context) => {
-          const { serviceRefs, ...data } = context;
+        context => {
+          const {serviceRefs, ...data} = context;
           return StoreEvents.SET('auth', data);
         },
-        { to: (context) => context.serviceRefs.store }
+        {to: context => context.serviceRefs.store},
       ),
 
       setContext: model.assign((_, event) => {
-        const { serviceRefs, ...data } = event.response as ContextFrom<
+        const {serviceRefs, ...data} = event.response as ContextFrom<
           typeof model
         >;
         return data;
@@ -119,19 +152,42 @@ export const authMachine = model.createMachine(
       setBiometrics: model.assign({
         biometrics: (_, event: SetupBiometricsEvent) => event.biometrics,
       }),
+
+      setLanguage: assign({
+        selectLanguage: context => true,
+      }),
+
+      setPasscodeSalt: assign({
+        passcodeSalt: (context, event) => {
+          return event.data as string;
+        },
+      }),
+    },
+
+    services: {
+      downloadFaceSdkModel: () => () => {
+        // ToDo - support to download model for face match
+      },
+      generatePasscodeSalt: () => async context => {
+        const randomBytes = await generateSecureRandom(16);
+        return binaryToBase64(randomBytes) as string;
+      },
     },
 
     guards: {
       hasData: (_, event: StoreResponseEvent) => event.response != null,
 
-      hasPasscodeSet: (context) => {
-        return context.passcode !== ''
+      hasPasscodeSet: context => {
+        return context.passcode !== '';
       },
-      hasBiometricSet: (context) => {
-        return context.biometrics !== ''
-      }
+      hasBiometricSet: context => {
+        return context.biometrics !== '' && context.passcode !== '';
+      },
+      hasLanguageset: context => {
+        return !context.selectLanguage;
+      },
     },
-  }
+  },
 );
 
 export function createAuthMachine(serviceRefs: AppServices) {
@@ -145,6 +201,10 @@ type State = StateFrom<typeof authMachine>;
 
 export function selectPasscode(state: State) {
   return state.context.passcode;
+}
+
+export function selectPasscodeSalt(state: State) {
+  return state.context.passcodeSalt;
 }
 
 export function selectBiometrics(state: State) {
@@ -165,4 +225,11 @@ export function selectUnauthorized(state: State) {
 
 export function selectSettingUp(state: State) {
   return state.matches('settingUp');
+}
+
+export function selectLanguagesetup(state: State) {
+  return state.matches('languagesetup');
+}
+export function selectIntroSlider(state: State) {
+  return state.matches('introSlider');
 }

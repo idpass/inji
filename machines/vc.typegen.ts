@@ -2,34 +2,44 @@
 
 export interface Typegen0 {
   '@@xstate/typegen': true;
-  'eventsCausingActions': {
-    setMyVcs: 'STORE_RESPONSE';
-    setReceivedVcs: 'STORE_RESPONSE';
+  internalEvents: {
+    'xstate.init': {type: 'xstate.init'};
+  };
+  invokeSrcNameMap: {};
+  missingImplementations: {
+    actions: never;
+    delays: never;
+    guards: never;
+    services: never;
+  };
+  eventsCausingActions: {
+    addVcToInProgressDownloads: 'ADD_VC_TO_IN_PROGRESS_DOWNLOADS';
     getReceivedVcsResponse: 'GET_RECEIVED_VCS';
     getVcItemResponse: 'GET_VC_ITEM';
-    prependToMyVcs: 'VC_ADDED';
-    setDownloadedVc: 'VC_DOWNLOADED';
+    loadMyVcs: 'REFRESH_MY_VCS' | 'xstate.init';
+    loadReceivedVcs: 'REFRESH_RECEIVED_VCS' | 'STORE_RESPONSE';
     moveExistingVcToTop: 'VC_RECEIVED';
+    prependToMyVcs: 'VC_ADDED';
     prependToReceivedVcs: 'VC_RECEIVED';
-    loadMyVcs: 'REFRESH_MY_VCS';
-    loadReceivedVcs: 'STORE_RESPONSE' | 'REFRESH_RECEIVED_VCS';
+    removeVcFromInProgressDownlods: 'REMOVE_VC_FROM_IN_PROGRESS_DOWNLOADS';
+    removeVcFromMyVcs: 'REMOVE_VC_FROM_CONTEXT';
+    resetAreAllVcsDownloaded: 'RESET_ARE_ALL_VCS_DOWNLOADED';
+    resetWalletBindingSuccess: 'RESET_WALLET_BINDING_SUCCESS';
+    setDownloadedVCFromOpenId4VCI: 'VC_DOWNLOADED_FROM_OPENID4VCI';
+    setDownloadedVc: 'VC_DOWNLOADED';
+    setMyVcs: 'STORE_RESPONSE';
+    setReceivedVcs: 'STORE_RESPONSE';
+    setUpdatedVcMetadatas: 'VC_METADATA_UPDATED';
+    setVcUpdate: 'VC_UPDATE';
+    setWalletBindingSuccess: 'WALLET_BINDING_SUCCESS';
+    updateMyVcs: 'VC_METADATA_UPDATED';
   };
-  'internalEvents': {
-    'xstate.init': { type: 'xstate.init' };
-  };
-  'invokeSrcNameMap': {};
-  'missingImplementations': {
-    actions: never;
-    services: never;
-    guards: never;
-    delays: never;
-  };
-  'eventsCausingServices': {};
-  'eventsCausingGuards': {
+  eventsCausingDelays: {};
+  eventsCausingGuards: {
     hasExistingReceivedVc: 'VC_RECEIVED';
   };
-  'eventsCausingDelays': {};
-  'matchesStates':
+  eventsCausingServices: {};
+  matchesStates:
     | 'init'
     | 'init.myVcs'
     | 'init.receivedVcs'
@@ -50,5 +60,5 @@ export interface Typegen0 {
               receivedVcs?: 'idle' | 'refreshing';
             };
       };
-  'tags': never;
+  tags: never;
 }

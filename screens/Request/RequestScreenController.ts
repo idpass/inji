@@ -1,81 +1,76 @@
-import { useSelector } from '@xstate/react';
-import { useContext, useEffect } from 'react';
-import { selectIsActive, selectIsFocused } from '../../machines/app';
+import {useSelector} from '@xstate/react';
+import {useContext, useEffect} from 'react';
+import {selectIsActive, selectIsFocused} from '../../machines/app';
+import {GlobalContext} from '../../shared/GlobalContext';
+import BluetoothStateManager from 'react-native-bluetooth-state-manager';
+import {useTranslation} from 'react-i18next';
+import {
+  selectIsCheckingBluetoothService,
+  selectIsWaitingForConnection,
+  selectIsWaitingForVc,
+  selectIsWaitingForVcTimeout,
+  selectOpenId4VpUri,
+  selectSenderInfo,
+  selectSharingProtocol,
+} from '../../machines/bleShare/request/selectors';
+import {
+  selectIsBluetoothDenied,
+  selectIsCancelling,
+  selectIsNearByDevicesPermissionDenied,
+  selectIsReviewing,
+  selectReadyForBluetoothStateCheck,
+} from '../../machines/bleShare/commonSelectors';
 import {
   RequestEvents,
-  selectIsAccepted,
-  selectIsBluetoothDenied,
-  selectConnectionParams,
-  selectIsDisconnected,
-  selectIsRejected,
-  selectIsReviewing,
-  selectSenderInfo,
-  selectIsWaitingForConnection,
-  selectIsExchangingDeviceInfo,
-  selectIsWaitingForVc,
-} from '../../machines/request';
-import { selectVcLabel } from '../../machines/settings';
-import { MainRouteProps } from '../../routes/main';
-import { GlobalContext } from '../../shared/GlobalContext';
-import BluetoothStateManager from 'react-native-bluetooth-state-manager';
-import { useTranslation } from 'react-i18next';
+  selectIsMinimumStorageLimitReached,
+} from '../../machines/bleShare/request/requestMachine';
 
-export function useRequestScreen({ navigation }: MainRouteProps) {
-  const { t } = useTranslation('RequestScreen');
-  const { appService } = useContext(GlobalContext);
-  const settingsService = appService.children.get('settings');
-  const vcLabel = useSelector(settingsService, selectVcLabel);
+export function useRequestScreen() {
+  const {t} = useTranslation('RequestScreen');
+  const {appService} = useContext(GlobalContext);
 
   const requestService = appService.children.get('request');
   const isActive = useSelector(appService, selectIsActive);
   const isFocused = useSelector(appService, selectIsFocused);
+  const isReadyForBluetoothStateCheck = useSelector(
+    requestService,
+    selectReadyForBluetoothStateCheck,
+  );
   const isBluetoothDenied = useSelector(
     requestService,
-    selectIsBluetoothDenied
+    selectIsBluetoothDenied,
+  );
+  const isNearByDevicesPermissionDenied = useSelector(
+    requestService,
+    selectIsNearByDevicesPermissionDenied,
   );
   const isWaitingForConnection = useSelector(
     requestService,
-    selectIsWaitingForConnection
+    selectIsWaitingForConnection,
   );
-  const isExchangingDeviceInfo = useSelector(
-    requestService,
-    selectIsExchangingDeviceInfo
-  );
-  const isWaitingForVc = useSelector(requestService, selectIsWaitingForVc);
 
+  const isWaitingForVc = useSelector(requestService, selectIsWaitingForVc);
+  const isWaitingForVcTimeout = useSelector(
+    requestService,
+    selectIsWaitingForVcTimeout,
+  );
+
+  let statusTitle = '';
   let statusMessage = '';
+  let statusHint = '';
   if (isWaitingForConnection) {
     statusMessage = t('status.waitingConnection');
-  } else if (isExchangingDeviceInfo) {
-    statusMessage = t('status.exchangingDeviceInfo');
   } else if (isWaitingForVc) {
-    statusMessage = t('status.connected', { vcLabel: vcLabel.singular });
+    statusTitle = t('status.sharing.title');
+    statusMessage = t('status.connected.message');
+  } else if (isWaitingForVcTimeout) {
+    statusTitle = t('status.sharing.title');
+    statusMessage = t('status.connected.message');
+    statusHint = t('status.connected.timeoutHint');
   }
 
   useEffect(() => {
-    const subscriptions = [
-      navigation.addListener('focus', () =>
-        requestService.send(RequestEvents.SCREEN_FOCUS())
-      ),
-      navigation.addListener('blur', () =>
-        requestService.send(RequestEvents.SCREEN_BLUR())
-      ),
-    ];
-
-    const navSubscription = requestService.subscribe((state) => {
-      if (state.matches('reviewing.navigatingToHome')) {
-        navigation.navigate('Home', { activeTab: 1 });
-      }
-    });
-
-    return () => {
-      subscriptions.forEach((unsubscribe) => unsubscribe());
-      navSubscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    BluetoothStateManager.getState().then((bluetoothState) => {
+    BluetoothStateManager.getState().then(bluetoothState => {
       if (bluetoothState === 'PoweredOn' && isBluetoothDenied) {
         requestService.send(RequestEvents.SCREEN_FOCUS());
       }
@@ -83,24 +78,35 @@ export function useRequestScreen({ navigation }: MainRouteProps) {
   }, [isFocused, isActive]);
 
   return {
-    vcLabel,
+    statusTitle,
     statusMessage,
+    statusHint,
+    sharingProtocol: useSelector(requestService, selectSharingProtocol),
 
     isWaitingForConnection,
-    isExchangingDeviceInfo,
-
     isWaitingForVc,
+    isWaitingForVcTimeout,
     isBluetoothDenied,
-    connectionParams: useSelector(requestService, selectConnectionParams),
+    isNearByDevicesPermissionDenied,
+    isReadyForBluetoothStateCheck,
+    isCheckingBluetoothService: useSelector(
+      requestService,
+      selectIsCheckingBluetoothService,
+    ),
+    isMinimumStorageLimitReached: useSelector(
+      requestService,
+      selectIsMinimumStorageLimitReached,
+    ),
+    openId4VpUri: useSelector(requestService, selectOpenId4VpUri),
     senderInfo: useSelector(requestService, selectSenderInfo),
     isReviewing: useSelector(requestService, selectIsReviewing),
-    isAccepted: useSelector(requestService, selectIsAccepted),
-    isRejected: useSelector(requestService, selectIsRejected),
-    isDisconnected: useSelector(requestService, selectIsDisconnected),
+    isCancelling: useSelector(requestService, selectIsCancelling),
 
+    CANCEL: () => requestService.send(RequestEvents.CANCEL()),
     DISMISS: () => requestService.send(RequestEvents.DISMISS()),
     ACCEPT: () => requestService.send(RequestEvents.ACCEPT()),
     REJECT: () => requestService.send(RequestEvents.REJECT()),
     REQUEST: () => requestService.send(RequestEvents.SCREEN_FOCUS()),
+    GOTO_SETTINGS: () => requestService.send(RequestEvents.GOTO_SETTINGS()),
   };
 }

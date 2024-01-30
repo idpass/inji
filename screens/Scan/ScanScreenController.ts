@@ -1,40 +1,66 @@
-import { useSelector } from '@xstate/react';
-import { useContext, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import {useSelector} from '@xstate/react';
+import {useContext} from 'react';
+import {useTranslation} from 'react-i18next';
+
+import {selectShareableVcsMetadata} from '../../machines/vc';
+import {GlobalContext} from '../../shared/GlobalContext';
+import {
+  selectIsLocationDenied,
+  selectIsLocationDisabled,
+  selectIsQrLoginStoring,
+  selectIsScanning,
+  selectIsShowQrLogin,
+  selectQrLoginRef,
+} from '../../machines/bleShare/scan/selectors';
+import {
+  selectIsBluetoothDenied,
+  selectIsNearByDevicesPermissionDenied,
+  selectReadyForBluetoothStateCheck,
+  selectIsBluetoothPermissionDenied,
+  selectIsStartPermissionCheck,
+} from '../../machines/bleShare/commonSelectors';
 import {
   ScanEvents,
-  selectIsInvalid,
-  selectIsAirplaneEnabled,
-  selectIsLocationDisabled,
-  selectIsLocationDenied,
-  selectIsReviewing,
-  selectIsScanning,
-  selectIsConnecting,
-  selectIsExchangingDeviceInfo,
-} from '../../machines/scan';
-import { selectVcLabel } from '../../machines/settings';
-import { selectShareableVcs } from '../../machines/vc';
-import { MainRouteProps } from '../../routes/main';
-import { GlobalContext } from '../../shared/GlobalContext';
+  selectIsMinimumStorageRequiredForAuditEntryLimitReached,
+} from '../../machines/bleShare/scan/scanMachine';
 
-export function useScanScreen({ navigation }: MainRouteProps) {
-  const { t } = useTranslation('ScanScreen');
-  const { appService } = useContext(GlobalContext);
+export function useScanScreen() {
+  const {t} = useTranslation('ScanScreen');
+  const {appService} = useContext(GlobalContext);
   const scanService = appService.children.get('scan');
-  const settingsService = appService.children.get('settings');
   const vcService = appService.children.get('vc');
 
-  const shareableVcs = useSelector(vcService, selectShareableVcs);
+  const shareableVcsMetadata = useSelector(
+    vcService,
+    selectShareableVcsMetadata,
+  );
 
   const isLocationDisabled = useSelector(scanService, selectIsLocationDisabled);
   const isLocationDenied = useSelector(scanService, selectIsLocationDenied);
-  const isFlightMode = useSelector(scanService, selectIsAirplaneEnabled);
+  const isReadyForBluetoothStateCheck = useSelector(
+    scanService,
+    selectReadyForBluetoothStateCheck,
+  );
+  const isStartPermissionCheck = useSelector(
+    scanService,
+    selectIsStartPermissionCheck,
+  );
+  const isNearByDevicesPermissionDenied = useSelector(
+    scanService,
+    selectIsNearByDevicesPermissionDenied,
+  );
+  const isBluetoothPermissionDenied = useSelector(
+    scanService,
+    selectIsBluetoothPermissionDenied,
+  );
+  const isBluetoothDenied = useSelector(scanService, selectIsBluetoothDenied);
+  const locationError = {message: '', button: ''};
+  const isMinimumStorageRequiredForAuditEntryLimitReached = useSelector(
+    scanService,
+    selectIsMinimumStorageRequiredForAuditEntryLimitReached,
+  );
 
-  const locationError = { message: '', button: '' };
-  if (isFlightMode) {
-    locationError.message = t('errors.flightMode.message');
-    locationError.button = t('errors.flightMode.button');
-  } else if (isLocationDisabled) {
+  if (isLocationDisabled) {
     locationError.message = t('errors.locationDisabled.message');
     locationError.button = t('errors.locationDisabled.button');
   } else if (isLocationDenied) {
@@ -42,67 +68,25 @@ export function useScanScreen({ navigation }: MainRouteProps) {
     locationError.button = t('errors.locationDenied.button');
   }
 
-  const isInvalid = useSelector(scanService, selectIsInvalid);
-  const isConnecting = useSelector(scanService, selectIsConnecting);
-  const isExchangingDeviceInfo = useSelector(
-    scanService,
-    selectIsExchangingDeviceInfo
-  );
-
-  let statusMessage = '';
-  if (isConnecting) {
-    statusMessage = t('status.connecting');
-  } else if (isExchangingDeviceInfo) {
-    statusMessage = t('status.exchangingDeviceInfo');
-  } else if (isInvalid) {
-    statusMessage = t('status.invalid');
-  }
-
-  useEffect(() => {
-    const subscriptions = [
-      navigation.addListener('focus', () =>
-        scanService.send(ScanEvents.SCREEN_FOCUS())
-      ),
-      navigation.addListener('blur', () =>
-        scanService.send(ScanEvents.SCREEN_BLUR())
-      ),
-    ];
-
-    const navSubscription = scanService.subscribe((state) => {
-      if (state.matches('reviewing.navigatingToHome')) {
-        navigation.navigate('Home', { activeTab: 0 });
-      }
-    });
-
-    return () => {
-      subscriptions.forEach((unsubscribe) => unsubscribe());
-      navSubscription.unsubscribe();
-    };
-  }, []);
-
   return {
     locationError,
-    vcLabel: useSelector(settingsService, selectVcLabel),
-
-    isInvalid,
-    isEmpty: !shareableVcs.length,
+    isEmpty: !shareableVcsMetadata.length,
+    isBluetoothPermissionDenied,
+    isNearByDevicesPermissionDenied,
     isLocationDisabled,
     isLocationDenied,
+    isBluetoothDenied,
+    isStartPermissionCheck,
+    isReadyForBluetoothStateCheck,
+    isMinimumStorageRequiredForAuditEntryLimitReached,
     isScanning: useSelector(scanService, selectIsScanning),
-    isReviewing: useSelector(scanService, selectIsReviewing),
-    isFlightMode,
-    statusMessage,
-
-    DISMISS: () => scanService.send(ScanEvents.DISMISS()),
-    ON_REQUEST: () =>
-      isFlightMode
-        ? scanService.send(ScanEvents.FLIGHT_REQUEST())
-        : scanService.send(ScanEvents.LOCATION_REQUEST()),
+    isQrLogin: useSelector(scanService, selectIsShowQrLogin),
+    isQrLoginstoring: useSelector(scanService, selectIsQrLoginStoring),
+    isQrRef: useSelector(scanService, selectQrLoginRef),
+    LOCATION_REQUEST: () => scanService.send(ScanEvents.LOCATION_REQUEST()),
+    GOTO_SETTINGS: () => scanService.send(ScanEvents.GOTO_SETTINGS()),
+    START_PERMISSION_CHECK: () =>
+      scanService.send(ScanEvents.START_PERMISSION_CHECK()),
     SCAN: (qrCode: string) => scanService.send(ScanEvents.SCAN(qrCode)),
-    DISMISS_INVALID: () => {
-      if (isInvalid) {
-        scanService.send(ScanEvents.DISMISS());
-      }
-    },
   };
 }

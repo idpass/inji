@@ -2,31 +2,31 @@
 
 export interface Typegen0 {
   '@@xstate/typegen': true;
-  'eventsCausingActions': {
-    setActivities: 'STORE_RESPONSE';
+  internalEvents: {
+    'xstate.init': {type: 'xstate.init'};
+  };
+  invokeSrcNameMap: {};
+  missingImplementations: {
+    actions: never;
+    delays: never;
+    guards: never;
+    services: never;
+  };
+  eventsCausingActions: {
+    loadActivities: 'REFRESH' | 'xstate.init';
     prependActivity: 'STORE_RESPONSE';
-    loadActivities: 'REFRESH';
+    setActivities: 'STORE_RESPONSE';
     storeActivity: 'LOG_ACTIVITY';
   };
-  'internalEvents': {
-    'xstate.init': { type: 'xstate.init' };
-  };
-  'invokeSrcNameMap': {};
-  'missingImplementations': {
-    actions: never;
-    services: never;
-    guards: never;
-    delays: never;
-  };
-  'eventsCausingServices': {};
-  'eventsCausingGuards': {};
-  'eventsCausingDelays': {};
-  'matchesStates':
+  eventsCausingDelays: {};
+  eventsCausingGuards: {};
+  eventsCausingServices: {};
+  matchesStates:
     | 'init'
     | 'ready'
     | 'ready.idle'
     | 'ready.logging'
     | 'ready.refreshing'
-    | { ready?: 'idle' | 'logging' | 'refreshing' };
-  'tags': never;
+    | {ready?: 'idle' | 'logging' | 'refreshing'};
+  tags: never;
 }

@@ -1,10 +1,7 @@
-import { useContext } from 'react';
-import { useSelector } from '@xstate/react';
-import { selectVcLabel } from '../../../machines/settings';
-import { GlobalContext } from '../../../shared/GlobalContext';
-import { ActorRefFrom } from 'xstate';
-import { TextInput } from 'react-native';
-import { ModalProps } from '../../../components/ui/Modal';
+import {useSelector} from '@xstate/react';
+import {ActorRefFrom} from 'xstate';
+import {TextInput} from 'react-native';
+import {ModalProps} from '../../../components/ui/Modal';
 import {
   AddVcModalEvents,
   AddVcModalMachine,
@@ -17,17 +14,13 @@ import {
   selectIdInputRef,
   selectIdType,
 } from './AddVcModalMachine';
-import { VcIdType } from '../../../types/vc';
+import {VcIdType} from '../../../types/VC/ExistingMosipVC/vc';
 
-export function useIdInputModal({ service }: IdInputModalProps) {
-  const { appService } = useContext(GlobalContext);
-  const settingsService = appService.children.get('settings');
-
+export function useIdInputModal({service}: IdInputModalProps) {
   return {
     id: useSelector(service, selectId),
     idType: useSelector(service, selectIdType),
     idInputRef: useSelector(service, selectIdInputRef),
-    vcLabel: useSelector(settingsService, selectVcLabel),
     idError: useSelector(service, selectIdError),
     otpError: useSelector(service, selectOtpError),
 
@@ -47,4 +40,5 @@ export function useIdInputModal({ service }: IdInputModalProps) {
 
 export interface IdInputModalProps extends ModalProps {
   service: ActorRefFrom<typeof AddVcModalMachine>;
+  onPress?: () => void;
 }
