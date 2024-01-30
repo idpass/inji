@@ -291,7 +291,7 @@ export const appMachine = model.createMachine(
 
           if (isAndroid()) {
             serviceRefs.request = spawn(
-              createRequestMachine(serviceRefs),
+              createRequestMachine(serviceRefs, context.isRequestIntent),
               requestMachine.id,
             );
           }

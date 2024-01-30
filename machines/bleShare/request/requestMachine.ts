@@ -23,6 +23,7 @@ import {VerifierDataEvent} from 'react-native-tuvali/src/types/events';
 import {BLEError} from '../types';
 import Storage from '../../../shared/storage';
 import {VCMetadata} from '../../../shared/VCMetadata';
+import ODKIntentModule from '../../../lib/react-native-odk-intent/ODKIntentModule';
 // import { verifyPresentation } from '../shared/vcjs/verifyPresentation';
 
 const {verifier, EventTypes, VerificationStatus} = tuvali;
@@ -38,6 +39,7 @@ const model = createModel(
     loggers: [] as EmitterSubscription[],
     receiveLogType: '' as ActivityLogType,
     readyForBluetoothStateCheck: false,
+    isRequestIntent: false
   },
   {
     events: {
@@ -361,9 +363,15 @@ export const requestMachine =
                 mergingIncomingVc: {
                   entry: 'mergeIncomingVc',
                   on: {
-                    STORE_RESPONSE: {
-                      target: '#request.reviewing.accepted',
-                    },
+                    STORE_RESPONSE: [
+                      {
+                        cond: 'isRequestIntent',
+                        target: '#request.reviewing.acceptedIntentShare'
+                      },
+                      {
+                        target: '#request.reviewing.accepted',
+                      }
+                    ],
                   },
                 },
                 prependingReceivedVc: {
@@ -388,6 +396,10 @@ export const requestMachine =
                   target: '#request.reviewing.savingFailed',
                 },
               },
+            },
+            acceptedIntentShare: {
+              entry: ['sendVcReceived', 'logReceived', 'sendVcDataIntent'],
+              always: 'navigatingToHome',
             },
             accepted: {
               entry: [
@@ -672,6 +684,21 @@ export const requestMachine =
             shouldVerifyPresence: false,
           }),
         }),
+
+        sendVcDataIntent: (context) => {
+          const { verifiableCredential } = context.incomingVc;
+          const { credentialSubject: subject } = verifiableCredential;
+
+          ODKIntentModule.sendBundleResult({
+            biometrics: subject.biometrics,
+            date_of_birth: subject.dateOfBirth,
+            email: subject.email,
+            full_name: subject.fullName,
+            issuance_date: verifiableCredential.issuanceDate,
+            issuer: verifiableCredential.issuer,
+            phone: subject.phone,
+            uin: subject.UIN,
+          });
       },
 
       services: {
@@ -829,6 +856,10 @@ export const requestMachine =
         },
 
         isMinimumStorageLimitReached: (_context, event) => Boolean(event.data),
+
+        isRequestIntent: (context) => {
+          return context.isRequestIntent;
+        },
       },
 
       delays: {
@@ -840,10 +871,11 @@ export const requestMachine =
 
 type State = StateFrom<typeof requestMachine>;
 
-export function createRequestMachine(serviceRefs: AppServices) {
+export function createRequestMachine(serviceRefs: AppServices, isRequestIntent = false) {
   return requestMachine.withContext({
     ...requestMachine.context,
     serviceRefs,
+    isRequestIntent
   });
 }
 
