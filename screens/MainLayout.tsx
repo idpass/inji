@@ -1,4 +1,4 @@
-import React, { useContext, useEffect }, {useContext} from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   BottomTabNavigationOptions,
   createBottomTabNavigator,
