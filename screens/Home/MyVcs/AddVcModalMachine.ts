@@ -14,13 +14,14 @@ import i18n from '../../../i18n';
 import {VCMetadata} from '../../../shared/VCMetadata';
 import {
   getErrorEventData,
-  getImpressionEventData,
   getInteractEventData,
   sendErrorEvent,
-  sendImpressionEvent,
   sendInteractEvent,
 } from '../../../shared/telemetry/TelemetryUtils';
+import {TelemetryConstants} from '../../../shared/telemetry/TelemetryConstants';
+
 import {API_URLS} from '../../../shared/api';
+import {IndividualId} from '../../../shared/constants';
 
 const model = createModel(
   {
@@ -36,12 +37,18 @@ const model = createModel(
   },
   {
     events: {
+      SET_INDIVIDUAL_ID: (individualId: IndividualId) => ({
+        id: individualId.id,
+        idType: individualId.idType,
+      }),
       INPUT_ID: (id: string) => ({id}),
       INPUT_OTP: (otp: string) => ({otp}),
       RESEND_OTP: () => ({}),
       VALIDATE_INPUT: () => ({}),
       READY: (idInputRef: TextInput) => ({idInputRef}),
       DISMISS: () => ({}),
+      CANCEL: () => ({}),
+      WAIT: () => ({}),
       SELECT_ID_TYPE: (idType: VcIdType) => ({idType}),
     },
   },
@@ -63,11 +70,9 @@ export const AddVcModalMachine =
       id: 'AddVcModal',
       initial: 'acceptingIdInput',
       on: {
-        INPUT_ID: {
-          actions: 'setId',
-        },
-        SELECT_ID_TYPE: {
-          actions: ['clearIdError', 'setIdType'],
+        SET_INDIVIDUAL_ID: {
+          actions: ['clearIdError', 'clearId', 'setIdType', 'setId'],
+          target: '#AddVcModal.acceptingIdInput.idle',
         },
       },
       states: {
@@ -95,6 +100,9 @@ export const AddVcModalMachine =
             idle: {
               entry: 'focusInput',
               on: {
+                SET_INDIVIDUAL_ID: {
+                  actions: ['clearIdError', 'clearId', 'setIdType', 'setId'],
+                },
                 INPUT_ID: {
                   actions: 'setId',
                 },
@@ -158,7 +166,6 @@ export const AddVcModalMachine =
                 src: 'requestOtp',
                 onDone: [
                   {
-                    actions: 'sendImpressionEvent',
                     target: '#AddVcModal.acceptingOtpInput',
                   },
                 ],
@@ -185,8 +192,7 @@ export const AddVcModalMachine =
               target: 'requestingCredential',
             },
             DISMISS: {
-              actions: 'resetIdInputRef',
-              target: 'acceptingIdInput',
+              target: 'cancelDownload',
             },
             RESEND_OTP: {
               target: '.resendOTP',
@@ -210,6 +216,16 @@ export const AddVcModalMachine =
                   },
                 ],
               },
+            },
+          },
+        },
+        cancelDownload: {
+          on: {
+            CANCEL: {
+              actions: ['clearId', 'resetIdInputRef', 'forwardToParent'],
+            },
+            WAIT: {
+              target: 'acceptingOtpInput',
             },
           },
         },
@@ -290,7 +306,11 @@ export const AddVcModalMachine =
                   ns: 'common',
                 });
             sendErrorEvent(
-              getErrorEventData('VC Download', message, backendError),
+              getErrorEventData(
+                TelemetryConstants.FlowType.vcDownload,
+                message,
+                backendError,
+              ),
             );
             return backendError;
           },
@@ -316,11 +336,21 @@ export const AddVcModalMachine =
               'OTP is invalid': 'invalidOtp',
               'OTP has expired': 'expiredOtp',
             };
-            return OTP_ERRORS_MAP[message]
+
+            const otpErrorMessage = OTP_ERRORS_MAP[message]
               ? i18n.t(`errors.backend.${OTP_ERRORS_MAP[message]}`, {
                   ns: 'AddVcModal',
                 })
               : message;
+
+            sendErrorEvent(
+              getErrorEventData(
+                TelemetryConstants.FlowType.vcDownload,
+                message,
+                otpErrorMessage,
+              ),
+            );
+            return otpErrorMessage;
           },
         }),
 
@@ -335,12 +365,6 @@ export const AddVcModalMachine =
         clearOtp: assign({otp: ''}),
 
         focusInput: context => context.idInputRef.focus(),
-
-        sendImpressionEvent: () => {
-          sendImpressionEvent(
-            getImpressionEventData('VC Download', 'OTP Verification'),
-          );
-        },
       },
 
       services: {
@@ -366,7 +390,6 @@ export const AddVcModalMachine =
         requestCredential: async context => {
           // force wait to fix issue with hanging overlay
           await new Promise(resolve => setTimeout(resolve, 1000));
-
           const response = await request(
             API_URLS.credentialRequest.method,
             API_URLS.credentialRequest.buildURL(),
@@ -438,4 +461,8 @@ export function selectIsRequestingOtp(state: State) {
 
 export function selectIsRequestingCredential(state: State) {
   return state.matches('requestingCredential');
+}
+
+export function selectIsCancellingDownload(state: State) {
+  return state.matches('cancelDownload');
 }

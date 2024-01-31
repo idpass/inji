@@ -6,6 +6,8 @@ import {
   stat,
   unlink,
   writeFile,
+  readDir,
+  ReadDirItem,
 } from 'react-native-fs';
 
 interface CacheData {
@@ -17,6 +19,9 @@ interface Cache {
   [key: string]: CacheData;
 }
 
+import * as RNZipArchive from 'react-native-zip-archive';
+import {getBackupFileName} from './commonUtil';
+
 class FileStorage {
   cache: Cache = {};
 
@@ -24,32 +29,8 @@ class FileStorage {
     return await readFile(path, 'utf8');
   }
 
-  async readFromCacheFile(path: string) {
-    if (this.cache[path]?.data) {
-      const count = this.cache[path]?.count ?? 0;
-      const data = this.cache[path]?.data;
-
-      if (count != undefined && count <= 1) {
-        this.cache[path] = {};
-      } else {
-        this.cache[path].count = count - 1;
-      }
-
-      return data;
-    }
-
-    return this.readFile(path);
-  }
-
-  async readAndCacheFile(path: string, useCount: number = 1) {
-    const data = await this.readFile(path);
-
-    this.cache[path] = {
-      data,
-      count: useCount,
-    };
-
-    return data;
+  async getAllFilesInDirectory(path: string) {
+    return await readDir(path);
   }
 
   async writeFile(path: string, data: string) {
@@ -80,8 +61,66 @@ export default new FileStorage();
  * android: /data/user/0/io.mosip.residentapp/files/inji/VC/<filename>
  * These paths are coming from DocumentDirectoryPath in react-native-fs.
  */
+
+export const vcDirectoryPath = `${DocumentDirectoryPath}/inji/VC`;
+export const backupDirectoryPath = `${DocumentDirectoryPath}/inji/backup`;
+export const zipFilePath = (filename: string) =>
+  `${DocumentDirectoryPath}/inji/backup/${filename}.zip`;
+
 export const getFilePath = (key: string) => {
   return `${vcDirectoryPath}/${key}.txt`;
 };
 
-export const vcDirectoryPath = `${DocumentDirectoryPath}/inji/VC`;
+export const getBackupFilePath = (key: string) => {
+  return `${backupDirectoryPath}/${key}.injibackup`;
+};
+
+export async function compressAndRemoveFile(fileName: string): Promise<string> {
+  const result = await compressFile(fileName);
+  await removeFile(fileName);
+  return result;
+}
+
+export async function unZipAndRemoveFile(fileName: string): Promise<string> {
+  const result = unzipFile(fileName);
+  // await removeFile(fileName);
+  return result;
+}
+
+async function compressFile(fileName: string): Promise<string> {
+  return await RNZipArchive.zip(backupDirectoryPath, zipFilePath(fileName));
+}
+
+async function unzipFile(fileName: string): Promise<string> {
+  return await RNZipArchive.unzip(zipFilePath(fileName), backupDirectoryPath);
+}
+
+async function removeFile(fileName: string) {
+  await new FileStorage().removeItem(getBackupFilePath(fileName));
+}
+
+export async function getDirectorySize(path: string) {
+  const directorySize = await new FileStorage()
+    .getAllFilesInDirectory(path)
+    .then((result: ReadDirItem[]) => {
+      let folderEntriesSizeInBytes = 0;
+      result.forEach(fileItem => {
+        folderEntriesSizeInBytes += Number(fileItem.size);
+      });
+      return folderEntriesSizeInBytes;
+    });
+  return directorySize;
+}
+
+export async function writeToBackupFile(data): Promise<string> {
+  const fileName = getBackupFileName();
+  const isDirectoryExists = await exists(backupDirectoryPath);
+  if (isDirectoryExists) {
+    await removeFile(backupDirectoryPath);
+  }
+  // TODO: create dir using a named instance of FileStorage later
+  await new FileStorage().createDirectory(backupDirectoryPath);
+  const path = getBackupFilePath(fileName);
+  await writeFile(path, JSON.stringify(data));
+  return fileName;
+}

@@ -41,6 +41,14 @@
 "removeLoggers": "DISCONNECT" | "RESET" | "SCREEN_BLUR" | "xstate.after(DESTROY_TIMEOUT)#request.clearingConnection" | "xstate.init";
 "requestExistingVc": "VC_RESPONSE";
 "requestReceivedVcs": "ACCEPT" | "DISMISS" | "FACE_VALID" | "VC_RECEIVED" | "done.invoke.request.reviewing.verifyingVp:invocation[0]";
+"sendBLEConnectionErrorEvent": "BLE_ERROR";
+"sendVCReceiveFailedEvent": "FACE_INVALID";
+"sendVCReceiveFlowTimeoutEndEvent": "CANCEL";
+"sendVCReceiveRejectedEvent": "CANCEL" | "REJECT" | "STORE_ERROR";
+"sendVCReceiveSuccessEvent": "STORE_RESPONSE";
+"sendVCReceivingDisconnectedEvent": "DISCONNECT";
+"sendVCReceivingStartEvent": "CONNECTED";
+"sendVCReceivingTerminatedEvent": "CANCEL";
 "sendVcDataIntent": "STORE_RESPONSE";
 "sendVcReceived": "STORE_RESPONSE";
 "setBleError": "BLE_ERROR";

@@ -1,17 +1,12 @@
 import React from 'react';
-import {Image, Pressable} from 'react-native';
+import {Pressable, View} from 'react-native';
 import {Theme} from '../ui/styleUtils';
-import {useTranslation} from 'react-i18next';
 import testIDProps from '../../shared/commonUtil';
 import {Text} from '../ui';
+import {displayType} from '../../machines/issuersMachine';
+import {SvgImage} from '../ui/svg';
 
 export const Issuer: React.FC<IssuerProps> = (props: IssuerProps) => {
-  const {t} = useTranslation('IssuersScreen');
-
-  function getIssuerLogo() {
-    return {uri: props.logoUrl};
-  }
-
   return (
     <Pressable
       {...testIDProps(`issuer-${props.testID}`)}
@@ -19,37 +14,35 @@ export const Issuer: React.FC<IssuerProps> = (props: IssuerProps) => {
       style={({pressed}) =>
         pressed
           ? [
-              Theme.issuersScreenStyles.issuerBoxContainerPressed,
+              Theme.IssuersScreenStyles.issuerBoxContainerPressed,
               Theme.Styles.boxShadow,
             ]
           : [
-              Theme.issuersScreenStyles.issuerBoxContainer,
+              Theme.IssuersScreenStyles.issuerBoxContainer,
               Theme.Styles.boxShadow,
             ]
       }>
-      <Image
-        {...testIDProps(`issuerIcon-${props.testID}`)}
-        style={Theme.issuersScreenStyles.issuerIcon}
-        source={getIssuerLogo()}
-      />
-      <Text
-        testID={`issuerHeading-${props.testID}`}
-        style={Theme.issuersScreenStyles.issuerHeading}>
-        {t('itemHeading', {issuer: props.displayName})}
-      </Text>
-      <Text
-        testID={`issuerDescription-${props.testID}`}
-        style={Theme.issuersScreenStyles.issuerDescription}>
-        {t('itemSubHeading')}
-      </Text>
+      <View style={Theme.IssuersScreenStyles.issuerBoxIconContainer}>
+        {SvgImage.IssuerIcon(props)}
+      </View>
+      <View style={Theme.IssuersScreenStyles.issuerBoxContent}>
+        <Text
+          testID={`issuerHeading-${props.testID}`}
+          style={Theme.IssuersScreenStyles.issuerHeading}>
+          {props.displayDetails.title}
+        </Text>
+        <Text
+          testID={`issuerDescription-${props.testID}`}
+          style={Theme.IssuersScreenStyles.issuerDescription}>
+          {props.displayDetails.description}
+        </Text>
+      </View>
     </Pressable>
   );
 };
 
-interface IssuerProps {
-  id: string;
-  displayName: string;
-  logoUrl: string;
+export interface IssuerProps {
+  displayDetails: displayType;
   onPress: () => void;
   testID: string;
 }

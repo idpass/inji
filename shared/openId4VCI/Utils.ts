@@ -1,23 +1,50 @@
-import {createSignature, encodeB64} from '../cryptoutil/cryptoUtil';
 import jwtDecode from 'jwt-decode';
 import jose from 'node-jose';
 import {isIOS} from '../constants';
 import pem2jwk from 'simple-pem2jwk';
 import {displayType, issuerType} from '../../machines/issuersMachine';
 import getAllConfigurations from '../commonprops/commonProps';
-import {CredentialWrapper} from '../../types/VC/EsignetMosipVC/vc';
+
 import {VCMetadata} from '../VCMetadata';
 import i18next from 'i18next';
+import {getJWT} from '../cryptoutil/cryptoUtil';
+import {CACHED_API} from '../api';
+import i18n from '../../i18n';
+import {VerifiableCredential} from '../../types/VC/ExistingMosipVC/vc';
+import {CredentialWrapper} from '../../types/VC/EsignetMosipVC/vc';
 
 export const Protocols = {
   OpenId4VCI: 'OpenId4VCI',
   OTP: 'OTP',
 };
 
+export const Issuers = {
+  Sunbird: 'Sunbird',
+  ESignet: 'ESignet',
+};
+
+export const ID_TYPE = {
+  MOSIPVerifiableCredential: i18n.t('VcDetails:nationalCard'),
+  InsuranceCredential: i18n.t('VcDetails:insuranceCard'),
+};
+
+export const getIDType = (verifiableCredential: VerifiableCredential) => {
+  return ID_TYPE[verifiableCredential.type[1]];
+};
+
+export const ACTIVATION_NOT_NEEDED = [Issuers.Sunbird];
+
+export const isActivationNeeded = (issuer: string) => {
+  return ACTIVATION_NOT_NEEDED.indexOf(issuer) === -1;
+};
+
 export const Issuers_Key_Ref = 'OpenId4VCI_KeyPair';
 
 export const getIdentifier = (context, credential) => {
-  const credId = credential.credential.id.split('/');
+  const credentialIdentifier = credential.credential.id;
+  const credId = credentialIdentifier.startsWith('did')
+    ? credentialIdentifier.split(':')
+    : credentialIdentifier.split('/');
   return (
     context.selectedIssuer.credential_issuer +
     ':' +
@@ -28,12 +55,33 @@ export const getIdentifier = (context, credential) => {
 };
 
 export const getBody = async context => {
-  const proofJWT = await getJWT(context);
+  const header = {
+    alg: 'RS256',
+    jwk: await getJWK(context.publicKey),
+    typ: 'openid4vci-proof+jwt',
+  };
+  const decodedToken = jwtDecode(context.tokenResponse.accessToken);
+  const payload = {
+    iss: context.selectedIssuer.client_id,
+    nonce: decodedToken.c_nonce,
+    aud: context.selectedIssuer.credential_audience,
+    iat: Math.floor(new Date().getTime() / 1000),
+    exp: Math.floor(new Date().getTime() / 1000) + 18000,
+  };
+
+  const proofJWT = await getJWT(
+    header,
+    payload,
+    Issuers_Key_Ref,
+    context.privateKey,
+  );
   return {
     format: 'ldp_vc',
     credential_definition: {
       '@context': ['https://www.w3.org/2018/credentials/v1'],
-      type: ['VerifiableCredential', 'MOSIPVerifiableCredential'],
+      type: context.selectedIssuer?.credential_type
+        ? context.selectedIssuer.credential_type
+        : ['VerifiableCredential', 'MOSIPVerifiableCredential'],
     },
     proof: {
       proof_type: 'jwt',
@@ -47,6 +95,10 @@ export const updateCredentialInformation = (context, credential) => {
   credentialWrapper.verifiableCredential = credential;
   credentialWrapper.identifier = getIdentifier(context, credential);
   credentialWrapper.generatedOn = new Date();
+  credentialWrapper.verifiableCredential.wellKnown =
+    context.selectedIssuer['.well-known'];
+  // credentialWrapper.verifiableCredential.wellKnown =
+  //   'https://esignet.collab.mosip.net/.well-known/openid-credential-issuer';
   credentialWrapper.verifiableCredential.issuerLogo =
     getDisplayObjectForCurrentLanguage(context.selectedIssuer.display)?.logo;
   return credentialWrapper;
@@ -83,7 +135,6 @@ export const constructAuthorizationConfiguration = (
     clientId: selectedIssuer.client_id,
     scopes: selectedIssuer.scopes_supported,
     additionalHeaders: selectedIssuer.additional_headers,
-    wellKnownEndpoint: selectedIssuer['.well-known'],
     redirectUrl: selectedIssuer.redirect_uri,
     serviceConfiguration: {
       authorizationEndpoint: selectedIssuer.authorization_endpoint,
@@ -116,36 +167,32 @@ export const getJWK = async publicKey => {
     );
   }
 };
-export const getJWT = async context => {
-  try {
-    const header64 = encodeB64(
-      JSON.stringify({
-        alg: 'RS256',
-        jwk: await getJWK(context.publicKey),
-        typ: 'openid4vci-proof+jwt',
-      }),
-    );
-    const decodedToken = jwtDecode(context.tokenResponse.accessToken);
-    const payload64 = encodeB64(
-      JSON.stringify({
-        iss: context.selectedIssuer.client_id,
-        nonce: decodedToken.c_nonce,
-        aud: context.selectedIssuer.credential_audience,
-        iat: Math.floor(new Date().getTime() / 1000),
-        exp: Math.floor(new Date().getTime() / 1000) + 18000,
-      }),
-    );
-    const preHash = header64 + '.' + payload64;
-    const signature64 = await createSignature(
-      context.privateKey,
-      preHash,
-      Issuers_Key_Ref,
-    );
-    return header64 + '.' + payload64 + '.' + signature64;
-  } catch (e) {
-    console.log(e);
-    throw e;
+
+export const getCredentialIssuersWellKnownConfig = async (
+  issuer: string,
+  wellknown: string,
+  defaultFields: string[],
+) => {
+  let fields: string[] = defaultFields;
+  let response = null;
+  if (wellknown) {
+    response = await CACHED_API.fetchIssuerWellknownConfig(issuer, wellknown);
+    if (!response) {
+      fields = [];
+    } else if (response?.credentials_supported[0].order) {
+      fields = response?.credentials_supported[0].order;
+    } else {
+      fields = Object.keys(
+        response?.credentials_supported[0].credential_definition
+          .credentialSubject,
+      );
+      console.log('fields => ', fields);
+    }
   }
+  return {
+    wellknown: response,
+    fields: fields,
+  };
 };
 
 export const vcDownloadTimeout = async (): Promise<number> => {
@@ -162,9 +209,11 @@ export enum OIDCErrors {
   INVALID_TOKEN_SPECIFIED = 'Invalid token specified',
   OIDC_CONFIG_ERROR_PREFIX = 'Config error',
 }
+
 // ErrorMessage is the type of error message shown in the UI
 export enum ErrorMessage {
   NO_INTERNET = 'noInternetConnection',
   GENERIC = 'generic',
   REQUEST_TIMEDOUT = 'requestTimedOut',
+  BIOMETRIC_CANCELLED = 'biometricCancelled',
 }

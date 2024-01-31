@@ -19,7 +19,7 @@
           "addVcToInProgressDownloads": "ADD_VC_TO_IN_PROGRESS_DOWNLOADS";
 "getReceivedVcsResponse": "GET_RECEIVED_VCS";
 "getVcItemResponse": "GET_VC_ITEM";
-"loadMyVcs": "REFRESH_MY_VCS" | "REMOVE_TAMPERED_VCS" | "STORE_RESPONSE" | "xstate.init";
+"loadMyVcs": "DOWNLOAD_LIMIT_EXPIRED" | "REFRESH_MY_VCS" | "REMOVE_TAMPERED_VCS" | "STORE_RESPONSE" | "xstate.init";
 "loadReceivedVcs": "REFRESH_RECEIVED_VCS" | "STORE_RESPONSE";
 "logTamperedVCsremoved": "REMOVE_TAMPERED_VCS";
 "moveExistingVcToTop": "VC_RECEIVED";
@@ -53,7 +53,7 @@
         eventsCausingServices: {
 
         };
-        matchesStates: "deletingFailedVcs" | "downloadLimitExpired" | "init" | "init.myVcs" | "init.receivedVcs" | "ready" | "ready.myVcs" | "ready.myVcs.idle" | "ready.myVcs.refreshing" | "ready.receivedVcs" | "ready.receivedVcs.idle" | "ready.receivedVcs.refreshing" | "tamperedVCs" | { "init"?: "myVcs" | "receivedVcs";
+        matchesStates: "deletingFailedVcs" | "init" | "init.myVcs" | "init.receivedVcs" | "ready" | "ready.myVcs" | "ready.myVcs.idle" | "ready.myVcs.refreshing" | "ready.receivedVcs" | "ready.receivedVcs.idle" | "ready.receivedVcs.refreshing" | "tamperedVCs" | { "init"?: "myVcs" | "receivedVcs";
 "ready"?: "myVcs" | "receivedVcs" | { "myVcs"?: "idle" | "refreshing";
 "receivedVcs"?: "idle" | "refreshing"; }; };
         tags: never;

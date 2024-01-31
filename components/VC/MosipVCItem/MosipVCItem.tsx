@@ -15,6 +15,7 @@ import {VCMetadata} from '../../../shared/VCMetadata';
 import {format} from 'date-fns';
 import {EsignetMosipVCItemMachine} from '../../../machines/VCItemMachine/EsignetMosipVCItem/EsignetMosipVCItemMachine';
 import {useVcItemController} from './VcItemController';
+import {VCCardSkeleton} from '../common/VCCardSkeleton';
 
 export const MosipVCItem: React.FC<
   ExistingMosipVCItemProps | EsignetMosipVCItemProps
@@ -42,6 +43,10 @@ export const MosipVCItem: React.FC<
     );
   }, [props.vcMetadata]);
 
+  if (!verifiableCredential) {
+    return <VCCardSkeleton />;
+  }
+
   return (
     <React.Fragment>
       <Pressable
@@ -61,8 +66,7 @@ export const MosipVCItem: React.FC<
           selectable={props.selectable}
           selected={props.selected}
           service={service}
-          iconName={props.iconName}
-          iconType={props.iconType}
+          isPinned={props.isPinned}
           onPress={() => props.onPress(service)}
           isDownloading={props.isDownloading}
         />
@@ -75,9 +79,14 @@ export const MosipVCItem: React.FC<
               emptyWalletBindingId={emptyWalletBindingId}
               showOnlyBindedVc={props.showOnlyBindedVc}
             />
-            <View style={Theme.Styles.verticalLine} />
+            <Row style={Theme.Styles.verticalLineWrapper}>
+              <View style={Theme.Styles.verticalLine} />
+            </Row>
             <Row style={Theme.Styles.kebabIcon}>
-              <Pressable onPress={KEBAB_POPUP} accessible={false}>
+              <Pressable
+                onPress={KEBAB_POPUP}
+                accessible={false}
+                style={Theme.Styles.kebabPressableContainer}>
                 <KebabPopUp
                   vcMetadata={props.vcMetadata}
                   iconName="dots-three-horizontal"
@@ -109,10 +118,9 @@ export interface ExistingMosipVCItemProps {
   showOnlyBindedVc?: boolean;
   onPress?: (vcRef?: ActorRefFrom<typeof ExistingMosipVCItemMachine>) => void;
   onShow?: (vcRef?: ActorRefFrom<typeof ExistingMosipVCItemMachine>) => void;
-  iconName?: string;
-  iconType?: string;
   isSharingVc?: boolean;
   isDownloading?: boolean;
+  isPinned?: boolean;
 }
 
 export interface EsignetMosipVCItemProps {
@@ -123,8 +131,7 @@ export interface EsignetMosipVCItemProps {
   showOnlyBindedVc?: boolean;
   onPress?: (vcRef?: ActorRefFrom<typeof EsignetMosipVCItemMachine>) => void;
   onShow?: (vcRef?: ActorRefFrom<typeof EsignetMosipVCItemMachine>) => void;
-  iconName?: string;
-  iconType?: string;
   isSharingVc?: boolean;
   isDownloading?: boolean;
+  isPinned?: boolean;
 }

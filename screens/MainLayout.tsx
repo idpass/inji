@@ -5,10 +5,10 @@ import {
 } from '@react-navigation/bottom-tabs';
 import {Icon} from 'react-native-elements';
 import {RequestRouteProps, RootRouteProps} from '../routes';
-import {mainRoutes, scan} from '../routes/main';
+import {mainRoutes, share} from '../routes/main';
 import {Theme} from '../components/ui/styleUtils';
 import {useTranslation} from 'react-i18next';
-import {Row} from '../components/ui';
+import {Column, Row} from '../components/ui';
 import {Image} from 'react-native';
 import {SettingScreen} from './Settings/SettingScreen';
 import {HelpScreen} from '../components/HelpScreen';
@@ -18,6 +18,8 @@ import { useSelector } from '@xstate/react';
 import { selectIsRequestIntent } from '../machines/app';
 import {ScanEvents} from '../machines/bleShare/scan/scanMachine';
 import testIDProps from '../shared/commonUtil';
+import {SvgImage} from '../components/ui/svg';
+
 const {Navigator, Screen} = createBottomTabNavigator();
 
 export const MainLayout: React.FC<
@@ -30,57 +32,9 @@ export const MainLayout: React.FC<
   const isRequestIntent = useSelector(appService, selectIsRequestIntent);
 
   const options: BottomTabNavigationOptions = {
-    headerRight: () => (
-      <Row align="space-between">
-        <HelpScreen
-          triggerComponent={
-            <Image
-              {...testIDProps('help')}
-              source={require('../assets/help-icon.png')}
-              style={{width: 36, height: 36}}
-            />
-          }
-          navigation={undefined}
-          route={undefined}
-        />
-
-        <SettingScreen
-          triggerComponent={
-            <Icon
-              {...testIDProps('settings')}
-              name="settings"
-              type="simple-line-icon"
-              size={21}
-              style={Theme.Styles.IconContainer}
-              color={Theme.Colors.Icon}
-            />
-          }
-          navigation={props.navigation}
-          route={undefined}
-        />
-      </Row>
-    ),
-    headerTitleStyle: {
-      fontFamily: 'Inter_600SemiBold',
-      fontSize: 30,
-      margin: 4,
-    },
-    headerRightContainerStyle: {paddingEnd: 13},
-    headerLeftContainerStyle: {paddingEnd: 13},
     tabBarShowLabel: true,
     tabBarActiveTintColor: Theme.Colors.IconBg,
-    tabBarLabelStyle: {
-      fontSize: 12,
-      fontFamily: 'Inter_600SemiBold',
-    },
-    tabBarStyle: {
-      height: 75,
-      paddingHorizontal: 10,
-    },
-    tabBarItemStyle: {
-      height: 83,
-      padding: 11,
-    },
+    ...Theme.BottomTabBarStyle,
   };
 
   useEffect(() => {
@@ -90,7 +44,12 @@ export const MainLayout: React.FC<
   }, [isRequestIntent]);
 
   return (
-    <Navigator initialRouteName={mainRoutes[0].name} screenOptions={options}>
+    <Navigator
+      initialRouteName={mainRoutes[0].name}
+      screenOptions={({route}) => ({
+        tabBarAccessibilityLabel: route.name,
+        ...options,
+      })}>
       {mainRoutes.map(route => (
         <Screen
           key={route.name}
@@ -98,7 +57,7 @@ export const MainLayout: React.FC<
           component={route.component}
           listeners={{
             tabPress: e => {
-              if (route.name == scan.name) {
+              if (route.name == share.name) {
                 scanService.send(ScanEvents.RESET());
               }
             },
@@ -107,12 +66,13 @@ export const MainLayout: React.FC<
             ...route.options,
             title: t(route.name),
             tabBarIcon: ({focused}) => (
-              <Icon
-                {...testIDProps(route.name)}
-                name={route.icon}
-                color={focused ? Theme.Colors.Icon : Theme.Colors.GrayIcon}
-                style={focused ? Theme.Styles.bottomTabIconStyle : null}
-              />
+              <Column
+                {...testIDProps(route.name + 'Icon')}
+                align="center"
+                crossAlign="center"
+                style={focused ? Theme.Styles.bottomTabIconStyle : null}>
+                {SvgImage[`${route.name}`](focused)}
+              </Column>
             ),
           }}
         />

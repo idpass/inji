@@ -23,10 +23,6 @@ export function selectQrLoginRef(state: State) {
   return state.context.QrLoginRef;
 }
 
-export function selectStayInProgress(state: State) {
-  return state.context.stayInProgress;
-}
-
 export function selectIsScanning(state: State) {
   return state.matches('findingConnection');
 }
@@ -60,11 +56,11 @@ export function selectIsInvalid(state: State) {
 }
 
 export function selectIsLocationDenied(state: State) {
-  return state.matches('checkingLocationService.denied');
+  return state.matches('checkingLocationState.denied');
 }
 
 export function selectIsLocationDisabled(state: State) {
-  return state.matches('checkingLocationService.disabled');
+  return state.matches('checkingLocationState.disabled');
 }
 
 export function selectIsShowQrLogin(state: State) {

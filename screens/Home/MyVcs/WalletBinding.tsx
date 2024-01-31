@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Icon, ListItem} from 'react-native-elements';
 import {Row, Text} from '../../../components/ui';
 import {Theme} from '../../../components/ui/styleUtils';
@@ -12,9 +12,39 @@ import {ActorRefFrom} from 'xstate';
 import {ExistingMosipVCItemMachine} from '../../../machines/VCItemMachine/ExistingMosipVCItem/ExistingMosipVCItemMachine';
 import testIDProps from '../../../shared/commonUtil';
 import {VCMetadata} from '../../../shared/VCMetadata';
+import {
+  getEndEventData,
+  getErrorEventData,
+  sendEndEvent,
+  sendErrorEvent,
+} from '../../../shared/telemetry/TelemetryUtils';
+import {TelemetryConstants} from '../../../shared/telemetry/TelemetryConstants';
+import {isActivationNeeded} from '../../../shared/openId4VCI/Utils';
 
 export const WalletBinding: React.FC<WalletBindingProps> = props => {
   const controller = useKebabPopUp(props);
+
+  useEffect(() => {
+    let error = controller.walletBindingError;
+    if (error) {
+      error = controller.bindingAuthFailedError
+        ? controller.bindingAuthFailedError + '-' + error
+        : error;
+      sendErrorEvent(
+        getErrorEventData(
+          TelemetryConstants.FlowType.vcActivation,
+          TelemetryConstants.ErrorId.activationFailed,
+          error,
+        ),
+      );
+      sendEndEvent(
+        getEndEventData(
+          TelemetryConstants.FlowType.vcActivation,
+          TelemetryConstants.EndEventStatus.failure,
+        ),
+      );
+    }
+  }, [controller.walletBindingError]);
 
   const WalletVerified: React.FC = () => {
     return (
@@ -28,7 +58,8 @@ export const WalletBinding: React.FC<WalletBindingProps> = props => {
   };
   const {t} = useTranslation('WalletBinding');
 
-  return controller.emptyWalletBindingId ? (
+  return controller.emptyWalletBindingId &&
+    isActivationNeeded(props?.vcMetadata.issuer) ? (
     <ListItem bottomDivider onPress={controller.ADD_WALLET_BINDING_ID}>
       <ListItem.Content>
         <ListItem.Title {...testIDProps('pendingActivationOrActivated')}>
@@ -51,14 +82,20 @@ export const WalletBinding: React.FC<WalletBindingProps> = props => {
         onCancel={controller.CANCEL}
       />
 
-      <OtpVerificationModal
-        isVisible={controller.isAcceptingOtpInput}
-        onDismiss={controller.DISMISS}
-        onInputDone={controller.INPUT_OTP}
-        error={controller.otpError}
-        resend={controller.RESEND_OTP}
-      />
+      {controller.isAcceptingOtpInput && (
+        <OtpVerificationModal
+          service={props.service}
+          isVisible={controller.isAcceptingOtpInput}
+          onDismiss={controller.DISMISS}
+          onInputDone={controller.INPUT_OTP}
+          error={controller.otpError}
+          resend={controller.RESEND_OTP}
+          flow={TelemetryConstants.FlowType.vcActivationFromKebab}
+        />
+      )}
+
       <MessageOverlay
+        testID="walletBindingError"
         isVisible={controller.isWalletBindingError}
         title={controller.walletBindingError}
         onButtonPress={controller.CANCEL}
@@ -83,7 +120,11 @@ export const WalletBinding: React.FC<WalletBindingProps> = props => {
             weight="bold"
             size="small"
             margin="10 10 10 10"
-            children={t('profileAuthenticated')}></Text>
+            children={
+              isActivationNeeded(props?.vcMetadata.issuer)
+                ? t('profileAuthenticated')
+                : t('credentialActivated')
+            }></Text>
         </Row>
       </Row>
     </ListItem>

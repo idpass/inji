@@ -7,6 +7,7 @@ import {useTranslation} from 'react-i18next';
 import {RootRouteProps} from '../../routes';
 import {useWelcomeScreen} from '../WelcomeScreenController';
 import LinearGradient from 'react-native-linear-gradient';
+import {SvgImage} from '../../components/ui/svg';
 
 export const IntroSlidersScreen: React.FC<RootRouteProps> = props => {
   const slider = useRef<AppIntroSlider>();
@@ -41,46 +42,24 @@ export const IntroSlidersScreen: React.FC<RootRouteProps> = props => {
     },
   ];
 
+  const isPasscodeSet = controller.isPasscodeSet();
+
   const renderItem = ({item}) => {
     return (
       <LinearGradient colors={Theme.Colors.gradientBtn}>
         <Centered>
-          <Row crossAlign="center">
-            <Column
-              style={{
-                flex: 3,
-                alignItems: 'flex-end',
-                marginRight: 75,
-              }}>
-              <Image
-                style={{marginTop: 50, marginBottom: 30}}
-                source={Theme.injiSmallLogo}
-              />
+          <Row align="space-between" style={Theme.Styles.introSliderHeader}>
+            <Column style={{marginLeft: Dimensions.get('screen').width * 0.4}}>
+              {SvgImage.InjiSmallLogo()}
             </Column>
 
-            <Column
-              style={{
-                flex: 1,
-                alignItems: 'flex-end',
-              }}>
-              {controller.isPasscodeSet() ? (
-                <Button
-                  testID="back"
-                  type="plain"
-                  title={t('back')}
-                  onPress={controller.BACK}
-                  styles={{height: 150}}
-                />
-              ) : (
-                <Button
-                  testID="skip"
-                  type="plain"
-                  title={t('skip')}
-                  onPress={controller.NEXT}
-                  styles={{height: 150}}
-                />
-              )}
-            </Column>
+            <Button
+              testID={isPasscodeSet ? 'back' : 'skip'}
+              type="plain"
+              title={isPasscodeSet ? t('back') : t('skip')}
+              onPress={isPasscodeSet ? controller.BACK : controller.NEXT}
+              styles={{height: 40, maxWidth: 115}}
+            />
           </Row>
           <Image
             source={item.image}
@@ -119,7 +98,7 @@ export const IntroSlidersScreen: React.FC<RootRouteProps> = props => {
       <View>
         <LinearGradient
           colors={Theme.Colors.gradientBtn}
-          style={{borderRadius: 10, height: 50, marginTop: -10}}>
+          style={Theme.Styles.introSliderButton}>
           <Text
             testID="next"
             style={{paddingTop: 3}}
@@ -138,7 +117,7 @@ export const IntroSlidersScreen: React.FC<RootRouteProps> = props => {
       <View>
         <LinearGradient
           colors={Theme.Colors.gradientBtn}
-          style={{borderRadius: 10, height: 50, marginTop: -10}}>
+          style={Theme.Styles.introSliderButton}>
           <Text
             testID="getStarted"
             style={{paddingTop: 3}}

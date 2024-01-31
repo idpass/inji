@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import {Button, Column, Row, Text} from '../../components/ui';
 import {Theme} from '../../components/ui/styleUtils';
-import {Image, RefreshControl} from 'react-native';
+import {RefreshControl} from 'react-native';
 import {useMyVcsTab} from './MyVcsTabController';
 import {HomeScreenTabProps} from './HomeScreen';
 import {AddVcModal} from './MyVcs/AddVcModal';
@@ -12,26 +12,26 @@ import {
   ErrorMessageOverlay,
   MessageOverlay,
 } from '../../components/MessageOverlay';
-import {groupBy} from '../../shared/javascript';
 import {VcItemContainer} from '../../components/VC/VcItemContainer';
 import {BannerNotification} from '../../components/BannerNotification';
 import {
   getErrorEventData,
   sendErrorEvent,
 } from '../../shared/telemetry/TelemetryUtils';
-import {Error} from '../../components/ui/Error';
+import {TelemetryConstants} from '../../shared/telemetry/TelemetryConstants';
 
-const pinIconProps = {iconName: 'pushpin', iconType: 'antdesign'};
+import {Error} from '../../components/ui/Error';
+import {useIsFocused} from '@react-navigation/native';
+import {getVCsOrderedByPinStatus} from '../../shared/Utils';
+import {SvgImage} from '../../components/ui/svg';
 
 export const MyVcsTab: React.FC<HomeScreenTabProps> = props => {
   const {t} = useTranslation('MyVcsTab');
   const controller = useMyVcsTab(props);
   const storeErrorTranslationPath = 'errors.savingFailed';
-  const [pinned, unpinned] = groupBy(
+  const vcMetadataOrderedByPinStatus = getVCsOrderedByPinStatus(
     controller.vcMetadatas,
-    vcMetadata => vcMetadata.isPinned,
   );
-  const vcMetadataOrderedByPinStatus = pinned.concat(unpinned);
 
   const getId = () => {
     controller.DISMISS();
@@ -54,21 +54,41 @@ export const MyVcsTab: React.FC<HomeScreenTabProps> = props => {
     if (controller.showHardwareKeystoreNotExistsAlert) {
       sendErrorEvent(
         getErrorEventData(
-          'App Onboarding',
-          'does_not_exist',
-          'Some security features will be unavailable as hardware key store is not available',
+          TelemetryConstants.FlowType.appOnboarding,
+          TelemetryConstants.ErrorId.doesNotExist,
+          TelemetryConstants.ErrorMessage.hardwareKeyStore,
         ),
       );
     }
-  }, [controller.areAllVcsLoaded, controller.inProgressVcDownloads]);
+
+    if (controller.isTampered) {
+      sendErrorEvent(
+        getErrorEventData(
+          TelemetryConstants.FlowType.appLogin,
+          TelemetryConstants.ErrorId.vcsAreTampered,
+          TelemetryConstants.ErrorMessage.vcsAreTampered,
+        ),
+      );
+    }
+  }, [
+    controller.areAllVcsLoaded,
+    controller.inProgressVcDownloads,
+    controller.isTampered,
+  ]);
 
   let failedVCsList = [];
   controller.downloadFailedVcs.forEach(vc => {
-    failedVCsList.push(`${vc.idType}:${vc.id}\n`);
+    failedVCsList.push(`\n${vc.idType}:${vc.id}`);
   });
   const downloadFailedVcsErrorMessage = `${t(
     'errors.downloadLimitExpires.message',
-  )}\n${failedVCsList}`;
+  )}${failedVCsList}`;
+
+  const isDownloadFailedVcs =
+    useIsFocused() &&
+    controller.downloadFailedVcs.length >= 1 &&
+    !controller.AddVcModalService &&
+    !controller.GetVcModalService;
 
   return (
     <React.Fragment>
@@ -105,10 +125,8 @@ export const MyVcsTab: React.FC<HomeScreenTabProps> = props => {
                   />
                 }>
                 {vcMetadataOrderedByPinStatus.map(vcMetadata => {
-                  const iconProps = vcMetadata.isPinned ? pinIconProps : {};
                   return (
                     <VcItemContainer
-                      {...iconProps}
                       key={vcMetadata.getVcKey()}
                       vcMetadata={vcMetadata}
                       margin="0 2 8 2"
@@ -116,6 +134,7 @@ export const MyVcsTab: React.FC<HomeScreenTabProps> = props => {
                       isDownloading={controller.inProgressVcDownloads?.has(
                         vcMetadata.getVcKey(),
                       )}
+                      isPinned={vcMetadata.isPinned}
                     />
                   );
                 })}
@@ -125,7 +144,7 @@ export const MyVcsTab: React.FC<HomeScreenTabProps> = props => {
           {controller.vcMetadatas.length === 0 && (
             <React.Fragment>
               <Column fill style={Theme.Styles.homeScreenContainer}>
-                <Image source={Theme.DigitalIdentityLogo} />
+                {SvgImage.DigitalIdentity()}
                 <Text
                   testID="bringYourDigitalID"
                   style={{paddingTop: 3}}
@@ -160,14 +179,16 @@ export const MyVcsTab: React.FC<HomeScreenTabProps> = props => {
       )}
 
       <MessageOverlay
+        testID="keyStoreNotExists"
         isVisible={controller.showHardwareKeystoreNotExistsAlert}
         title={t('errors.keystoreNotExists.title')}
         message={t('errors.keystoreNotExists.message')}
         onButtonPress={controller.ACCEPT_HARDWARE_SUPPORT_NOT_EXISTS}
         buttonText={t('errors.keystoreNotExists.riskOkayText')}
-        customHeight={'auto'}>
+        minHeight={'auto'}>
         <Row>
           <Button
+            testID="ok"
             type="gradient"
             title={t('errors.keystoreNotExists.riskOkayText')}
             onPress={controller.ACCEPT_HARDWARE_SUPPORT_NOT_EXISTS}
@@ -193,16 +214,16 @@ export const MyVcsTab: React.FC<HomeScreenTabProps> = props => {
         message={t('errors.vcIsTampered.message')}
         onButtonPress={controller.REMOVE_TAMPERED_VCS}
         buttonText={t('common:ok')}
-        customHeight={'auto'}
+        minHeight={'auto'}
       />
 
       <MessageOverlay
-        isVisible={controller.isDownloadLimitExpires}
+        isVisible={isDownloadFailedVcs}
         title={t('errors.downloadLimitExpires.title')}
         message={downloadFailedVcsErrorMessage}
         onButtonPress={controller.DELETE_VC}
         buttonText={t('common:ok')}
-        customHeight={'auto'}
+        minHeight={'auto'}
       />
 
       {controller.isNetworkOff && (
@@ -214,7 +235,7 @@ export const MyVcsTab: React.FC<HomeScreenTabProps> = props => {
           message={t('errors.noInternetConnection.message')}
           onDismiss={controller.DISMISS}
           tryAgain={controller.TRY_AGAIN}
-          image={<Image source={Theme.NoInternetConnection} />}
+          image={SvgImage.NoInternetConnection()}
         />
       )}
     </React.Fragment>

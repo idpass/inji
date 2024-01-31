@@ -2,6 +2,8 @@ import argon2 from 'react-native-argon2';
 import {AnyState} from 'xstate';
 import {getDeviceNameSync} from 'react-native-device-info';
 import {isAndroid} from './constants';
+import {generateSecureRandom} from 'react-native-securerandom';
+import forge from 'node-forge';
 
 export const hashData = async (
   data: string,
@@ -11,6 +13,21 @@ export const hashData = async (
   const result = await argon2(data, salt, config);
   return result.rawHash as string;
 };
+
+export const generateRandomString = async () => {
+  const randomBytes = await generateSecureRandom(64);
+  const randomString = randomBytes.reduce(
+    (acc, byte) => acc + byte.toString(16).padStart(2, '0'),
+    '',
+  );
+  return randomString;
+};
+export const generateBackupEncryptionKey = (
+  password: string,
+  salt: string,
+  iterations: number,
+  length: number,
+) => forge.pkcs5.pbkdf2(password, salt, iterations, length);
 
 export interface Argon2iConfig {
   iterations: number;
@@ -54,4 +71,28 @@ export function logState(state: AnyState) {
 
 export const getMaskedText = (id: string): string => {
   return '*'.repeat(id.length - 4) + id.slice(-4);
+};
+
+export const faceMatchConfig = (resp: string) => {
+  return {
+    withFace: {
+      encoder: {
+        tfModel: {
+          path: resp + '/model.tflite',
+          inputWidth: 160,
+          inputHeight: 160,
+          outputLength: 512,
+          modelChecksum:
+            '797b4d99794965749635352d55da38d4748c28c659ee1502338badee4614ed06',
+        },
+      },
+      matcher: {
+        threshold: 0.8,
+      },
+    },
+  };
+};
+
+export const getBackupFileName = () => {
+  return `backup_${Date.now()}`;
 };

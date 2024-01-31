@@ -16,7 +16,7 @@ export const QrLoginSuccess: React.FC<QrLoginSuccessProps> = props => {
   return (
     <Modal
       isVisible={controller.isVerifyingSuccesful}
-      arrowLeft={<Icon name={''} />}
+      arrowLeft={true}
       headerTitle={t('status')}
       headerElevation={5}
       onDismiss={controller.DISMISS}>
@@ -44,7 +44,7 @@ export const QrLoginSuccess: React.FC<QrLoginSuccessProps> = props => {
           margin="2 0 0 0"
           elevation={2}>
           <Button
-            title={t('okay')}
+            title={t('ok')}
             margin="0 0 12 0"
             styles={Theme.ButtonStyles.radius}
             onPress={props.onPress}

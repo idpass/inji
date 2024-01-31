@@ -3,13 +3,17 @@ import {
   BottomTabNavigationOptions,
   BottomTabScreenProps,
 } from '@react-navigation/bottom-tabs';
-import {Image} from 'react-native';
 import {RootStackParamList} from './index';
 import {ScanLayout} from '../screens/Scan/ScanLayout';
 import {HistoryScreen} from '../screens/History/HistoryScreen';
 import i18n from '../i18n';
 import {BOTTOM_TAB_ROUTES} from './routesConstants';
 import {HomeScreenLayout} from '../screens/HomeScreenLayout';
+import {Theme} from '../components/ui/styleUtils';
+
+export const changeTabBarVisible = (visible: string) => {
+  Theme.BottomTabBarStyle.tabBarStyle.display = visible;
+};
 
 const home: TabScreen = {
   name: BOTTOM_TAB_ROUTES.home,
@@ -20,12 +24,12 @@ const home: TabScreen = {
     headerShown: false,
   },
 };
-export const scan: TabScreen = {
-  name: BOTTOM_TAB_ROUTES.scan,
+export const share: TabScreen = {
+  name: BOTTOM_TAB_ROUTES.share,
   component: ScanLayout,
   icon: 'qr-code-scanner',
   options: {
-    title: i18n.t('MainLayout:scan'),
+    title: i18n.t('MainLayout:share'),
     headerShown: false,
   },
 };
@@ -42,12 +46,12 @@ const history: TabScreen = {
 
 export const mainRoutes: TabScreen[] = [];
 mainRoutes.push(home);
-mainRoutes.push(scan);
+mainRoutes.push(share);
 mainRoutes.push(history);
 
 export type MainBottomTabParamList = {
   home: undefined;
-  scan: undefined;
+  share: undefined;
   history: undefined;
 };
 

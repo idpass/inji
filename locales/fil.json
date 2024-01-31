@@ -39,7 +39,7 @@
   },
   "QrScanner": {
     "cameraAccessDisabled": "Naka-disable ang access sa camera!",
-    "cameraPermissionGuideLabel": "Pumunta sa mga setting at manual na paganahin ang access ng camera.",
+    "cameraPermissionGuideLabel": "Pumunta sa mga setting ng telepono at manual na paganahin ang access ng camera.",
     "flipCamera": "I-flip ang Camera"
   },
   "VcDetails": {
@@ -58,10 +58,12 @@
     "id": "Id",
     "qrCodeHeader": "QR Code",
     "nationalCard": "Pambansang Kard",
+    "insuranceCard": "Insurance Card",
     "uin": "UIN",
     "vid": "VID",
     "enableVerification": "I-activate",
     "profileAuthenticated": "Ang mga kredensyal ay pinagana para sa online na pagpapatotoo.",
+    "credentialActivated": "Na-activate",
     "offlineAuthDisabledHeader": "Nakabinbin ang pag-activate para sa online na pag-login!",
     "offlineAuthDisabledMessage": "Mangyaring i-click ang pindutan sa ibaba upang i-activate ang kredensyal na ito upang magamit para sa online na pag-login.",
     "verificationEnabledSuccess": "Na-activate para sa online na pag-login",
@@ -96,7 +98,8 @@
   },
   "WalletBinding": {
     "inProgress": "Isinasagawa",
-    "profileAuthenticated": "Na-activate para sa online na pag-login"
+    "profileAuthenticated": "Na-activate para sa online na pag-login",
+    "credentialActivated": "Na-activate"
   },
   "BindingVcWarningOverlay": {
     "alert": "Pakikumpirma",
@@ -150,17 +153,16 @@
     "aboutInji": "Tungkol kay Inji",
     "header": "TUNGKOL KAY INJI",
     "appID": "App ID",
-    "aboutDetailes": "Ang Inji ay isang mobile app na maaaring gamitin bilang digital wallet para mag-imbak ng mga kredensyal. Pinapayagan din nito ang pag-verify ng pagkakakilanlan sa parehong offline at online na mga mode, sa anumang lugar at oras.",
-    "forMoreDetailes": "Para sa karagdagang detalye",
+    "aboutDetails": "Ang Inji ay isang mobile app na maaaring gamitin bilang digital wallet para mag-imbak ng mga kredensyal. Pinapayagan din nito ang pag-verify ng pagkakakilanlan sa parehong offline at online na mga mode, sa anumang lugar at oras.",
+    "forMoreDetails": "Para sa karagdagang detalye",
     "clickHere": "Pindutin dito",
     "version": "Bersyon",
     "tuvaliVersion": "Tuvali-bersyon"
   },
   "IssuersScreen": {
     "title": "Magdagdag ng bagong card",
-    "header": "Mangyaring piliin ang iyong gustong tagabigay mula sa mga opsyon sa ibaba upang magdagdag ng bagong card.",
-    "itemHeading": "I-download sa pamamagitan ng {{issuer}}",
-    "itemSubHeading": "Ilagay ang iyong national ID para i-download ang iyong card.",
+    "description": "Mangyaring piliin ang iyong gustong tagabigay mula sa mga opsyon sa ibaba upang magdagdag ng bagong card.",
+    "searchByIssuersName": "Maghanap ayon sa pangalan ng Nag-isyu",
     "loaders": {
       "loading": "Naglo-load...",
       "subTitle": {
@@ -174,6 +176,10 @@
         "title": "Pakisuri ang iyong koneksyon at subukang muli",
         "message": "Mangyaring kumonekta sa internet at subukang muli."
       },
+      "biometricsCancelled": {
+        "title": "Gusto mo bang kanselahin ang pag-download?",
+        "message": "Kinakailangan ang biometric confirmation para magpatuloy sa pag-download ng card."
+      },
       "generic": {
         "title": "may nangyaring mali!",
         "message": "Nagkakaproblema kami sa iyong kahilingan. Pakisubukang muli."
@@ -182,24 +188,41 @@
   },
   "HelpScreen": {
     "header": "Tulong",
-    "whatIsDigitalCredential?": "Ano ang isang digital na kredensyal?",
+    "here": " dito. ",
+    "whatIsaDigitalCredential?": "Ano ang isang digital na kredensyal?",
     "detail-1": "Ang digital na kredensyal ay ang digital na bersyon ng iyong pisikal na Identity card",
-    "whatCanDoWithDigitalCredential?": "Ano ang maaari nating gawin sa mga digital na kredensyal?",
+    "whatCanWeDoWithDigitalCredential?": "Ano ang maaari nating gawin sa mga digital na kredensyal?",
     "detail-2": "Maaari kang makakuha ng iba't ibang serbisyo ng Pamahalaan at pribadong gamit ang iyong mga digital na kredensyal.",
     "howToAddCard?": "Paano magdagdag ng card?",
-    "detail-3": "Upang magdagdag ng card, mag-click sa '+' na button sa Home page at piliin ang naaangkop na opsyon.",
-    "howToRemoveCardFromWallet?": "Paano magbahagi ng card?",
-    "detail-4": "Mag-swipe pakaliwa sa card > mag-click sa Higit pa > Alisin sa Wallet",
-    "canWeAddMultipleCards?": "Maaari ba tayong magdagdag ng maraming card?",
+    "detail-3": "Maaaring ma-download ang mga ID sa INJI Mobile Wallet bilang Mga Nabe-verify na Kredensyal. Para malaman kung paano mag-download ng mga VC na may iba't ibang ID mangyaring basahin ",
+    "howToRemoveACardFromTheWallet?": "Paano mag-alis ng card mula sa wallet?",
+    "detail-4a": "Maaari kang mag-click sa ...(meatballs menu) sa isang card sa Home page at piliin ang Remove from Wallet na opsyon para mag-alis ng card mula sa wallet. Upang malaman ang higit pa, mangyaring basahin", 
+    "detail-4b": "Pakitandaan na, maaaring i-download muli ang parehong card.",
+    "canIAddMultipleCards?": "Maaari ba akong magdagdag ng maraming card?",
     "detail-5": "Oo, maaari kang magdagdag ng maraming card sa wallet sa pamamagitan ng pag-click sa '+' na button sa Home page.",
-    "howToShareCard?": "Paano magbahagi ng card?",
+    "howToShareACard?": "Paano magbahagi ng card?",
     "detail-6": "Mag-click sa pindutang 'Ibahagi' at i-scan ang QR code mula sa humihiling na partido. Kapag naitatag na ang koneksyon, ibabahagi ang card.",
-    "howToActivateCardForOnlineLogin?": "Paano i-activate ang isang card para sa online na pag-login?",
+    "howToActivateACardForOnlineLogin?": "Paano i-activate ang isang card para sa online na pag-login?",
     "detail-7": "Matapos matagumpay na magdagdag ng card sa wallet, mag-click sa 'Activation pending for Online login' sa card. Sa pag-click sa 'I-activate', ang card ay handa nang gamitin para sa online na pag-login.",
-    "howToViewActivity?": "Paano tingnan ang mga log ng aktibidad?",
+    "howToViewActivityLogs?": "Paano tingnan ang mga log ng aktibidad?",
     "detail-8": "Sa Home page, mag-click sa 'Kasaysayan' upang tingnan ang mga detalye ng aktibidad ng user.",
-    "whatCanDoBiometricsChanged?": "Ano ang mangyayari kapag binago ang biometric ng Android keystore?",
-    "detail-9": "Ang Android keystore ay nagtataglay ng mahalagang impormasyon tulad ng mga pribadong key para sa mga patunay ng pagkakakilanlan. Kapag binago mo ang iyong biometrics, hindi na ligtas ang mga lumang key. Upang panatilihing secure ang mga bagay, inaalis namin ang mga patunay ng pagkakakilanlan na nilagdaan ng mga lumang key na iyon. Maaari mo lamang i-download muli ang iyong mga patunay ng pagkakakilanlan, at lalagdaan ang mga ito gamit ang pinakabago, mas ligtas na mga susi."
+    "whatHappensWhenAndroidKeystoreBiometricIsChanged?": "Ano ang mangyayari kapag binago ang biometric ng Android keystore?",
+    "detail-9": "Ang Android keystore ay nagtataglay ng mahalagang impormasyon tulad ng mga pribadong key para sa mga patunay ng pagkakakilanlan. Kapag binago mo ang iyong biometrics, hindi na ligtas ang mga lumang key. Upang panatilihing secure ang mga bagay, inaalis namin ang mga patunay ng pagkakakilanlan na nilagdaan ng mga lumang key na iyon. Maaari mo lamang i-download muli ang iyong mga patunay ng pagkakakilanlan, at lalagdaan ang mga ito gamit ang pinakabago, mas ligtas na mga susi.",
+    "whatIsAnId?":"Ano ang ID?",
+    "detail-10":"Ang ID ay anumang dokumento na maaaring patunayan ang pagkakakilanlan ng isang tao. Sa konteksto ng MOSIP, ang mga identifier ay alphanumeric digital handle para sa mga pagkakakilanlan sa system. Habang ang pagkakakilanlan ng isang tao ay kinakatawan bilang isang koleksyon ng mga biographic at biometric na katangian na maaaring natatanging makilala ang tao, ang pagkakakilanlan ay tinutukoy gamit ang mga identifier.",
+    "whatAreTheDifferentTypesOfId?": "Ano ang iba't ibang uri ng ID?",
+    "detail-11":"Sa konteksto ng MOSIP, ang iba't ibang ID ay UIN, VID, at AID. Magbasa pa tungkol sa kanila",
+    "whereCanIFindTheseIds?":"Saan ko mahahanap ang mga ID na ito?",
+    "detail-12a": "Bilang bahagi ng proseso ng pagpapatala (pagpaparehistro), kapag matagumpay na nairehistro ang demograpikong impormasyon at biometrics ng residente, isang registration ID (AID) ang inilalaan sa residente. Ang isang acknowledgement slip na naglalaman ng mga nakuhang detalye at ang AID ay ibinibigay din (naka-print) sa residente bilang patunay ng pagpaparehistro.",
+    "detail-12b": "Sa matagumpay na pagproseso, ang isang Unique Identification Number (UIN) ay ilalaan sa residente at isang abiso ang ipapadala sa residente sa nakarehistrong numero ng telepono at/o email.",
+    "detail-12c": "Ang VID / Virtual ID ay isang alias identifier na na-configure para sa isang beses na paggamit at hindi nali-link. Dahil ginagamit ang mga ito para sa mga transaksyon sa pagpapatotoo, ang mga naturang identifier ay dapat malaman lamang ng user o bubuo sa kanilang paglahok.",
+    "whyDoesMyVcSayActivationIsPending?":"Bakit sinasabi ng aking VC na nakabinbin ang Activation?",
+    "detail-13": "Kapag na-download na ang VC sa iyong wallet, hindi pa ito nakatali sa pagkakakilanlan ng user kung kaya't sinasabi ng iyong VC na Nakabinbin ang Aktibidad. Ang pagbubuklod ng iyong VC sa iyong wallet (kasama ang iyong passcode o biometrics) ay napakahalaga upang matiyak ang pinakamataas na antas ng seguridad. Upang i-activate ang iyong VC, mangyaring sundin ang mga hakbang",
+    "whatDoYouMeanByActivatedForOnlineLogin?": "Ano ang ibig mong sabihin sa Activated for Online login?",
+    "detail-14a": "1. Kapag matagumpay na na-binded ang VC sa wallet, makikita mo na ito ay Activated for Online login which means itong VC ay magagamit na para sa QR login process. Upang malaman ang higit pa tungkol sa pag-login sa QR code, mangyaring basahin",
+    "detail-14b": "2. Ang Q&A ay dapat na nababasa at naiintindihan kahit na binago ng user ang wika sa INJI app.",
+    "whatIsAVerifiableCredential?": "Ano ang isang Napapatunayang Kredensyal?",
+    "detail-15": "Ang Nabe-verify na Kredensyal ay isang digitally sign na piraso ng impormasyon na kumakatawan sa isang pahayag na ginawa ng nagbigay tungkol sa isang paksa at kadalasang kinabibilangan ng mga detalye ng demograpiko. Ang mga VC ay ligtas at mapagkakatiwalaan sa iba't ibang online na pakikipag-ugnayan."
   },
   "AddVcModal": {
     "requestingCredential": "Humihiling ng kredensyal...",
@@ -250,24 +273,34 @@
     "applicationIdLabel": "Pakilagay ang iyong Application ID",
     "enterApplicationId": "Ilagay ang Application ID",
     "requestingOTP": "Humihiling ng OTP...",
-    "qstnMarkToolTip": "Available ang Application ID sa natanggap na acknowledgement pagkatapos ng enrollment.",
+    "toolTipTitle": "Ang sinabi ko?",
+    "toolTipDescription": "Ang Application ID (AID) ay tumutukoy sa natatanging identifier na ibinigay sa isang residente sa panahon ng anumang ID lifecycle na kaganapan, gaya ng ID Issuance, ID Update, o Lost ID retrieval, sa registration center. ",
     "getUIN": "Kumuha ng UIN/VID"
   },
   "IdInputModal": {
-    "header": "Kunin ang iyong ID",
-    "guideLabel": "Piliin ang uri ng ID at ilagay ang MOSIP na ibinigay na UIN o VID ng ID na nais mong makuha",
-    "generateVc": "Bumuo ng card",
+    "header": "I-download ang iyong ID",
+    "guideLabel": "Piliin ang uri ng ID at ilagay ang MOSIP na ibinigay na UIN o VID na nais mong i-download. ",
+    "generateVc": "Bumuo ng Card",
     "downloadID": "I-download ang ID",
-    "enterId": "Ipasok ang {{idType}}",
-    "noUIN/VID": "Walang UIN/VID? ",
-    "getItHere": "Kunin mo na",
-    "requestingOTP": "Humihiling ng OTP..."
+    "enterId": "Pumasok {{idType}}",
+    "noUIN/VID": "Walang UIN/VID?",
+    "getItHere": "Kunin ito ngayon gamit ang iyong AID.",
+    "requestingOTP": "Humihiling ng OTP...",
+    "toolTipTitle": "Ano ang {{idType}}?",
+    "toolTipUINDescription": "Ang Unique Identification Number (UIN), gaya ng ipinahihiwatig ng pangalan, ay isang natatanging numero na itinalaga sa isang residente. ",
+    "toolTipVIDDescription": "Ang VID / Virtual ID ay isang alias identifier na maaaring gamitin para sa mga transaksyon sa pagpapatunay. "
   },
   "OtpVerificationModal": {
     "title": "Pag-verify ng OTP",
     "otpSentMessage": "Ipinadala namin ang 6 na digit na code sa iyong rehistradong mobile number!",
     "resendTheCode": "Maaari mong ipadala muli ang code sa ",
-    "resendCode": "Ipadala muli ang Code"
+    "resendCode": "Ipadala muli ang Code",
+    "confirmationDialog": {
+      "title": "Gusto mo bang kanselahin ang pag-download?",
+      "message": "Kapag nakansela, hindi na mada-download ang iyong card at kailangan mong simulan muli ang pag-download.",
+      "wait": "Hindi, maghihintay ako",
+      "cancel": "Oo, Kanselahin"
+    }
   },
   "MyVcsTab": {
     "bringYourDigitalID": "Dalhin ang Iyong Digital ID",
@@ -298,7 +331,7 @@
         "title": "Pakisuri ang iyong koneksyon at subukang muli",
         "message": "Mangyaring kumonekta sa internet at subukang muli."
       },
-      "downloadLimitExpires":{
+      "downloadLimitExpires": {
         "title": "Error sa Pag-download",
         "message": "Nagkaroon ng isyu sa pag-download ng mga sumusunod na card. Pakisubukang muli"
       }
@@ -346,7 +379,7 @@
   },
   "MainLayout": {
     "home": "Bahay",
-    "scan": "Scan",
+    "share": "Ibahagi",
     "history": "Kasaysayan",
     "request": "Hiling",
     "settings": "mga setting"
@@ -460,7 +493,6 @@
     "gotoSettings": "Pumunta sa setting"
   },
   "ScanScreen": {
-    "header": "I-scan ang QR Code",
     "noShareableVcs": "Walang magagamit na mga card na maibabahagi.",
     "sharingVc": "Pagbabahagi ng card",
     "bluetoothStateIos": "Naka-OFF ang Bluetooth, paki-ON ito mula sa control center",
@@ -468,9 +500,10 @@
     "enableBluetoothMessage": "Mangyaring paganahin ang mga pahintulot ng bluetooth upang suportahan ang lokal na pagbabahagi",
     "enableBluetoothButtonText": "Payagan ang mga pahintulot ng bluetooth",
     "scanningGuide": "Panatilihin ang telepono at i-scan ang QR code",
+    "invalidQR": "Mangyaring mag-scan ng wastong QR",
     "errors": {
       "locationDisabled": {
-        "message": "Dapat na nakabukas ang Location services ng iyong mobile para maaaring makapag-scan",
+        "message": "Para magpatuloy, hayaang i-on ng iyong device ang lokasyon",
         "button": "Buksan ang location services"
       },
       "locationDenied": {
@@ -487,10 +520,13 @@
       }
     },
     "status": {
-      "inProgress": "Isinasagawa",
+      "inProgress": {
+        "title": "Isinasagawa",
+        "hint": "Mangyaring maghintay habang itinatag namin ang koneksyon."
+      },
       "establishingConnection": "Pagtatatag ng Koneksyon",
       "connectionInProgress": "Isinasagawa ang koneksyon",
-      "connectingTimeout": "Ito ay tumatagal ng ilang sandali upang maitaguyod ang koneksyon. Bukas ba ang ibang device para sa mga koneksyon?",
+      "connectingTimeout": "Ito ay tumatagal ng ilang sandali upang maitaguyod ang koneksyon. Bukas ba ang ibang device para sa koneksyon?",
       "stayOnTheScreen": "Manatili sa screen",
       "retry": "Subukan muli",
       "exchangingDeviceInfo": "Nagpapalitan ng impormasyon ng device...",
@@ -500,14 +536,15 @@
       "sent": "Naipadala na ang card...",
       "sentHint": "Naghihintay para sa receiver na i-save o itapon ang iyong card",
       "sharing": {
-        "title": "Isinasagawa ang pagbabahagi",
+        "title": "Isinasagawa ang pagbabahagi...",
         "timeoutHint": "Naantala ang pagbabahagi, posibleng dahil sa isang isyu sa koneksyon.",
-        "hint": "Mangyaring maghintay habang ibinabahagi namin ang napiling card."
+        "hint": "Mangyaring maghintay habang ibinabahagi namin ang napiling card..."
       },
       "accepted": {
-        "title": "Matagumpay na naibahagi ang ID",
-        "message": "Ang iyong ID ay matagumpay na naibahagi sa",
-        "gotohome": "Pumunta sa bahay"
+        "title": "Matagumpay na naibahagi ang ID!",
+        "message": "Ang iyong ID ay matagumpay na naibahagi.",
+        "home": "Bahay",
+        "history": "Kasaysayan"
       },
       "rejected": {
         "title": "Pansinin",
@@ -585,6 +622,7 @@
     "cancel": "Kanselahin",
     "accept": "Tanggapin",
     "save": "I-save",
+    "ok": "Ok",
     "dismiss": "Dismissed",
     "editLabel": "Palitan ang {{label}}",
     "tryAgain": "Subukan muli",

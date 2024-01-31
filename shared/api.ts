@@ -1,7 +1,9 @@
 import {request} from './request';
-import Storage, {API_CACHED_STORAGE_KEYS} from './storage';
+import {API_CACHED_STORAGE_KEYS} from './storage';
 import {COMMON_PROPS_KEY} from './commonprops/commonProps';
 import {INITIAL_CONFIG} from './InitialConfig';
+import Keychain from 'react-native-keychain';
+import {getItem, setItem} from '../machines/store';
 
 export const API_URLS: ApiUrls = {
   issuersList: {
@@ -12,6 +14,10 @@ export const API_URLS: ApiUrls = {
     method: 'GET',
     buildURL: (issuerId: string): `/${string}` =>
       `/residentmobileapp/issuers/${issuerId}`,
+  },
+  issuerWellknownConfig: {
+    method: 'GET',
+    buildURL: (requestUrl: `/${string}`): `/${string}` => requestUrl,
   },
   allProperties: {
     method: 'GET',
@@ -62,6 +68,20 @@ export const API_URLS: ApiUrls = {
     method: 'PATCH',
     buildURL: (id: string): `/${string}` => `/residentmobileapp/vid/${id}`,
   },
+  linkTransaction: {
+    method: 'POST',
+    buildURL: (): `/${string}` =>
+      '/v1/esignet/linked-authorization/v2/link-transaction',
+  },
+  authenticate: {
+    method: 'POST',
+    buildURL: (): `/${string}` =>
+      '/v1/esignet/linked-authorization/v2/authenticate',
+  },
+  sendConsent: {
+    method: 'POST',
+    buildURL: (): `/${string}` => '/v1/esignet/linked-authorization/v2/consent',
+  },
 };
 
 export const API = {
@@ -80,7 +100,13 @@ export const API = {
     );
     return response.response;
   },
-
+  fetchIssuerWellknownConfig: async (requestUrl: string) => {
+    const response = await request(
+      API_URLS.issuerWellknownConfig.method,
+      API_URLS.issuerWellknownConfig.buildURL(requestUrl),
+    );
+    return response;
+  },
   fetchAllProperties: async () => {
     const response = await request(
       API_URLS.allProperties.method,
@@ -102,10 +128,15 @@ export const CACHED_API = {
       cacheKey: API_CACHED_STORAGE_KEYS.fetchIssuerConfig(issuerId),
       fetchCall: API.fetchIssuerConfig.bind(null, issuerId),
     }),
-
-  getAllProperties: () =>
+  fetchIssuerWellknownConfig: (issuerId: string, requestUrl: string) =>
     generateCacheAPIFunction({
-      isCachePreferred: true,
+      cacheKey: API_CACHED_STORAGE_KEYS.fetchIssuerWellknownConfig(issuerId),
+      fetchCall: API.fetchIssuerWellknownConfig.bind(null, requestUrl),
+    }),
+
+  getAllProperties: (isCachePreferred: boolean) =>
+    generateCacheAPIFunction({
+      isCachePreferred,
       cacheKey: COMMON_PROPS_KEY,
       fetchCall: API.fetchAllProperties,
       onErrorHardCodedValue: INITIAL_CONFIG.allProperties,
@@ -145,15 +176,19 @@ async function generateCacheAPIFunctionWithCachePreference(
   fetchCall: (...props: any[]) => any,
   onErrorHardCodedValue?: any,
 ) {
+  const existingCredentials = await Keychain.getGenericPassword();
   try {
-    const response = (await Storage.getItem(cacheKey)) as string;
+    const response = await getItem(
+      cacheKey,
+      null,
+      existingCredentials?.password,
+    );
 
     if (response) {
-      return JSON.parse(response);
+      return response;
     } else {
       const response = await fetchCall();
-
-      Storage.setItem(cacheKey, JSON.stringify(response)).then(() =>
+      setItem(cacheKey, response, existingCredentials?.password).then(() =>
         console.log('Cached response for ' + cacheKey),
       );
 
@@ -179,9 +214,10 @@ async function generateCacheAPIFunctionWithAPIPreference(
   fetchCall: (...props: any[]) => any,
   onErrorHardCodedValue?: any,
 ) {
+  const existingCredentials = await Keychain.getGenericPassword();
   try {
     const response = await fetchCall();
-    Storage.setItem(cacheKey, JSON.stringify(response)).then(() =>
+    setItem(cacheKey, response, existingCredentials.password).then(() =>
       console.log('Cached response for ' + cacheKey),
     );
     return response;
@@ -193,12 +229,18 @@ async function generateCacheAPIFunctionWithAPIPreference(
 
     console.log(error);
 
-    const response = (await Storage.getItem(cacheKey)) as string;
+    const response = await getItem(
+      cacheKey,
+      null,
+      existingCredentials.password,
+    );
 
     if (response) {
-      return JSON.parse(response);
+      return response;
     } else {
-      if (onErrorHardCodedValue != undefined) {
+      if (response == null) {
+        throw error;
+      } else if (onErrorHardCodedValue != undefined) {
         return onErrorHardCodedValue;
       } else {
         throw error;
@@ -215,6 +257,7 @@ type Api_Params = {
 type ApiUrls = {
   issuersList: Api_Params;
   issuerConfig: Api_Params;
+  issuerWellknownConfig: Api_Params;
   allProperties: Api_Params;
   getIndividualId: Api_Params;
   reqIndividualOTP: Api_Params;
@@ -227,4 +270,7 @@ type ApiUrls = {
   authLock: Api_Params;
   authUnLock: Api_Params;
   requestRevoke: Api_Params;
+  linkTransaction: Api_Params;
+  authenticate: Api_Params;
+  sendConsent: Api_Params;
 };

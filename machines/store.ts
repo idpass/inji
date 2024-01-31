@@ -12,8 +12,8 @@ import {
 import {createModel} from 'xstate/lib/model';
 import {generateSecureRandom} from 'react-native-securerandom';
 import {log} from 'xstate/lib/actions';
-import {MY_VCS_STORE_KEY} from '../shared/constants';
-import SecureKeystore from 'react-native-secure-keystore';
+import {isIOS, MY_VCS_STORE_KEY, SETTINGS_STORE_KEY} from '../shared/constants';
+import SecureKeystore from '@mosip/secure-keystore';
 import {
   AUTH_TIMEOUT,
   decryptJson,
@@ -24,7 +24,13 @@ import {
   isHardwareKeystoreExists,
 } from '../shared/cryptoutil/cryptoUtil';
 import {VCMetadata} from '../shared/VCMetadata';
-import FileStorage, {getFilePath} from '../shared/fileStorage';
+import {BiometricCancellationError} from '../shared/error/BiometricCancellationError';
+import {TelemetryConstants} from '../shared/telemetry/TelemetryConstants';
+import {
+  sendErrorEvent,
+  getErrorEventData,
+} from '../shared/telemetry/TelemetryUtils';
+import RNSecureKeyStore from 'react-native-secure-key-store';
 
 export const keyinvalidatedString =
   'Key Invalidated due to biometric enrollment';
@@ -42,8 +48,11 @@ const model = createModel(
       TRY_AGAIN: () => ({}),
       IGNORE: () => ({}),
       GET: (key: string) => ({key}),
+      EXPORT: () => ({}),
+      RESTORE_BACKUP: (data: {}) => ({data}),
       DECRYPT_ERROR: () => ({}),
       KEY_INVALIDATE_ERROR: () => ({}),
+      BIOMETRIC_CANCELLED: (requester?: string) => ({requester}),
       SET: (key: string, value: unknown) => ({key, value}),
       APPEND: (key: string, value: unknown) => ({key, value}),
       PREPEND: (key: string, value: unknown) => ({key, value}),
@@ -173,13 +182,19 @@ export const storeMachine =
           },
         },
         ready: {
-          entry: ['notifyParent', 'cacheVCFilesData'],
+          entry: 'notifyParent',
           invoke: {
             src: 'store',
             id: '_store',
           },
           on: {
             GET: {
+              actions: 'forwardStoreRequest',
+            },
+            EXPORT: {
+              actions: 'forwardStoreRequest',
+            },
+            RESTORE_BACKUP: {
               actions: 'forwardStoreRequest',
             },
             SET: {
@@ -242,6 +257,17 @@ export const storeMachine =
         KEY_INVALIDATE_ERROR: {
           actions: sendParent('KEY_INVALIDATE_ERROR'),
         },
+        BIOMETRIC_CANCELLED: {
+          actions: [
+            send(
+              (_, event) => model.events.BIOMETRIC_CANCELLED(event.requester),
+              {
+                to: (_, event) => event.requester,
+              },
+            ),
+            sendUpdate(),
+          ],
+        },
       },
     },
     {
@@ -259,18 +285,6 @@ export const storeMachine =
         setEncryptionKey: model.assign({
           encryptionKey: (_, event) => event.key,
         }),
-
-        cacheVCFilesData: context => {
-          getItem(MY_VCS_STORE_KEY, [], context.encryptionKey).then(vcList => {
-            if (vcList) {
-              vcList?.forEach((vcMetadataStr: string) => {
-                const vcKey =
-                  VCMetadata.fromVcMetadataString(vcMetadataStr).getVcKey();
-                FileStorage.readAndCacheFile(getFilePath(vcKey));
-              });
-            }
-          });
-        },
       },
 
       services: {
@@ -284,6 +298,8 @@ export const storeMachine =
                 'Dummy',
               );
             } catch (e) {
+              sendErrorEvent(getErrorEventData('ENCRYPTION', '', e));
+
               if (e.message.includes(keyinvalidatedString)) {
                 await clear();
                 callback(model.events.KEY_INVALIDATE_ERROR());
@@ -294,6 +310,13 @@ export const storeMachine =
             }
             callback(model.events.READY());
           } else {
+            sendErrorEvent(
+              getErrorEventData(
+                'ENCRYPTION',
+                '',
+                'Could not get the android Key alias',
+              ),
+            );
             callback(
               model.events.ERROR(
                 new Error('Could not get the android Key alias'),
@@ -326,6 +349,18 @@ export const storeMachine =
                   response = await getItem(
                     event.key,
                     null,
+                    context.encryptionKey,
+                  );
+                  break;
+                }
+                case 'EXPORT': {
+                  response = await exportData(context.encryptionKey);
+                  break;
+                }
+                case 'RESTORE_BACKUP': {
+                  // the backup data is in plain text
+                  response = await loadBackupData(
+                    event.data,
                     context.encryptionKey,
                   );
                   break;
@@ -400,6 +435,14 @@ export const storeMachine =
               }
               callback(model.events.STORE_RESPONSE(response, event.requester));
             } catch (e) {
+              sendErrorEvent(
+                getErrorEventData(
+                  TelemetryConstants.FlowType.fetchData,
+                  '',
+                  e.message,
+                  {e},
+                ),
+              );
               if (e.message.includes(keyinvalidatedString)) {
                 await clear();
                 callback(model.events.KEY_INVALIDATE_ERROR());
@@ -416,6 +459,9 @@ export const storeMachine =
               ) {
                 callback(model.events.DECRYPT_ERROR());
                 sendUpdate();
+              } else if (e instanceof BiometricCancellationError) {
+                callback(model.events.BIOMETRIC_CANCELLED(event.requester));
+                sendUpdate();
               } else {
                 console.error(e);
                 callback(model.events.STORE_ERROR(e, event.requester));
@@ -424,11 +470,21 @@ export const storeMachine =
           });
         },
         getEncryptionKey: () => async callback => {
+          if (isIOS()) {
+            RNSecureKeyStore.setResetOnAppUninstallTo(false);
+          }
           const existingCredentials = await Keychain.getGenericPassword();
           if (existingCredentials) {
             console.log('Credentials successfully loaded for user');
             callback(model.events.KEY_RECEIVED(existingCredentials.password));
           } else {
+            sendErrorEvent(
+              getErrorEventData(
+                TelemetryConstants.FlowType.fetchData,
+                '',
+                'Could not get keychain credentials',
+              ),
+            );
             console.log('Credentials failed to load for user');
             callback(
               model.events.ERROR(
@@ -449,6 +505,13 @@ export const storeMachine =
             if (hasSetCredentials) {
               callback(model.events.KEY_RECEIVED(randomBytesString));
             } else {
+              sendErrorEvent(
+                getErrorEventData(
+                  TelemetryConstants.FlowType.fetchData,
+                  '',
+                  'Could not generate keychain credentials',
+                ),
+              );
               callback(
                 model.events.ERROR(
                   new Error('Could not generate keychain credentials.'),
@@ -485,13 +548,31 @@ export async function setItem(
   encryptionKey: string,
 ) {
   try {
-    const data = JSON.stringify(value);
-    const encryptedData = await encryptJson(encryptionKey, data);
+    let encryptedData;
+    if (key === SETTINGS_STORE_KEY) {
+      const appId = value.appId;
+      delete value.appId;
+      const settings = {
+        encryptedData: await encryptJson(encryptionKey, JSON.stringify(value)),
+        appId,
+      };
+      encryptedData = JSON.stringify(settings);
+    } else {
+      encryptedData = await encryptJson(encryptionKey, JSON.stringify(value));
+    }
     await Storage.setItem(key, encryptedData, encryptionKey);
   } catch (e) {
     console.error('error setItem:', e);
     throw e;
   }
+}
+
+export async function exportData(encryptionKey: string) {
+  return Storage.exportData(encryptionKey);
+}
+
+export async function loadBackupData(data, encryptionKey) {
+  await Storage.loadBackupData(data, encryptionKey);
 }
 
 export async function getItem(
@@ -502,11 +583,30 @@ export async function getItem(
   try {
     const data = await Storage.getItem(key, encryptionKey);
     if (data != null) {
-      const decryptedData = await decryptJson(encryptionKey, data);
+      let decryptedData;
+      if (key === SETTINGS_STORE_KEY) {
+        let parsedData = JSON.parse(data);
+        if (parsedData.encryptedData) {
+          decryptedData = await decryptJson(
+            encryptionKey,
+            parsedData.encryptedData,
+          );
+          parsedData.encryptedData = JSON.parse(decryptedData);
+        }
+        return parsedData;
+      }
+      decryptedData = await decryptJson(encryptionKey, data);
       return JSON.parse(decryptedData);
     }
     if (data === null && VCMetadata.isVCKey(key)) {
       await removeItem(key, data, encryptionKey);
+      sendErrorEvent(
+        getErrorEventData(
+          TelemetryConstants.FlowType.fetchData,
+          TelemetryConstants.ErrorId.tampered,
+          tamperedErrorMessageString,
+        ),
+      );
       throw new Error(tamperedErrorMessageString);
     } else {
       return defaultValue;
@@ -516,10 +616,25 @@ export async function getItem(
       e.message.includes(tamperedErrorMessageString) ||
       e.message.includes(keyinvalidatedString) ||
       e.message === ENOENT ||
+      e instanceof BiometricCancellationError ||
       e.message.includes('Key not found') // this error happens when previous get Item calls failed due to key invalidation and data and keys are deleted
     ) {
+      sendErrorEvent(
+        getErrorEventData(
+          TelemetryConstants.FlowType.fetchData,
+          TelemetryConstants.ErrorId.tampered,
+          e.message,
+        ),
+      );
       throw e;
     }
+    sendErrorEvent(
+      getErrorEventData(
+        TelemetryConstants.FlowType.fetchData,
+        TelemetryConstants.ErrorId.tampered,
+        `Exception in getting item for ${key}: ${e}`,
+      ),
+    );
     console.error(`Exception in getting item for ${key}: ${e}`);
     return defaultValue;
   }

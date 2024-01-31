@@ -1,10 +1,11 @@
 import React, {Fragment, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
-import {BackHandler, Image, SafeAreaView, View} from 'react-native';
+import {BackHandler, SafeAreaView, View} from 'react-native';
 import Spinner from 'react-native-spinkit';
 import {Button, Centered, Column, Row, Text} from '../../components/ui';
 import {Theme} from './styleUtils';
 import testIDProps from '../../shared/commonUtil';
+import {SvgImage} from './svg';
 
 export const Loader: React.FC<LoaderProps> = props => {
   const {t} = useTranslation('ScanScreen');
@@ -49,13 +50,7 @@ export const Loader: React.FC<LoaderProps> = props => {
         crossAlign="center"
         fill>
         <Column margin="24 0" align="space-around">
-          <Image
-            source={Theme.InjiProgressingLogo}
-            height={2}
-            width={2}
-            style={{marginLeft: -6}}
-            {...testIDProps('progressingLogo')}
-          />
+          {SvgImage.ProgressIcon()}
           <View {...testIDProps('threeDotsLoader')}>
             <Spinner
               type="ThreeBounce"
@@ -64,15 +59,32 @@ export const Loader: React.FC<LoaderProps> = props => {
             />
           </View>
         </Column>
-
-        <Column style={{display: props.hint ? 'flex' : 'none'}}>
+        {(props.isHintVisible || props.onCancel) && (
           <Column style={Theme.SelectVcOverlayStyles.timeoutHintContainer}>
-            <Text
-              align="center"
-              color={Theme.Colors.TimoutText}
-              style={Theme.TextStyles.bold}>
-              {props.hint}
-            </Text>
+            {props.hint && (
+              <Text
+                align="center"
+                margin="10"
+                color={Theme.Colors.TimeoutHintText}
+                size="small"
+                style={Theme.TextStyles.bold}>
+                {props.hint}
+              </Text>
+            )}
+            {props.onStayInProgress && (
+              <Button
+                type="clear"
+                title={t('status.stayOnTheScreen')}
+                onPress={props.onStayInProgress}
+              />
+            )}
+            {props.onRetry && (
+              <Button
+                type="clear"
+                title={t('status.retry')}
+                onPress={props.onRetry}
+              />
+            )}
             {props.onCancel && (
               <Button
                 type="clear"
@@ -81,20 +93,18 @@ export const Loader: React.FC<LoaderProps> = props => {
               />
             )}
           </Column>
-        </Column>
+        )}
       </Centered>
     </Fragment>
   );
 };
 
 export interface LoaderProps {
-  isVisible: boolean;
   title: string;
   subTitle?: string;
-  label?: string;
   hint?: string;
+  onStayInProgress?: () => void;
+  isHintVisible?: boolean;
   onCancel?: () => void;
-  requester?: boolean;
-  progress?: boolean | number;
-  onBackdropPress?: () => void;
+  onRetry?: () => void;
 }

@@ -9,12 +9,34 @@ import {SCAN_ROUTES} from '../../routes/routesConstants';
 import {SharingSuccessModal} from './SuccessfullySharedModal';
 import {Theme} from '../../components/ui/styleUtils';
 import {Icon} from 'react-native-elements';
+import {Loader} from '../../components/ui/Loader';
 
 const ScanStack = createNativeStackNavigator();
 
 export const ScanLayout: React.FC = () => {
   const {t} = useTranslation('ScanScreen');
   const controller = useScanLayout();
+
+  if (
+    controller.statusOverlay != null &&
+    !controller.isAccepted &&
+    !controller.isInvalid
+  ) {
+    return (
+      <Loader
+        title={controller.statusOverlay?.title}
+        hint={controller.statusOverlay?.hint}
+        onCancel={controller.statusOverlay?.onButtonPress}
+        onStayInProgress={controller.statusOverlay?.onStayInProgress}
+        isHintVisible={
+          controller.isStayInProgress ||
+          controller.isBleError ||
+          controller.isSendingVc
+        }
+        onRetry={controller.statusOverlay?.onRetry}
+      />
+    );
+  }
 
   return (
     <React.Fragment>
@@ -41,23 +63,10 @@ export const ScanLayout: React.FC = () => {
           component={ScanScreen}
           options={{
             headerTitleStyle: {fontSize: 30, fontFamily: 'Inter_600SemiBold'},
-            title: t('MainLayout:scan'),
+            title: t('MainLayout:share'),
           }}
         />
       </ScanStack.Navigator>
-
-      <ProgressingModal
-        isVisible={controller.statusOverlay != null && !controller.isAccepted}
-        title={controller.statusOverlay?.title}
-        hint={controller.statusOverlay?.hint}
-        onCancel={controller.statusOverlay?.onButtonPress}
-        onStayInProgress={controller.statusOverlay?.onStayInProgress}
-        isHintVisible={controller.isStayInProgress}
-        isBleErrorVisible={controller.isBleError}
-        onRetry={controller.statusOverlay?.onRetry}
-        progress={controller.statusOverlay?.progress}
-        requester={controller.statusOverlay?.requester}
-      />
 
       <SharingSuccessModal
         isVisible={controller.isAccepted}

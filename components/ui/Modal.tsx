@@ -21,7 +21,7 @@ export const Modal: React.FC<ModalProps> = props => {
       <Column fill safe>
         <Row elevation={props.headerElevation}>
           <View style={props.modalStyle}>
-            {props.headerRight ? (
+            {props.headerRight && !props.arrowLeft ? (
               <Icon
                 {...testIDProps('closeModal')}
                 name={I18nManager.isRTL ? 'chevron-right' : 'chevron-left'}
@@ -32,7 +32,7 @@ export const Modal: React.FC<ModalProps> = props => {
             {props.arrowLeft ? (
               <Icon
                 {...testIDProps('arrowLeft')}
-                name="arrow-left"
+                name={I18nManager.isRTL ? 'arrow-right' : 'arrow-left'}
                 type="material-community"
                 onPress={props.onDismiss}
                 containerStyle={Theme.Styles.backArrowContainer}
@@ -42,12 +42,9 @@ export const Modal: React.FC<ModalProps> = props => {
             <Row
               fill
               align={props.headerLeft ? 'flex-start' : 'center'}
-              margin={'16 0 0 0'}>
+              margin={props.arrowLeft ? '16 0 0 -15' : '16 0 0 10'}>
               <Column>
-                <Text
-                  testID={props.testID}
-                  style={Theme.TextStyles.header}
-                  margin="0 0 0 -15">
+                <Text testID={props.testID} style={Theme.TextStyles.header}>
                   {props.headerTitle || props.headerLeft}
                 </Text>
                 {!props.requester ? (
@@ -108,6 +105,6 @@ export interface ModalProps {
   headerLabelColor?: string;
   headerRight?: React.ReactElement;
   headerLeft?: React.ReactElement;
-  arrowLeft?: React.ReactElement;
+  arrowLeft?: boolean;
   onShow?: () => void;
 }

@@ -1,10 +1,12 @@
 import React from 'react';
 import {useTranslation} from 'react-i18next';
-import {Dimensions} from 'react-native';
 import {Icon} from 'react-native-elements';
 import {VerifiableCredential} from '../../../types/VC/ExistingMosipVC/vc';
 import {Row, Text} from '../../ui';
 import {Theme} from '../../ui/styleUtils';
+import {View} from 'react-native';
+import {isActivationNeeded} from '../../../shared/openId4VCI/Utils';
+import {VCMetadata} from '../../../shared/VCMetadata';
 
 const WalletUnverifiedIcon: React.FC = () => {
   return (
@@ -14,10 +16,8 @@ const WalletUnverifiedIcon: React.FC = () => {
       size={Theme.ICON_MID_SIZE}
       type="material-community"
       containerStyle={{
-        marginStart: 1,
-        marginEnd: 1,
+        marginEnd: 5,
         bottom: 1,
-        marginRight: -2,
       }}
     />
   );
@@ -29,7 +29,10 @@ const WalletVerifiedIcon: React.FC = () => {
       name="verified-user"
       color={Theme.Colors.VerifiedIcon}
       size={Theme.ICON_MID_SIZE}
-      containerStyle={{marginStart: 10, bottom: 1, marginLeft: 10}}
+      containerStyle={{
+        marginEnd: 5,
+        bottom: 1,
+      }}
     />
   );
 };
@@ -39,29 +42,22 @@ const WalletUnverifiedActivationDetails: React.FC<
 > = props => {
   const {t} = useTranslation('VcDetails');
   return (
-    <Row
-      width={Dimensions.get('screen').width * 0.8}
-      align="space-between"
-      crossAlign="center">
-      <Row
-        crossAlign="center"
-        style={{
-          flex: 1,
-          maxWidth: 255,
-        }}>
+    <Row style={Theme.Styles.vcActivationDetailsWrapper}>
+      <View style={{flex: 1, alignSelf: 'center', justifyContent: 'center'}}>
         {props.verifiableCredential && <WalletUnverifiedIcon />}
+      </View>
+      <View style={{flex: 4}}>
         <Text
           color={Theme.Colors.Details}
           testID="activationPending"
           weight="regular"
-          margin="8"
           style={
             !props.verifiableCredential
               ? Theme.Styles.loadingTitle
               : Theme.Styles.statusLabel
           }
           children={t('offlineAuthDisabledHeader')}></Text>
-      </Row>
+      </View>
     </Row>
   );
 };
@@ -71,29 +67,28 @@ const WalletVerifiedActivationDetails: React.FC<
 > = props => {
   const {t} = useTranslation('WalletBinding');
   return (
-    <Row
-      width={Dimensions.get('screen').width * 0.8}
-      align="space-between"
-      crossAlign="center">
-      <Row
-        crossAlign="center"
-        style={{
-          flex: 1,
-        }}>
+    <Row style={Theme.Styles.vcActivationDetailsWrapper}>
+      <View style={{flex: 1, alignSelf: 'center', justifyContent: 'center'}}>
         <WalletVerifiedIcon />
+      </View>
+      <View style={{flex: 4}}>
         <Text
           color={Theme.Colors.statusLabel}
           testID="activated"
           weight="regular"
           size="smaller"
-          margin="8 10 10 5"
+          margin="0 0 0 5"
           style={
             !props.verifiableCredential
               ? Theme.Styles.loadingTitle
               : Theme.Styles.statusLabel
           }
-          children={t('profileAuthenticated')}></Text>
-      </Row>
+          children={
+            isActivationNeeded(props?.vcMetadata.issuer)
+              ? t('profileAuthenticated')
+              : t('credentialActivated')
+          }></Text>
+      </View>
     </Row>
   );
 };
@@ -102,8 +97,9 @@ export const MosipVCItemActivationStatus: React.FC<
   ExistingMosipVCItemActivationStatusProps
 > = props => {
   return (
-    <Row margin="0 0 0 -6">
-      {props.emptyWalletBindingId ? (
+    <Row style={Theme.Styles.vcActivationStatusContainer}>
+      {props.emptyWalletBindingId &&
+      isActivationNeeded(props?.vcMetadata.issuer) ? (
         <WalletUnverifiedActivationDetails
           verifiableCredential={props.verifiableCredential}
         />
@@ -111,6 +107,7 @@ export const MosipVCItemActivationStatus: React.FC<
         <WalletVerifiedActivationDetails
           verifiableCredential={props.verifiableCredential}
           showOnlyBindedVc={props.showOnlyBindedVc}
+          vcMetadata={props.vcMetadata}
         />
       )}
     </Row>
@@ -126,6 +123,7 @@ interface ExistingMosipVCItemActivationStatusProps {
 interface WalletVerifiedDetailsProps {
   showOnlyBindedVc: boolean;
   verifiableCredential: VerifiableCredential;
+  vcMetadata: VCMetadata;
 }
 
 interface WalletUnVerifiedDetailsProps {

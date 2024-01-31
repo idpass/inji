@@ -1,16 +1,16 @@
-import React, {useLayoutEffect} from 'react';
+import React, {useLayoutEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {FlatList, Image, View} from 'react-native';
+import {FlatList, Pressable, View} from 'react-native';
 import {Issuer} from '../../components/openId4VCI/Issuer';
 import {Error} from '../../components/ui/Error';
 import {Header} from '../../components/ui/Header';
-import {Column, Text} from '../../components/ui';
+import {Button, Column, Row, Text} from '../../components/ui';
 import {Theme} from '../../components/ui/styleUtils';
 import {RootRouteProps} from '../../routes';
 import {HomeRouteProps} from '../../routes/main';
 import {useIssuerScreenController} from './IssuerScreenController';
 import {Loader} from '../../components/ui/Loader';
-import testIDProps, {removeWhiteSpace} from '../../shared/commonUtil';
+import {removeWhiteSpace} from '../../shared/commonUtil';
 import {
   ErrorMessage,
   getDisplayObjectForCurrentLanguage,
@@ -22,12 +22,23 @@ import {
   sendInteractEvent,
   sendStartEvent,
 } from '../../shared/telemetry/TelemetryUtils';
+import {TelemetryConstants} from '../../shared/telemetry/TelemetryConstants';
+import {MessageOverlay} from '../../components/MessageOverlay';
+import {SearchBar} from '../../components/ui/SearchBar';
+import {SvgImage} from '../../components/ui/svg';
+import {Icon} from 'react-native-elements';
 
 export const IssuersScreen: React.FC<
   HomeRouteProps | RootRouteProps
 > = props => {
   const controller = useIssuerScreenController(props);
   const {t} = useTranslation('IssuersScreen');
+
+  const issuers = controller.issuers;
+  let [filteredSearchData, setFilteredSearchData] = useState(issuers);
+  const [search, setSearch] = useState('');
+  const [tapToSearch, setTapToSearch] = useState(false);
+  const [clearSearchIcon, setClearSearchIcon] = useState(false);
 
   useLayoutEffect(() => {
     if (controller.loadingReason || controller.errorMessageType) {
@@ -57,9 +68,15 @@ export const IssuersScreen: React.FC<
   ]);
 
   const onPressHandler = (id: string, protocol: string) => {
-    sendStartEvent(getStartEventData('VC Download', {id: id}));
+    sendStartEvent(
+      getStartEventData(TelemetryConstants.FlowType.vcDownload, {id: id}),
+    );
     sendInteractEvent(
-      getInteractEventData('VC Download', 'CLICK', `IssuerType: ${id}`),
+      getInteractEventData(
+        TelemetryConstants.FlowType.vcDownload,
+        TelemetryConstants.InteractEventSubtype.click,
+        `IssuerType: ${id}`,
+      ),
     );
     protocol === Protocols.OTP
       ? controller.DOWNLOAD_ID()
@@ -68,6 +85,15 @@ export const IssuersScreen: React.FC<
 
   const isGenericError = () => {
     return controller.errorMessageType === ErrorMessage.GENERIC;
+  };
+
+  const onFocusSearch = () => {
+    setTapToSearch(true);
+  };
+
+  const clearSearchText = () => {
+    filterIssuers('');
+    setClearSearchIcon(false);
   };
 
   const goBack = () => {
@@ -83,21 +109,56 @@ export const IssuersScreen: React.FC<
 
   const getImage = () => {
     if (isGenericError()) {
-      return (
-        <Image
-          source={Theme.SomethingWentWrong}
-          style={{width: 370, height: 150}}
-          {...testIDProps('somethingWentWrongImage')}
-        />
-      );
+      return SvgImage.SomethingWentWrong();
     }
-    return (
-      <Image
-        {...testIDProps('noInternetConnectionImage')}
-        source={Theme.NoInternetConnection}
-      />
-    );
+    return SvgImage.NoInternetConnection();
   };
+
+  const filterIssuers = (searchText: string) => {
+    const filteredData = issuers.filter(item => {
+      if (
+        getDisplayObjectForCurrentLanguage(item.display)
+          ?.title.toLowerCase()
+          .includes(searchText.toLowerCase())
+      ) {
+        return getDisplayObjectForCurrentLanguage(item.display);
+      }
+    });
+    setFilteredSearchData(filteredData);
+    setSearch(searchText);
+    if (searchText !== '') {
+      setClearSearchIcon(true);
+    } else {
+      setClearSearchIcon(false);
+    }
+  };
+
+  if (controller.isBiometricsCancelled) {
+    return (
+      <MessageOverlay
+        isVisible={controller.isBiometricsCancelled}
+        minHeight={'auto'}
+        title={t('errors.biometricsCancelled.title')}
+        message={t('errors.biometricsCancelled.message')}
+        onBackdropPress={controller.RESET_ERROR}>
+        <Row>
+          <Button
+            fill
+            type="clear"
+            title={t('common:cancel')}
+            onPress={controller.RESET_ERROR}
+            margin={[0, 8, 0, 0]}
+          />
+          <Button
+            testID="tryAgain"
+            fill
+            title={t('common:tryAgain')}
+            onPress={controller.TRY_AGAIN}
+          />
+        </Row>
+      </MessageOverlay>
+    );
+  }
 
   if (controller.errorMessageType) {
     return (
@@ -116,10 +177,8 @@ export const IssuersScreen: React.FC<
   if (controller.loadingReason) {
     return (
       <Loader
-        isVisible
         title={t('loaders.loading')}
         subTitle={t(`loaders.subTitle.${controller.loadingReason}`)}
-        progress
       />
     );
   }
@@ -127,41 +186,61 @@ export const IssuersScreen: React.FC<
   return (
     <React.Fragment>
       {controller.issuers.length > 0 && (
-        <Column style={Theme.issuersScreenStyles.issuerListOuterContainer}>
+        <Column style={Theme.IssuersScreenStyles.issuerListOuterContainer}>
+          <Row
+            style={
+              tapToSearch
+                ? Theme.SearchBarStyles.searchBarContainer
+                : Theme.SearchBarStyles.idleSearchBarBottomLine
+            }>
+            <SearchBar
+              searchIconTestID="searchIssuerIcon"
+              searchBarTestID="issuerSearchBar"
+              search={search}
+              placeholder={t('searchByIssuersName')}
+              onFocus={onFocusSearch}
+              onChangeText={filterIssuers}
+              onLayout={() => filterIssuers('')}
+            />
+            {clearSearchIcon && (
+              <Pressable onPress={clearSearchText}>
+                <Icon
+                  testID="clearingIssuerSearchIcon"
+                  name="circle-with-cross"
+                  type="entypo"
+                  size={15}
+                  color={Theme.Colors.DetailsLabel}
+                />
+              </Pressable>
+            )}
+          </Row>
           <Text
-            {...testIDProps('addCardDescription')}
+            testID="issuersScreenDescription"
             style={{
               ...Theme.TextStyles.regularGrey,
-              paddingTop: 0.5,
-              marginVertical: 14,
-              marginHorizontal: 9,
+              ...Theme.IssuersScreenStyles.issuersSearchSubText,
             }}>
-            {t('header')}
+            {t('description')}
           </Text>
-          <View style={Theme.issuersScreenStyles.issuersContainer}>
+          <View style={Theme.IssuersScreenStyles.issuersContainer}>
             {controller.issuers.length > 0 && (
               <FlatList
-                data={controller.issuers}
+                data={filteredSearchData}
                 renderItem={({item}) => (
                   <Issuer
                     testID={removeWhiteSpace(item.credential_issuer)}
                     key={item.credential_issuer}
-                    id={item.credential_issuer}
-                    displayName={
-                      getDisplayObjectForCurrentLanguage(item.display)?.name
-                    }
-                    logoUrl={
-                      getDisplayObjectForCurrentLanguage(item.display)?.logo
-                        ?.url
-                    }
+                    displayDetails={getDisplayObjectForCurrentLanguage(
+                      item.display,
+                    )}
                     onPress={() =>
                       onPressHandler(item.credential_issuer, item.protocol)
                     }
                     {...props}
                   />
                 )}
-                numColumns={2}
-                keyExtractor={item => item.id}
+                numColumns={1}
+                keyExtractor={item => item.credential_issuer}
               />
             )}
           </View>

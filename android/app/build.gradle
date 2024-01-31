@@ -1,11 +1,10 @@
-plugins { 
+plugins {
     id 'com.gladed.androidgitversion' version '0.4.14'
 }
 
 apply plugin: "com.android.application"
 apply plugin: "com.facebook.react"
-
-import com.android.build.OutputFile
+apply plugin: "org.sonarqube"
 
 react {
     /* Folders */
@@ -37,6 +36,7 @@ react {
     //
     //   The entry file for bundle generation. Default is 'index.android.js' or 'index.js'
     // entryFile = file("../js/MyApplication.android.js")
+    entryFile = file("../../index.js")
     //
     //   A list of extra flags to pass to the 'bundle' commands.
     //   See https://github.com/react-native-community/cli/blob/main/docs/commands.md#bundle
@@ -113,6 +113,7 @@ android {
             appAuthRedirectScheme: 'io.mosip.residentapp.inji'
         ]
     }
+
     splits {
         abi {
             reset()
@@ -121,29 +122,56 @@ android {
             include "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
         }
     }
-    
+
     signingConfigs {
         release {
-            def keystore = file('release.keystore')
-            def keystoreAlias = System.getenv("RELEASE_KEYSTORE_ALIAS")
-            def keystorePass = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+            // for sonarqube job we will generate dummy release keystore to sign the app as we are not doing it in workflow
+            def hasSonarqube = System.properties.containsKey("sonarqube")
+            def keystore = file('release.keystore').exists() ? file('release.keystore') : file('dummyrelease.keystore')
             storeFile file("$keystore")
-            storePassword "$keystorePass"
-            keyAlias "$keystoreAlias"
-            keyPassword "$keystorePass"
+            if (hasSonarqube && !keystore.exists() ) {
+                exec {
+                    commandLine 'keytool',
+                            '-genkey',
+                            '-v',
+                            '-storetype', 'PKCS12',
+                            '-keyalg', 'RSA',
+                            '-keysize', '2048',
+                            '-validity', '10000',
+                            '-storepass', 'password',
+                            '-keypass', 'password',
+                            '-alias', 'androidreleasekey',
+                            '-keystore', 'dummyrelease.keystore',
+                            '-dname', 'CN=,OU=,O=,L=,S=,C=US'
+                }
+                storePassword "password"
+                keyAlias "androidreleasekey"
+                keyPassword "password"
+            }
+            else{
+                def keystoreAlias = System.getenv("RELEASE_KEYSTORE_ALIAS")
+                def keystorePass = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                storePassword "$keystorePass"
+                keyAlias "$keystoreAlias"
+                keyPassword "$keystorePass"
+            }
             v2SigningEnabled true
             v1SigningEnabled false
         }
         debug {
             def keystore = file('debug.keystore')
-            def keystoreAlias = System.getenv("DEBUG_KEYSTORE_ALIAS")
-            def keystorePass = System.getenv("DEBUG_KEYSTORE_PASSWORD")
-            storeFile file("$keystore")
-            storePassword "$keystorePass"
-            keyAlias "$keystoreAlias"
-            keyPassword "$keystorePass"
-            v2SigningEnabled true
-            v1SigningEnabled false
+            if (keystore.exists()) {
+                def keystoreAlias = System.getenv("DEBUG_KEYSTORE_ALIAS")
+                def keystorePass = System.getenv("DEBUG_KEYSTORE_PASSWORD")
+                storeFile file("$keystore")
+                storePassword "$keystorePass"
+                keyAlias "$keystoreAlias"
+                keyPassword "$keystorePass"
+                v2SigningEnabled true
+                v1SigningEnabled false
+            }else {
+                android.buildTypes.debug.signingConfig = null
+            }
         }
     }
     buildTypes {
@@ -204,6 +232,16 @@ android {
             outputFileName = "Inji_${architecture}.apk"
         }
     }
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (variant.flavorName == "collab") {
+                sonarqube {
+                    androidVariant variant.name
+                }
+            }
+        }
+    }
 }
 
 dependencies {
@@ -238,7 +276,7 @@ dependencies {
             implementation 'com.facebook.fresco:animated-webp:2.0.0'
         }
     }
-
+    compileOnly project(':react-native-android-location-services-dialog-box')
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
     debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {

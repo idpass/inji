@@ -31,18 +31,16 @@ export interface Typegen0 {
     services: never;
   };
   eventsCausingActions: {
-    cacheVCFilesData:
-      | 'KEY_RECEIVED'
-      | 'READY'
-      | 'done.invoke.store.resettingStorage:invocation[0]';
     forwardStoreRequest:
       | 'APPEND'
       | 'CLEAR'
+      | 'EXPORT'
       | 'GET'
       | 'PREPEND'
       | 'REMOVE'
       | 'REMOVE_ITEMS'
       | 'REMOVE_VC_METADATA'
+      | 'RESTORE_BACKUP'
       | 'SET'
       | 'UPDATE';
     notifyParent:

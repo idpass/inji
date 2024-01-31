@@ -41,10 +41,10 @@ const model = createModel(
       TOGGLE_BIOMETRIC_UNLOCK: (enable: boolean) => ({enable}),
       STORE_RESPONSE: (response: unknown) => ({response}),
       CHANGE_LANGUAGE: (language: string) => ({language}),
-      UPDATE_MIMOTO_HOST: (credentialRegistry: string) => ({
+      UPDATE_HOST: (credentialRegistry: string, esignetHostUrl: string) => ({
         credentialRegistry,
+        esignetHostUrl,
       }),
-      UPDATE_ESIGNET_HOST: (esignetHostUrl: string) => ({esignetHostUrl}),
       UPDATE_CREDENTIAL_REGISTRY_RESPONSE: (
         credentialRegistryResponse: string,
       ) => ({
@@ -103,15 +103,16 @@ export const settingsMachine = model.createMachine(
           UPDATE_VC_LABEL: {
             actions: ['updateVcLabel', 'storeContext'],
           },
-          UPDATE_MIMOTO_HOST: {
-            actions: ['resetCredentialRegistry'],
+          UPDATE_HOST: {
+            actions: [
+              'resetCredentialRegistryResponse',
+              'updateEsignetHostUrl',
+              'storeContext',
+            ],
             target: 'resetInjiProps',
           },
-          UPDATE_ESIGNET_HOST: {
-            actions: ['updateEsignetHostUrl', 'storeContext'],
-          },
           CANCEL: {
-            actions: ['resetCredentialRegistry'],
+            actions: ['resetCredentialRegistryResponse'],
           },
           INJI_TOUR_GUIDE: {
             target: 'showInjiTourGuide',
@@ -143,7 +144,7 @@ export const settingsMachine = model.createMachine(
         },
         on: {
           CANCEL: {
-            actions: ['resetCredentialRegistry'],
+            actions: ['resetCredentialRegistryResponse'],
             target: 'idle',
           },
         },
@@ -164,8 +165,13 @@ export const settingsMachine = model.createMachine(
       }),
 
       updateDefaults: model.assign({
-        appId: () => {
-          const appId = generateAppId();
+        appId: (_, event) => {
+          const appId =
+            event.response != null &&
+            event.response.encryptedData == null &&
+            event.response.appId != null
+              ? event.response.appId
+              : generateAppId();
           __AppId.setValue(appId);
           return appId;
         },
@@ -190,7 +196,8 @@ export const settingsMachine = model.createMachine(
         __AppId.setValue(newContext.appId);
         return {
           ...context,
-          ...newContext,
+          ...newContext.encryptedData,
+          appId: newContext.appId,
         };
       }),
 
@@ -220,7 +227,7 @@ export const settingsMachine = model.createMachine(
         credentialRegistryResponse: () => 'success',
       }),
 
-      resetCredentialRegistry: model.assign({
+      resetCredentialRegistryResponse: model.assign({
         credentialRegistryResponse: () => '',
       }),
 
@@ -237,7 +244,7 @@ export const settingsMachine = model.createMachine(
       resetInjiProps: async (context, event) => {
         try {
           await Storage.removeItem(COMMON_PROPS_KEY);
-          return await getAllConfigurations(event.credentialRegistry);
+          return await getAllConfigurations(event.credentialRegistry, false);
         } catch (error) {
           console.log('Error from resetInjiProps ', error);
           throw error;
@@ -246,7 +253,10 @@ export const settingsMachine = model.createMachine(
     },
 
     guards: {
-      hasData: (_, event) => event.response != null,
+      hasData: (_, event) =>
+        event.response != null &&
+        event.response.encryptedData != null &&
+        event.response.appId != null,
       hasPartialData: (_, event) =>
         event.response != null && event.response.appId == null,
     },

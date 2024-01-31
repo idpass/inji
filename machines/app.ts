@@ -25,6 +25,11 @@ import {
   SETTINGS_STORE_KEY,
 } from '../shared/constants';
 import {logState} from '../shared/commonUtil';
+import {backupMachine, createBackupMachine} from './backup';
+import {
+  backupRestoreMachine,
+  createBackupRestoreMachine,
+} from './backupRestore';
 
 import ODKIntentModule from '../lib/react-native-odk-intent/ODKIntentModule';
 
@@ -279,6 +284,16 @@ export const appMachine = model.createMachine(
             settingsMachine.id,
           );
 
+          serviceRefs.backup = spawn(
+            createBackupMachine(serviceRefs),
+            backupMachine.id,
+          );
+
+          serviceRefs.backupRestore = spawn(
+            createBackupRestoreMachine(serviceRefs),
+            backupRestoreMachine.id,
+          );
+
           serviceRefs.activityLog = spawn(
             createActivityLogMachine(serviceRefs),
             activityLogMachine.id,
@@ -312,6 +327,8 @@ export const appMachine = model.createMachine(
           context.serviceRefs.settings.subscribe(logState);
           context.serviceRefs.activityLog.subscribe(logState);
           context.serviceRefs.scan.subscribe(logState);
+          context.serviceRefs.backup.subscribe(logState);
+          context.serviceRefs.backupRestore.subscribe(logState);
 
           if (isAndroid()) {
             context.serviceRefs.request.subscribe(logState);
@@ -338,17 +355,17 @@ export const appMachine = model.createMachine(
 
       loadCredentialRegistryInConstants: (_context, event) => {
         changeCrendetialRegistry(
-          !event.response?.credentialRegistry
+          !event.response?.encryptedData?.credentialRegistry
             ? MIMOTO_BASE_URL
-            : event.response?.credentialRegistry,
+            : event.response?.encryptedData?.credentialRegistry,
         );
       },
 
       loadEsignetHostFromConstants: (_context, event) => {
         changeEsignetUrl(
-          !event.response?.esignetHostUrl
+          !event.response?.encryptedData?.esignetHostUrl
             ? ESIGNET_BASE_URL
-            : event.response?.esignetHostUrl,
+            : event.response?.encryptedData?.esignetHostUrl,
         );
       },
     },
